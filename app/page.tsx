@@ -28,6 +28,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+// SortableChord component remains unchanged
 function SortableChord({
                            id,
                            item,
@@ -174,15 +175,27 @@ export default function Home() {
                 .map((c: string) => c.trim())
                 .filter((c: string) => c);
 
-            setChords(
-                cleaned.slice(0, 4).map((c) => ({
+            let initialChords = cleaned.slice(0, 4).map((c) => ({
+                id: `${Date.now()}-${Math.random()}`,
+                chord: c,
+                locked: false,
+            }));
+            // Ensure at least 2 chords
+            while (initialChords.length < 2) {
+                initialChords.push({
                     id: `${Date.now()}-${Math.random()}`,
-                    chord: c,
+                    chord: "A",
                     locked: false,
-                }))
-            );
+                });
+            }
+            setChords(initialChords);
         } catch (e) {
             console.error(e);
+            // Fallback to at least 2 chords if API fails
+            setChords([
+                { id: `${Date.now()}-1`, chord: "A", locked: false },
+                { id: `${Date.now()}-2`, chord: "D", locked: false },
+            ]);
         }
         setLoading(false);
     };
@@ -239,6 +252,60 @@ export default function Home() {
         }
     };
 
+    const addChordAt = (position: number) => {
+        if (chords.length >= 8) return;
+        const newChord = { id: `${Date.now()}-${Math.random()}`, chord: "A", locked: false };
+        setChords((prev) => [
+            ...prev.slice(0, position),
+            newChord,
+            ...prev.slice(position),
+        ]);
+    };
+
+    const Spacer = ({ position }: { position: number }) => {
+        const [hover, setHover] = useState(false);
+        return (
+            <div
+                className="w-[30px] h-48 relative"
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+            >
+                {hover && chords.length < 8 && (
+                    <button
+                        className="absolute inset-0 m-auto w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
+                        onClick={() => addChordAt(position)}
+                    >
+                        +
+                    </button>
+                )}
+            </div>
+        );
+    };
+
+    const elements = [];
+    chords.forEach((chord, index) => {
+        elements.push(<Spacer key={`spacer-${index}`} position={index} />);
+        elements.push(
+            <motion.div
+                key={chord.id}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+            >
+                <SortableChord
+                    id={chord.id}
+                    item={chord}
+                    onPlay={() => playChord(chord.chord)}
+                    toggleLock={toggleLock}
+                    onRemove={removeChord}
+                    loading={loading}
+                />
+            </motion.div>
+        );
+    });
+    elements.push(<Spacer key={`spacer-${chords.length}`} position={chords.length} />);
+
     return (
         <div className="min-h-screen bg-gray-50 pt-32">
             <header className="absolute top-0 left-0 p-8">
@@ -274,26 +341,9 @@ export default function Home() {
                         items={chords.map((chord) => chord.id)}
                         strategy={horizontalListSortingStrategy}
                     >
-                        <div className="flex justify-center gap-[30px]">
+                        <div className="flex justify-center w-full">
                             <AnimatePresence>
-                                {chords.map((item) => (
-                                    <motion.div
-                                        key={item.id}
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.8 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        <SortableChord
-                                            id={item.id}
-                                            item={item}
-                                            onPlay={() => playChord(item.chord)}
-                                            toggleLock={toggleLock}
-                                            onRemove={removeChord}
-                                            loading={loading}
-                                        />
-                                    </motion.div>
-                                ))}
+                                {elements}
                             </AnimatePresence>
                         </div>
                     </SortableContext>
