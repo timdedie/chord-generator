@@ -6,14 +6,21 @@ import Papa from "papaparse";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import LoadingThreeDotsJumping from "@/components/ui/LoadingThreeDotsJumping";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+    AlertCircle,
+    Lock,
+    Unlock,
+    MoveHorizontal,
+    Plus,
+    RefreshCw,
+    X,
+} from "lucide-react";
 import * as Tone from "tone";
 import { Chord } from "tonal";
 import MidiWriter from "midi-writer-js";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaArrowsAltH, FaLock, FaLockOpen, FaPlus } from "react-icons/fa";
-import { TiDelete } from "react-icons/ti";
-import { FaArrowRotateRight } from "react-icons/fa6";
 
 import {
     DndContext,
@@ -31,8 +38,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// Removed the ChordSkeleton component
+// SkeletonCard renders a Skeleton matching the card's dimensions.
+function SkeletonCard() {
+    return <Skeleton className="w-48 h-48 rounded-xl" />;
+}
 
+// SortableChord returns only a SkeletonCard when a chord (that is not locked) is loading.
 function SortableChord({
                            id,
                            item,
@@ -48,6 +59,11 @@ function SortableChord({
     onRemove: (id: string) => void;
     loading: boolean;
 }) {
+    // If loading and the chord is not locked, show the skeleton.
+    if (loading) {
+        return <SkeletonCard />;
+    }
+
     const { attributes, listeners, setNodeRef, transform, transition } =
         useSortable({ id });
     const [hover, setHover] = useState(false);
@@ -62,22 +78,18 @@ function SortableChord({
             style={{ transform: CSS.Transform.toString(transform), transition }}
             className="relative group cursor-pointer flex items-center justify-center w-48 h-48 border border-gray-300 bg-gray-50"
         >
-            {loading ? (
-                <LoadingThreeDotsJumping />
-            ) : (
-                <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.2 }}
-                    className="text-2xl font-bold"
-                >
-                    {item.chord}
-                </motion.span>
-            )}
+            <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+                className="text-2xl font-bold"
+            >
+                {item.chord}
+            </motion.span>
 
             <AnimatePresence>
-                {hover && !loading && (
+                {hover && (
                     <motion.div
                         key="delete"
                         onClick={(e) => {
@@ -90,15 +102,15 @@ function SortableChord({
                         transition={{ duration: 0.2 }}
                         whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
-                        className="absolute top-2 right-2 cursor-pointer text-2xl"
+                        className="absolute top-2 right-2 cursor-pointer"
                     >
-                        <TiDelete />
+                        <X className="h-6 w-6" />
                     </motion.div>
                 )}
             </AnimatePresence>
 
             <AnimatePresence>
-                {hover && !loading && (
+                {hover && (
                     <motion.div
                         {...listeners}
                         initial={{ opacity: 0, y: 8 }}
@@ -107,15 +119,15 @@ function SortableChord({
                         transition={{ duration: 0.2 }}
                         whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
-                        className="absolute bottom-10 left-1/2 -translate-x-1/2 cursor-grab text-2xl"
+                        className="absolute bottom-10 left-1/2 -translate-x-1/2 cursor-grab"
                     >
-                        <FaArrowsAltH />
+                        <MoveHorizontal className="h-6 w-6" />
                     </motion.div>
                 )}
             </AnimatePresence>
 
             <AnimatePresence>
-                {(item.locked || hover) && !loading && (
+                {(item.locked || hover) && (
                     <motion.div
                         key={item.locked ? "locked" : "unlocked"}
                         onClick={(e) => {
@@ -128,9 +140,13 @@ function SortableChord({
                         transition={{ duration: 0.2 }}
                         whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
-                        className="absolute bottom-2 left-1/2 -translate-x-1/2 cursor-pointer text-2xl"
+                        className="absolute bottom-2 left-1/2 -translate-x-1/2 cursor-pointer"
                     >
-                        {item.locked ? <FaLock /> : <FaLockOpen />}
+                        {item.locked ? (
+                            <Lock className="h-6 w-6" />
+                        ) : (
+                            <Unlock className="h-6 w-6" />
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -139,7 +155,6 @@ function SortableChord({
 }
 
 export default function Home() {
-    // State hooks
     const [prompt, setPrompt] = useState("");
     const [chords, setChords] = useState<
         { id: string; chord: string; locked: boolean }[]
@@ -149,7 +164,6 @@ export default function Home() {
     const [error, setError] = useState("");
     const [midiUrl, setMidiUrl] = useState("");
 
-    // CSV examples
     const [examples, setExamples] = useState<string[]>([]);
     const [randomExamples, setRandomExamples] = useState<string[]>([]);
 
@@ -289,7 +303,15 @@ export default function Home() {
         return () => URL.revokeObjectURL(url);
     }, [chords]);
 
-    // Updated chord row logic:
+    // Automatically clear error after 3 seconds.
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(""), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
+
+    // Updated chord row logic.
     let chordRow: React.ReactNode = null;
     if (chords.length > 0) {
         const handleDragEnd = ({ active, over }: DragEndEvent) => {
@@ -304,7 +326,6 @@ export default function Home() {
         async function addChordAt(position: number) {
             if (chords.length >= 8) return;
 
-            // Create a new chord with a placeholder value.
             const newChordId = `${Date.now()}-${Math.random()}`;
             const placeholderChord = {
                 id: newChordId,
@@ -312,13 +333,11 @@ export default function Home() {
                 locked: false,
             };
 
-            // Insert the placeholder chord into the progression.
             setChords((prev) => [
                 ...prev.slice(0, position),
                 placeholderChord,
                 ...prev.slice(position),
             ]);
-            // Mark this chord as loading.
             setLoadingChordId(newChordId);
 
             try {
@@ -334,13 +353,11 @@ export default function Home() {
                 const data = await res.json();
                 if (data.error) {
                     setError(data.error);
-                    // Remove the placeholder chord if there's an error.
                     setChords((prev) => prev.filter((ch) => ch.id !== newChordId));
                     setLoadingChordId(null);
                     return;
                 }
 
-                // Update the placeholder chord with the API response.
                 const updatedChord = {
                     id: newChordId,
                     chord: data.chord.trim(),
@@ -352,7 +369,6 @@ export default function Home() {
             } catch (e) {
                 console.error("Error adding chord:", e);
                 setError("Error adding chord. Please try again.");
-                // Optionally remove the placeholder on error.
                 setChords((prev) => prev.filter((ch) => ch.id !== newChordId));
             }
             setLoadingChordId(null);
@@ -376,7 +392,7 @@ export default function Home() {
                                 className="absolute inset-0 m-auto w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
                                 onClick={() => addChordAt(position)}
                             >
-                                <FaPlus className="text-lg" />
+                                <Plus className="h-5 w-5" />
                             </motion.button>
                         )}
                     </AnimatePresence>
@@ -387,6 +403,8 @@ export default function Home() {
         const elements = [];
         chords.forEach((chord, index) => {
             elements.push(<Spacer key={`spacer-${index}`} position={index} />);
+            // Only set the loading flag for chords that are not locked.
+            const isLoading = !chord.locked && (fullLoading || loadingChordId === chord.id);
             elements.push(
                 <motion.div
                     key={chord.id}
@@ -401,19 +419,14 @@ export default function Home() {
                         onPlay={() => playChord(chord.chord)}
                         toggleLock={toggleLock}
                         onRemove={() =>
-                            setChords((prev) =>
-                                prev.filter((ch) => ch.id !== chord.id)
-                            )
+                            setChords((prev) => prev.filter((ch) => ch.id !== chord.id))
                         }
-                        // Show loading if this chord is currently being added or if a full generation is in progress (and chord isn't locked)
-                        loading={!chord.locked && (fullLoading || loadingChordId === chord.id)}
+                        loading={isLoading}
                     />
                 </motion.div>
             );
         });
-        elements.push(
-            <Spacer key={`spacer-${chords.length}`} position={chords.length} />
-        );
+        elements.push(<Spacer key={`spacer-${chords.length}`} position={chords.length} />);
 
         chordRow = (
             <DndContext
@@ -421,10 +434,7 @@ export default function Home() {
                 collisionDetection={closestCenter}
                 onDragEnd={handleDragEnd}
             >
-                <SortableContext
-                    items={chords.map((ch) => ch.id)}
-                    strategy={horizontalListSortingStrategy}
-                >
+                <SortableContext items={chords.map((ch) => ch.id)} strategy={horizontalListSortingStrategy}>
                     <div className="flex gap-4 justify-center w-full">
                         <AnimatePresence>{elements}</AnimatePresence>
                     </div>
@@ -432,22 +442,17 @@ export default function Home() {
             </DndContext>
         );
     } else if (fullLoading) {
-        // Generation has started but no chords yet – show cards with the jumping loading animation.
         chordRow = (
             <div className="flex gap-4">
                 {[...Array(4)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="w-48 h-48 border border-gray-300 bg-gray-50 rounded flex items-center justify-center"
-                    >
-                        <LoadingThreeDotsJumping />
+                    <div key={i}>
+                        <SkeletonCard />
                     </div>
                 ))}
             </div>
         );
     }
 
-    // Fixed: use fullLoading instead of undefined loading
     const hasChords = chords.length > 0 || fullLoading;
 
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -459,6 +464,26 @@ export default function Home() {
             <header className="absolute top-0 left-0 p-8">
                 <h1 className="text-4xl font-bold">Chord Generator</h1>
             </header>
+
+            {/* Fixed position Alert container */}
+            <AnimatePresence>
+                {error && (
+                    <motion.div
+                        key="alert"
+                        initial={{ x: "100%", opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: "100%", opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed top-20 right-4 z-50"
+                    >
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Error</AlertTitle>
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <main
                 className={`flex flex-col items-center transition-all duration-500 ${
@@ -483,13 +508,10 @@ export default function Home() {
                             className="w-16 h-16 flex items-center justify-center transition transform hover:scale-105"
                             disabled={fullLoading}
                         >
-                            <FaArrowRotateRight
-                                className={`text-3xl ${fullLoading ? "animate-spin" : ""}`}
-                            />
+                            <RefreshCw className={`h-8 w-8 ${fullLoading ? "animate-spin" : ""}`} />
                         </Button>
                     </div>
 
-                    {/* Show suggestion buttons only if no chords have been generated */}
                     <AnimatePresence>
                         {(!fullLoading && chords.length === 0) && (
                             <motion.div
@@ -514,8 +536,6 @@ export default function Home() {
                             </motion.div>
                         )}
                     </AnimatePresence>
-
-                    {error && <p className="text-red-600 mb-4">{error}</p>}
                 </div>
 
                 {chordRow}
