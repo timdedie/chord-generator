@@ -81,12 +81,23 @@ function SortableChord({
             )}
 
             {/* DELETE BUTTON */}
-            <div
-                onClick={e => { e.stopPropagation(); onRemove(index); }}
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 cursor-pointer text-2xl"
-            >
-                <TiDelete />
-            </div>
+            <AnimatePresence>
+                {hover && !loading && (
+                    <motion.div
+                        key="delete"
+                        onClick={e => { e.stopPropagation(); onRemove(index); }}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.2 }}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="absolute top-2 right-2 cursor-pointer text-2xl"
+                    >
+                        <TiDelete />
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* DRAG HANDLE */}
             <AnimatePresence>
@@ -107,14 +118,23 @@ function SortableChord({
             </AnimatePresence>
 
             {/* LOCK ICON (no transition) */}
-            {(item.locked || hover) && !loading && (
-                <div
-                    onClick={e => { e.stopPropagation(); toggleLock(index); }}
-                    className="absolute bottom-2 left-1/2 -translate-x-1/2 cursor-pointer text-2xl opacity-100"
-                >
-                    {item.locked ? <FaLock /> : <FaLockOpen />}
-                </div>
-            )}
+            <AnimatePresence>
+                {(item.locked || hover) && !loading && (
+                    <motion.div
+                        key={item.locked ? "locked" : "unlocked"}
+                        onClick={e => { e.stopPropagation(); toggleLock(index); }}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.2 }}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="absolute bottom-2 left-1/2 -translate-x-1/2 cursor-pointer text-2xl"
+                    >
+                        {item.locked ? <FaLock /> : <FaLockOpen />}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </Card>
     );
 }
