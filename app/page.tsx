@@ -10,8 +10,9 @@ import * as Tone from "tone";
 import { Chord } from "tonal";
 import MidiWriter from "midi-writer-js";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaArrowsAltH, FaLock, FaLockOpen } from "react-icons/fa";
+import { FaArrowsAltH, FaLock, FaLockOpen, FaPlus } from "react-icons/fa";
 import { TiDelete } from "react-icons/ti";
+import { FaArrowRotateRight } from "react-icons/fa6";
 import {
     DndContext,
     closestCenter,
@@ -270,14 +271,20 @@ export default function Home() {
                 onMouseEnter={() => setHover(true)}
                 onMouseLeave={() => setHover(false)}
             >
-                {hover && chords.length < 8 && (
-                    <button
-                        className="absolute inset-0 m-auto w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
-                        onClick={() => addChordAt(position)}
-                    >
-                        +
-                    </button>
-                )}
+                <AnimatePresence>
+                    {hover && chords.length < 8 && (
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute inset-0 m-auto w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
+                            onClick={() => addChordAt(position)}
+                        >
+                            <FaPlus className="text-lg" />
+                        </motion.button>
+                    )}
+                </AnimatePresence>
             </div>
         );
     };
@@ -325,8 +332,12 @@ export default function Home() {
                             placeholder="happy and uplifting"
                             className="flex-grow px-8 h-24 placeholder:text-4xl !text-4xl"
                         />
-                        <Button onClick={generateChords} className="w-24 h-24">
-                            {loading ? <LoadingCircleSpinner /> : "Go"}
+                        <Button
+                            onClick={generateChords}
+                            className="w-24 h-24 flex items-center justify-center transition transform hover:scale-105"
+                            disabled={loading}
+                        >
+                            <FaArrowRotateRight className={`text-6xl ${loading ? "animate-spin" : ""}`} />
                         </Button>
                     </div>
                     {error && <p className="text-red-600 mt-2">{error}</p>}
@@ -359,7 +370,11 @@ export default function Home() {
                             transition={{ duration: 0.3 }}
                             className="w-full max-w-3xl flex justify-end mt-8"
                         >
-                            <Button asChild disabled={!midiUrl}>
+                            <Button
+                                asChild
+                                disabled={!midiUrl}
+                                className="transition transform hover:scale-105"
+                            >
                                 <a href={midiUrl} download="chord_progression.mid">
                                     Download MIDI
                                 </a>
