@@ -22,6 +22,7 @@
     "next": "15.2.3",
     "onnxjs": "^0.1.8",
     "openai": "^4.89.0",
+    "papaparse": "^5.5.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
