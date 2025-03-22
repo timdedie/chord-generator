@@ -506,6 +506,7 @@ export default function Home() {
                                         variant="secondary"
                                         disabled={fullLoading}
                                         onClick={() => handleExampleClick(ex)}
+                                        className="hover:scale-101"
                                     >
                                         {ex}
                                     </Button>
