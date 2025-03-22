@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, KeyboardEvent, useRef } from "react";
+import {useEffect, useState, KeyboardEvent, useRef} from "react";
 import Papa from "papaparse";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Card} from "@/components/ui/card";
+import {Skeleton} from "@/components/ui/skeleton";
+import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {
     AlertCircle,
     Lock,
@@ -17,10 +17,10 @@ import {
     X,
 } from "lucide-react";
 import * as Tone from "tone";
-import { Chord } from "tonal";
+import {Chord} from "tonal";
 import MidiWriter from "midi-writer-js";
-import { motion, AnimatePresence } from "framer-motion";
-import { Piano, KeyboardShortcuts, MidiNumbers } from "react-piano";
+import {motion, AnimatePresence} from "framer-motion";
+import {Piano, KeyboardShortcuts, MidiNumbers} from "react-piano";
 import "react-piano/dist/styles.css";
 
 import {
@@ -37,11 +37,11 @@ import {
     arrayMove,
     horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import {CSS} from "@dnd-kit/utilities";
 
 // SkeletonCard renders a Skeleton matching the card's dimensions.
 function SkeletonCard() {
-    return <Skeleton className="w-48 h-48 rounded-xl" />;
+    return <Skeleton className="w-48 h-48 rounded-xl"/>;
 }
 
 // SortableChord returns only a SkeletonCard when a chord (that is not locked) is loading.
@@ -61,11 +61,11 @@ function SortableChord({
     loading: boolean;
 }) {
     if (loading) {
-        return <SkeletonCard />;
+        return <SkeletonCard/>;
     }
 
-    const { attributes, listeners, setNodeRef, transform, transition } =
-        useSortable({ id });
+    const {attributes, listeners, setNodeRef, transform, transition} =
+        useSortable({id});
     const [hover, setHover] = useState(false);
 
     return (
@@ -75,14 +75,14 @@ function SortableChord({
             onClick={onPlay}
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
-            style={{ transform: CSS.Transform.toString(transform), transition }}
+            style={{transform: CSS.Transform.toString(transform), transition}}
             className="relative group cursor-pointer flex items-center justify-center w-48 h-48 border border-gray-300 bg-gray-50"
         >
             <motion.span
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.2 }}
+                initial={{opacity: 0, scale: 0.8}}
+                animate={{opacity: 1, scale: 1}}
+                exit={{opacity: 0, scale: 0.8}}
+                transition={{duration: 0.2}}
                 className="text-2xl font-bold"
             >
                 {item.chord}
@@ -96,15 +96,15 @@ function SortableChord({
                             e.stopPropagation();
                             onRemove(item.id);
                         }}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.2 }}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
+                        initial={{opacity: 0, scale: 0.8}}
+                        animate={{opacity: 1, scale: 1}}
+                        exit={{opacity: 0, scale: 0.8}}
+                        transition={{duration: 0.2}}
+                        whileHover={{scale: 1.2}}
+                        whileTap={{scale: 0.9}}
                         className="absolute top-2 right-2 cursor-pointer"
                     >
-                        <X className="h-6 w-6" />
+                        <X className="h-6 w-6"/>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -113,15 +113,15 @@ function SortableChord({
                 {hover && (
                     <motion.div
                         {...listeners}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.2 }}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
+                        initial={{opacity: 0, y: 8}}
+                        animate={{opacity: 1, y: 0}}
+                        exit={{opacity: 0, y: 8}}
+                        transition={{duration: 0.2}}
+                        whileHover={{scale: 1.2}}
+                        whileTap={{scale: 0.9}}
                         className="absolute bottom-10 left-1/2 -translate-x-1/2 cursor-grab"
                     >
-                        <MoveHorizontal className="h-6 w-6" />
+                        <MoveHorizontal className="h-6 w-6"/>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -134,18 +134,18 @@ function SortableChord({
                             e.stopPropagation();
                             toggleLock(item.id);
                         }}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.2 }}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
+                        initial={{opacity: 0, scale: 0.8}}
+                        animate={{opacity: 1, scale: 1}}
+                        exit={{opacity: 0, scale: 0.8}}
+                        transition={{duration: 0.2}}
+                        whileHover={{scale: 1.2}}
+                        whileTap={{scale: 0.9}}
                         className="absolute bottom-2 left-1/2 -translate-x-1/2 cursor-pointer"
                     >
                         {item.locked ? (
-                            <Lock className="h-6 w-6" />
+                            <Lock className="h-6 w-6"/>
                         ) : (
-                            <Unlock className="h-6 w-6" />
+                            <Unlock className="h-6 w-6"/>
                         )}
                     </motion.div>
                 )}
@@ -193,7 +193,7 @@ export default function Home() {
     function toggleLock(id: string) {
         setChords((prev) =>
             prev.map((ch) =>
-                ch.id === id ? { ...ch, locked: !ch.locked } : ch
+                ch.id === id ? {...ch, locked: !ch.locked} : ch
             )
         );
     }
@@ -215,8 +215,8 @@ export default function Home() {
         try {
             const res = await fetch("/api/generate", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: usedPrompt, existingChords: chords }),
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({prompt: usedPrompt, existingChords: chords}),
             });
             const data = await res.json();
             console.log("API response:", data);
@@ -235,20 +235,25 @@ export default function Home() {
                 .map((c: string) => c.trim())
                 .filter((c: string) => c);
 
-            let newChords = cleaned.slice(0, 4).map((c) => ({
+            let newChords = cleaned.slice(0, 4).map((c: string) => ({
                 id: `${Date.now()}-${Math.random()}`,
                 chord: c,
                 locked: false,
             }));
 
             if (chords.length > 0) {
-                newChords = newChords.map((newChord, idx) => {
-                    const oldChord = chords[idx];
-                    if (oldChord && oldChord.locked) {
-                        return oldChord;
+                newChords = newChords.map(
+                    (
+                        newChord: { id: string; chord: string; locked: boolean },
+                        idx: number
+                    ) => {
+                        const oldChord = chords[idx];
+                        if (oldChord && oldChord.locked) {
+                            return oldChord;
+                        }
+                        return newChord;
                     }
-                    return newChord;
-                });
+                );
             }
 
             setChords(newChords);
@@ -313,8 +318,8 @@ export default function Home() {
 
     function makeMidiUrl(values: string[]) {
         const track = new MidiWriter.Track();
-        track.setTimeSignature(4, 4);
-        track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 1 }));
+        track.setTimeSignature(4, 4, 24, 8);
+        track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1}));
 
         values.forEach((ch) => {
             const notes = Chord.get(ch).notes.map((n) =>
@@ -356,7 +361,7 @@ export default function Home() {
     // Updated chord row logic.
     let chordRow: React.ReactNode = null;
     if (chords.length > 0) {
-        const handleDragEnd = ({ active, over }: DragEndEvent) => {
+        const handleDragEnd = ({active, over}: DragEndEvent) => {
             if (!over || active.id === over.id) return;
             setChords((items) => {
                 const oldIndex = items.findIndex((i) => i.id === active.id);
@@ -385,7 +390,7 @@ export default function Home() {
             try {
                 const res = await fetch("/api/generate", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({
                         existingChords: chords,
                         addChordPosition: position,
@@ -416,7 +421,7 @@ export default function Home() {
             setLoadingChordId(null);
         }
 
-        function Spacer({ position }: { position: number }) {
+        function Spacer({position}: { position: number }) {
             const [hover, setHover] = useState(false);
             return (
                 <div
@@ -427,14 +432,14 @@ export default function Home() {
                     <AnimatePresence>
                         {hover && chords.length < 8 && (
                             <motion.button
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                transition={{ duration: 0.2 }}
+                                initial={{opacity: 0, scale: 0.8}}
+                                animate={{opacity: 1, scale: 1}}
+                                exit={{opacity: 0, scale: 0.8}}
+                                transition={{duration: 0.2}}
                                 className="absolute inset-0 m-auto w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
                                 onClick={() => addChordAt(position)}
                             >
-                                <Plus className="h-5 w-5" />
+                                <Plus className="h-5 w-5"/>
                             </motion.button>
                         )}
                     </AnimatePresence>
@@ -444,16 +449,16 @@ export default function Home() {
 
         const elements = [];
         chords.forEach((chord, index) => {
-            elements.push(<Spacer key={`spacer-${index}`} position={index} />);
+            elements.push(<Spacer key={`spacer-${index}`} position={index}/>);
             const isLoading =
                 !chord.locked && (fullLoading || loadingChordId === chord.id);
             elements.push(
                 <motion.div
                     key={chord.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{opacity: 0, scale: 0.8}}
+                    animate={{opacity: 1, scale: 1}}
+                    exit={{opacity: 0, scale: 0.8}}
+                    transition={{duration: 0.2}}
                 >
                     <SortableChord
                         id={chord.id}
@@ -469,7 +474,7 @@ export default function Home() {
             );
         });
         elements.push(
-            <Spacer key={`spacer-${chords.length}`} position={chords.length} />
+            <Spacer key={`spacer-${chords.length}`} position={chords.length}/>
         );
 
         chordRow = (
@@ -493,7 +498,7 @@ export default function Home() {
             <div className="flex gap-4">
                 {[...Array(4)].map((_, i) => (
                     <div key={i}>
-                        <SkeletonCard />
+                        <SkeletonCard/>
                     </div>
                 ))}
             </div>
@@ -526,14 +531,14 @@ export default function Home() {
                 {error && (
                     <motion.div
                         key="alert"
-                        initial={{ x: "100%", opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: "100%", opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+                        initial={{x: "100%", opacity: 0}}
+                        animate={{x: 0, opacity: 1}}
+                        exit={{x: "100%", opacity: 0}}
+                        transition={{duration: 0.3}}
                         className="fixed top-20 right-4 z-50"
                     >
                         <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
+                            <AlertCircle className="h-4 w-4"/>
                             <AlertTitle>Error</AlertTitle>
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
@@ -576,10 +581,10 @@ export default function Home() {
                         {(!fullLoading && chords.length === 0) && (
                             <motion.div
                                 key="example-buttons"
-                                initial={{ opacity: 1 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0, height: 0, overflow: "hidden" }}
-                                transition={{ duration: 0.3 }}
+                                initial={{opacity: 1}}
+                                animate={{opacity: 1}}
+                                exit={{opacity: 0, height: 0, overflow: "hidden"}}
+                                transition={{duration: 0.3}}
                                 className="flex flex-wrap gap-2 mb-6"
                             >
                                 {randomExamples.map((ex, i) => (
@@ -604,10 +609,10 @@ export default function Home() {
                     {midiUrl && chords.length > 0 && (
                         <motion.div
                             key="download"
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 16 }}
-                            transition={{ duration: 0.3 }}
+                            initial={{opacity: 0, y: 16}}
+                            animate={{opacity: 1, y: 0}}
+                            exit={{opacity: 0, y: 16}}
+                            transition={{duration: 0.3}}
                             className="w-full max-w-3xl flex justify-end mt-8"
                         >
                             <Button
@@ -628,12 +633,12 @@ export default function Home() {
             <div className="fixed bottom-0 left-0 right-0 flex justify-center bg-gray-50 p-4">
                 <div className="max-w-[600px] w-full">
                     <Piano
-                        noteRange={{ first: firstNote, last: lastNote }}
-                        playNote={(midiNumber) => {
+                        noteRange={{first: firstNote, last: lastNote}}
+                        playNote={(midiNumber: number) => {
                             const note = MidiNumbers.getAttributes(midiNumber).note;
                             pianoRef.current.triggerAttack(note);
                         }}
-                        stopNote={(midiNumber) => {
+                        stopNote={(midiNumber: number) => {
                             const note = MidiNumbers.getAttributes(midiNumber).note;
                             pianoRef.current.triggerRelease(note);
                         }}
