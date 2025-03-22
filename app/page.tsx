@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, KeyboardEvent } from "react";
+import { useEffect, useState, KeyboardEvent, useRef } from "react";
 import Papa from "papaparse";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -21,6 +20,8 @@ import * as Tone from "tone";
 import { Chord } from "tonal";
 import MidiWriter from "midi-writer-js";
 import { motion, AnimatePresence } from "framer-motion";
+import { Piano, KeyboardShortcuts, MidiNumbers } from "react-piano";
+import "react-piano/dist/styles.css";
 
 import {
     DndContext,
@@ -59,7 +60,6 @@ function SortableChord({
     onRemove: (id: string) => void;
     loading: boolean;
 }) {
-    // If loading and the chord is not locked, show the skeleton.
     if (loading) {
         return <SkeletonCard />;
     }
@@ -163,7 +163,7 @@ export default function Home() {
     const [loadingChordId, setLoadingChordId] = useState<string | null>(null);
     const [error, setError] = useState("");
     const [midiUrl, setMidiUrl] = useState("");
-
+    const [activeNotes, setActiveNotes] = useState<string[]>([]);
     const [examples, setExamples] = useState<string[]>([]);
     const [randomExamples, setRandomExamples] = useState<string[]>([]);
 
@@ -259,14 +259,56 @@ export default function Home() {
         setFullLoading(false);
     }
 
+    const pianoRef = useRef<any>(null);
+
+    useEffect(() => {
+        pianoRef.current = new Tone.Sampler({
+            urls: {
+                "A0": "A0.mp3",
+                "A1": "A1.mp3",
+                "A2": "A2.mp3",
+                "A3": "A3.mp3",
+                "A4": "A4.mp3",
+                "A5": "A5.mp3",
+                "A6": "A6.mp3",
+                "A7": "A7.mp3",
+                "C1": "C1.mp3",
+                "C2": "C2.mp3",
+                "C3": "C3.mp3",
+                "C4": "C4.mp3",
+                "C5": "C5.mp3",
+                "C6": "C6.mp3",
+                "C7": "C7.mp3",
+                "C8": "C8.mp3",
+                "D#1": "D#1.mp3",
+                "D#2": "D#2.mp3",
+                "D#3": "D#3.mp3",
+                "D#4": "D#4.mp3",
+                "D#5": "D#5.mp3",
+                "D#6": "D#6.mp3",
+                "D#7": "D#7.mp3",
+                "F#1": "F#1.mp3",
+                "F#2": "F#2.mp3",
+                "F#3": "F#3.mp3",
+                "F#4": "F#4.mp3",
+                "F#5": "F#5.mp3",
+                "F#6": "F#6.mp3",
+                "F#7": "F#7.mp3",
+            },
+            release: 1,
+            baseUrl: "/piano/",
+        }).toDestination();
+    }, []);
+
     async function playChord(chord: string) {
         if (!chord) return;
         await Tone.start();
-        const synth = new Tone.PolySynth().toDestination();
         const notes = Chord.get(chord).notes.map((n) =>
             /\d/.test(n) ? n : `${n}4`
         );
-        synth.triggerAttackRelease(notes, "2n");
+        setActiveNotes(notes);
+        pianoRef.current.triggerAttackRelease(notes, "2n");
+        setTimeout(() => setActiveNotes([]), 500);
     }
 
     function makeMidiUrl(values: string[]) {
@@ -403,8 +445,8 @@ export default function Home() {
         const elements = [];
         chords.forEach((chord, index) => {
             elements.push(<Spacer key={`spacer-${index}`} position={index} />);
-            // Only set the loading flag for chords that are not locked.
-            const isLoading = !chord.locked && (fullLoading || loadingChordId === chord.id);
+            const isLoading =
+                !chord.locked && (fullLoading || loadingChordId === chord.id);
             elements.push(
                 <motion.div
                     key={chord.id}
@@ -426,7 +468,9 @@ export default function Home() {
                 </motion.div>
             );
         });
-        elements.push(<Spacer key={`spacer-${chords.length}`} position={chords.length} />);
+        elements.push(
+            <Spacer key={`spacer-${chords.length}`} position={chords.length} />
+        );
 
         chordRow = (
             <DndContext
@@ -434,7 +478,10 @@ export default function Home() {
                 collisionDetection={closestCenter}
                 onDragEnd={handleDragEnd}
             >
-                <SortableContext items={chords.map((ch) => ch.id)} strategy={horizontalListSortingStrategy}>
+                <SortableContext
+                    items={chords.map((ch) => ch.id)}
+                    strategy={horizontalListSortingStrategy}
+                >
                     <div className="flex gap-4 justify-center w-full">
                         <AnimatePresence>{elements}</AnimatePresence>
                     </div>
@@ -458,6 +505,15 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") generateChords();
     };
+
+    // Define note range and keyboard shortcuts for react-piano
+    const firstNote = MidiNumbers.fromNote("C3");
+    const lastNote = MidiNumbers.fromNote("C5");
+    const keyboardShortcuts = KeyboardShortcuts.create({
+        firstNote,
+        lastNote,
+        keyboardConfig: KeyboardShortcuts.HOME_ROW,
+    });
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -499,7 +555,7 @@ export default function Home() {
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Describe a mood or style ..."
+                            placeholder="Describe a mood, style, genre or key ..."
                             className="flex-grow px-8 h-16 placeholder:text-2xl !text-2xl"
                             disabled={fullLoading}
                         />
@@ -508,7 +564,11 @@ export default function Home() {
                             className="w-16 h-16 flex items-center justify-center transition transform hover:scale-105"
                             disabled={fullLoading}
                         >
-                            <RefreshCw className={`h-8 w-8 ${fullLoading ? "animate-spin" : ""}`} />
+                            <RefreshCw
+                                className={`h-8 w-8 ${
+                                    fullLoading ? "animate-spin" : ""
+                                }`}
+                            />
                         </Button>
                     </div>
 
@@ -563,6 +623,28 @@ export default function Home() {
                     )}
                 </AnimatePresence>
             </main>
+
+            {/* React-Piano integration */}
+            <div className="fixed bottom-0 left-0 right-0 flex justify-center bg-gray-50 p-4">
+                <div className="max-w-[600px] w-full">
+                    <Piano
+                        noteRange={{ first: firstNote, last: lastNote }}
+                        playNote={(midiNumber) => {
+                            const note = MidiNumbers.getAttributes(midiNumber).note;
+                            pianoRef.current.triggerAttack(note);
+                        }}
+                        stopNote={(midiNumber) => {
+                            const note = MidiNumbers.getAttributes(midiNumber).note;
+                            pianoRef.current.triggerRelease(note);
+                        }}
+                        activeNotes={activeNotes.map((note) => MidiNumbers.fromNote(note))}
+                        width={600}
+                        // Remove keyboard shortcuts to prevent triggering with the computer keyboard
+                        // and remove the note labels by returning null in renderNoteLabel.
+                        renderNoteLabel={() => null}
+                    />
+                </div>
+            </div>
         </div>
     );
 }
