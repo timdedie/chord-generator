@@ -31,18 +31,16 @@ import { CSS } from "@dnd-kit/utilities";
 function SortableChord({
                            id,
                            item,
-                           index,
                            onPlay,
                            toggleLock,
                            onRemove,
                            loading,
                        }: {
     id: string;
-    item: { chord: string; locked: boolean };
-    index: number;
+    item: { id: string; chord: string; locked: boolean };
     onPlay: () => void;
-    toggleLock: (i: number) => void;
-    onRemove: (i: number) => void;
+    toggleLock: (id: string) => void;
+    onRemove: (id: string) => void;
     loading: boolean;
 }) {
     const { attributes, listeners, setNodeRef, transform, transition } =
@@ -57,35 +55,30 @@ function SortableChord({
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
             style={{ transform: CSS.Transform.toString(transform), transition }}
-            className={`relative group cursor-pointer flex items-center justify-center w-48 h-48 border border-gray-300 ${
-                item.chord ? "bg-gray-50" : "bg-gray-200"
-            }`}
+            className="relative group cursor-pointer flex items-center justify-center w-48 h-48 border border-gray-300 bg-gray-50"
         >
             {loading ? (
                 <LoadingThreeDotsJumping />
             ) : (
-                <AnimatePresence>
-                    {item.chord && (
-                        <motion.span
-                            key={item.chord}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            transition={{ duration: 0.2 }}
-                            className="text-2xl font-bold"
-                        >
-                            {item.chord}
-                        </motion.span>
-                    )}
-                </AnimatePresence>
+                <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-2xl font-bold"
+                >
+                    {item.chord}
+                </motion.span>
             )}
 
-            {/* DELETE BUTTON */}
             <AnimatePresence>
                 {hover && !loading && (
                     <motion.div
                         key="delete"
-                        onClick={e => { e.stopPropagation(); onRemove(index); }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onRemove(item.id);
+                        }}
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
@@ -99,7 +92,6 @@ function SortableChord({
                 )}
             </AnimatePresence>
 
-            {/* DRAG HANDLE */}
             <AnimatePresence>
                 {hover && !loading && (
                     <motion.div
@@ -117,12 +109,14 @@ function SortableChord({
                 )}
             </AnimatePresence>
 
-            {/* LOCK ICON (no transition) */}
             <AnimatePresence>
                 {(item.locked || hover) && !loading && (
                     <motion.div
                         key={item.locked ? "locked" : "unlocked"}
-                        onClick={e => { e.stopPropagation(); toggleLock(index); }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleLock(item.id);
+                        }}
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
@@ -141,16 +135,21 @@ function SortableChord({
 
 export default function Home() {
     const [prompt, setPrompt] = useState("");
-    const [chords, setChords] = useState<{ chord: string; locked: boolean }[]>(
-        Array(4).fill({ chord: "", locked: false })
-    );
+    const [chords, setChords] = useState<
+        { id: string; chord: string; locked: boolean }[]
+    >([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [midiUrl, setMidiUrl] = useState("");
 
-    const removeChord = (i: number) =>
-        setChords(prev =>
-            prev.map((c, idx) => (idx === i ? { chord: "", locked: false } : c))
+    const removeChord = (id: string) =>
+        setChords((prev) => prev.filter((chord) => chord.id !== id));
+
+    const toggleLock = (id: string) =>
+        setChords((prev) =>
+            prev.map((chord) =>
+                chord.id === id ? { ...chord, locked: !chord.locked } : chord
+            )
         );
 
     const generateChords = async () => {
@@ -172,13 +171,15 @@ export default function Home() {
                 .replace(/['"]?$/, "")
                 .trim()
                 .split(/[-‐‑–—]/)
-                .map((c: string) => c.trim());
+                .map((c: string) => c.trim())
+                .filter((c: string) => c);
 
             setChords(
-                [...cleaned.map((c) => ({ chord: c, locked: false })), ...Array(4)].slice(
-                    0,
-                    4
-                )
+                cleaned.slice(0, 4).map((c) => ({
+                    id: `${Date.now()}-${Math.random()}`,
+                    chord: c,
+                    locked: false,
+                }))
             );
         } catch (e) {
             console.error(e);
@@ -206,16 +207,18 @@ export default function Home() {
             track.addEvent(new MidiWriter.NoteEvent({ pitch: notes, duration: "4" }));
         });
         return URL.createObjectURL(
-            new Blob([new MidiWriter.Writer(track).buildFile()], { type: "audio/midi" })
+            new Blob([new MidiWriter.Writer(track).buildFile()], {
+                type: "audio/midi",
+            })
         );
     };
 
     useEffect(() => {
-        if (chords.every((c) => c.chord === "")) {
+        if (chords.length === 0) {
             setMidiUrl("");
             return;
         }
-        const url = makeMidiUrl(chords.map((c) => c.chord).filter(Boolean));
+        const url = makeMidiUrl(chords.map((c) => c.chord));
         setMidiUrl(url);
         return () => URL.revokeObjectURL(url);
     }, [chords]);
@@ -224,21 +227,15 @@ export default function Home() {
         if (e.key === "Enter") generateChords();
     };
 
-    const toggleLock = (i: number) =>
-        setChords((prev) =>
-            prev.map((c, idx) => (idx === i ? { ...c, locked: !c.locked } : c))
-        );
-
     const sensors = useSensors(useSensor(PointerSensor));
+
     const handleDragEnd = ({ active, over }: DragEndEvent) => {
         if (over && active.id !== over.id) {
-            setChords((items) =>
-                arrayMove(
-                    items,
-                    Number(active.id.split("-")[1]),
-                    Number(over.id.split("-")[1])
-                )
-            );
+            setChords((items) => {
+                const activeIndex = items.findIndex((item) => item.id === active.id);
+                const overIndex = items.findIndex((item) => item.id === over.id);
+                return arrayMove(items, activeIndex, overIndex);
+            });
         }
     };
 
@@ -250,7 +247,9 @@ export default function Home() {
 
             <main className="flex flex-col items-center">
                 <div className="w-full max-w-3xl mb-12">
-                    <p className="text-sm text-gray-600 mb-1">Describe your chord progression</p>
+                    <p className="text-sm text-gray-600 mb-1">
+                        Describe your chord progression
+                    </p>
                     <div className="flex gap-4">
                         <Input
                             value={prompt}
@@ -266,21 +265,36 @@ export default function Home() {
                     {error && <p className="text-red-600 mt-2">{error}</p>}
                 </div>
 
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <SortableContext items={chords.map((_, i) => `chord-${i}`)} strategy={horizontalListSortingStrategy}>
-                        <div className="flex gap-[30px]">
-                            {chords.map((item, idx) => (
-                                <SortableChord
-                                    key={idx}
-                                    id={`chord-${idx}`}
-                                    item={item}
-                                    index={idx}
-                                    loading={loading}
-                                    onPlay={() => playChord(item.chord)}
-                                    toggleLock={toggleLock}
-                                    onRemove={removeChord}
-                                />
-                            ))}
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext
+                        items={chords.map((chord) => chord.id)}
+                        strategy={horizontalListSortingStrategy}
+                    >
+                        <div className="flex justify-center gap-[30px]">
+                            <AnimatePresence>
+                                {chords.map((item) => (
+                                    <motion.div
+                                        key={item.id}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.8 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <SortableChord
+                                            id={item.id}
+                                            item={item}
+                                            onPlay={() => playChord(item.chord)}
+                                            toggleLock={toggleLock}
+                                            onRemove={removeChord}
+                                            loading={loading}
+                                        />
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
                         </div>
                     </SortableContext>
                 </DndContext>
