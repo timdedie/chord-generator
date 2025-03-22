@@ -34,7 +34,11 @@ export async function POST(request: Request): Promise<Response> {
                 ],
             });
 
-            const newChord = completion.choices[0].message.content.trim();
+            const message = completion.choices[0].message;
+            if (!message || !message.content) {
+                throw new Error("Invalid API response: missing message content");
+            }
+            const newChord = message.content.trim();
             console.log("Response from API (new chord):", newChord);
 
             return new Response(JSON.stringify({ chord: newChord }), { status: 200 });
