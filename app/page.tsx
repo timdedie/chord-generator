@@ -285,20 +285,20 @@ export default function Home() {
                 "C6": "C6.mp3",
                 "C7": "C7.mp3",
                 "C8": "C8.mp3",
-                "D#1": "D#1.mp3",
-                "D#2": "D#2.mp3",
-                "D#3": "D#3.mp3",
-                "D#4": "D#4.mp3",
-                "D#5": "D#5.mp3",
-                "D#6": "D#6.mp3",
-                "D#7": "D#7.mp3",
-                "F#1": "F#1.mp3",
-                "F#2": "F#2.mp3",
-                "F#3": "F#3.mp3",
-                "F#4": "F#4.mp3",
-                "F#5": "F#5.mp3",
-                "F#6": "F#6.mp3",
-                "F#7": "F#7.mp3",
+                "D#1": "Dsharp1.mp3",
+                "D#2": "Dsharp2.mp3",
+                "D#3": "Dsharp3.mp3",
+                "D#4": "Dsharp4.mp3",
+                "D#5": "Dsharp5.mp3",
+                "D#6": "Dsharp6.mp3",
+                "D#7": "Dsharp7.mp3",
+                "F#1": "Fsharp1.mp3",
+                "F#2": "Fsharp2.mp3",
+                "F#3": "Fsharp3.mp3",
+                "F#4": "Fsharp4.mp3",
+                "F#5": "Fsharp5.mp3",
+                "F#6": "Fsharp6.mp3",
+                "F#7": "Fsharp7.mp3",
             },
             release: 1,
             baseUrl: "/piano/",
@@ -553,7 +553,7 @@ export default function Home() {
             >
                 <div className="w-full max-w-3xl">
                     <p className="text-sm text-gray-600 mb-1">
-                        What kind of chord progression do you want to generate?
+                        What chord progression do you want to generate?
                     </p>
                     <div className="flex gap-4 mb-8">
                         <Input
