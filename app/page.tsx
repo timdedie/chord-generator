@@ -643,10 +643,11 @@ export default function Home() {
                 )}
             </AnimatePresence>
 
-            <main
-                className={`flex flex-col items-center transition-all duration-500 ${
-                    hasChords ? "pt-40" : "justify-center h-screen"
-                }`}
+            <motion.main
+                className="flex flex-col items-center w-full"
+                initial={{ paddingTop: "45vh" }}
+                animate={{ paddingTop: hasChords ? "20vh" : "35vh" }}
+                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
             >
                 <div className="w-full max-w-3xl">
                     <p className="text-sm text-gray-600 mb-1">
@@ -717,7 +718,8 @@ export default function Home() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </main>
+            </motion.main>
+
 
             {/* React-piano interface */}
             <div className="fixed bottom-0 left-0 right-0 flex justify-center bg-gray-50 p-4">
