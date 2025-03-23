@@ -629,7 +629,7 @@ export default function Home() {
                 </AnimatePresence>
             </main>
 
-            {/* React-Piano integration */}
+            {/* React-piano integration */}
             <div className="fixed bottom-0 left-0 right-0 flex justify-center bg-gray-50 p-4">
                 <div className="max-w-[600px] w-full">
                     <Piano
