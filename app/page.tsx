@@ -337,11 +337,22 @@ export default function Home() {
     const playChord = useCallback(async (chord: string) => {
         if (!chord) return;
         await Tone.start();
-        const notes = Chord.get(chord).notes.map((n) => (/\d/.test(n) ? n : `${n}4`));
-        setActiveNotes(notes);
-        pianoRef.current?.triggerAttackRelease(notes, "2n");
+
+        // Get chord notes, trim and append octave if needed
+        const chordNotes = Chord.get(chord).notes.map((n) => {
+            const trimmed = n.trim();
+            return /\d/.test(trimmed) ? trimmed : `${trimmed}4`;
+        });
+
+        // If chordNotes is empty or contains invalid values, skip playing
+        if (!chordNotes.length || chordNotes.some(note => !note)) return;
+
+        setActiveNotes(chordNotes);
+        pianoRef.current?.triggerAttackRelease(chordNotes, "2n");
+
         setTimeout(() => setActiveNotes([]), 500);
     }, []);
+
 
     // Create a MIDI file URL from the current chord progression
     const makeMidiUrl = useCallback((values: string[]): string => {
@@ -721,7 +732,9 @@ export default function Home() {
                             const note = MidiNumbers.getAttributes(midiNumber).note;
                             pianoRef.current?.triggerRelease(note);
                         }}
-                        activeNotes={activeNotes.filter(note => note).map((note) => MidiNumbers.fromNote(note))}
+                        activeNotes={activeNotes
+                            .filter(note => note && note.trim() !== "")
+                            .map(note => MidiNumbers.fromNote(note.trim()))}
                         width={600}
                         renderNoteLabel={() => null}
                     />
