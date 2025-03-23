@@ -15,6 +15,10 @@ import {
     Plus,
     RefreshCw,
     X,
+    Info,
+    PlayCircle,
+    Download,
+    Piano as PianoIcon,
 } from "lucide-react";
 import * as Tone from "tone";
 import { Chord } from "tonal";
@@ -22,7 +26,13 @@ import MidiWriter from "midi-writer-js";
 import { motion, AnimatePresence } from "framer-motion";
 import { Piano, KeyboardShortcuts, MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
-
+import {
+    Dialog,
+    DialogContent, DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import {
     DndContext,
     closestCenter,
@@ -515,6 +525,103 @@ export default function Home() {
                 <h1 className="text-4xl font-bold">Chord Generator</h1>
             </header>
 
+            <div className="absolute top-0 right-0 p-8">
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="ghost" size="icon" aria-label="How it works">
+                            <Info className="h-6 w-6" />
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl p-8">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-bold mb-4">How It Works</DialogTitle>
+                        </DialogHeader>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            {/* Generating Progressions */}
+                            <div>
+                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                                    <RefreshCw className="h-5 w-5" /> Generating Progressions
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    Enter a description (e.g., "happy jazz in C major") and click refresh to generate a new progression.
+                                </p>
+                            </div>
+
+                            {/* Playing Chords */}
+                            <div>
+                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                                    <PlayCircle className="h-5 w-5" /> Playing Chords
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    Click a chord to hear it played on the piano.
+                                </p>
+                            </div>
+
+                            {/* Locking Chords */}
+                            <div>
+                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                                    <Lock className="h-5 w-5" /> Locking Chords
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    Hover and lock a chord to keep it during generation.
+                                </p>
+                            </div>
+
+                            {/* Rearranging Chords */}
+                            <div>
+                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                                    <MoveHorizontal className="h-5 w-5" /> Rearranging Chords
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    Hover to see the move icon, then drag to rearrange.
+                                </p>
+                            </div>
+
+                            {/* Adding Chords */}
+                            <div>
+                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                                    <Plus className="h-5 w-5" /> Adding Chords
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    Hover between chords and click plus to add a new one.
+                                </p>
+                            </div>
+
+                            {/* Removing Chords */}
+                            <div>
+                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                                    <X className="h-5 w-5" /> Removing Chords
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    Hover and click X to remove a chord.
+                                </p>
+                            </div>
+
+                            {/* Downloading MIDI */}
+                            <div>
+                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                                    <Download className="h-5 w-5" /> Downloading MIDI
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    Download your progression as a MIDI file.
+                                </p>
+                            </div>
+
+                            {/* Piano Interface */}
+                            <div>
+                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
+                                    <PianoIcon className="h-5 w-5" /> Piano Interface
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                    Highlights notes as chords play; you can play manually too.
+                                </p>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
             {/* Fixed position Alert container */}
             <AnimatePresence>
                 {error && (
@@ -605,9 +712,10 @@ export default function Home() {
                             <Button
                                 asChild
                                 disabled={!midiUrl}
-                                className="transition transform hover:scale-105"
+                                className="transition transform hover:scale-105 gap-2"
                             >
-                                <a href={midiUrl} download="chord_progression.mid">
+                                <a href={midiUrl} download="chord_progression.mid" className="flex items-center">
+                                    <Download className="h-5 w-5" />
                                     Download MIDI
                                 </a>
                             </Button>
