@@ -38,9 +38,12 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
-// Icons
+// Lucide Icons
 import {
+    Sun,
+    Moon,
     AlertCircle,
     Lock,
     Unlock,
@@ -51,7 +54,7 @@ import {
     Info,
     PlayCircle,
     Download,
-    Piano as PianoIcon,
+    Piano as PianoIcon
 } from "lucide-react";
 
 import exampleInputs from "@/public/example-inputs.json";
@@ -93,14 +96,14 @@ function SortableChord({ id, item, onPlay, toggleLock, onRemove, loading }: Sort
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
             style={{ transform: CSS.Transform.toString(transform), transition }}
-            className="relative group cursor-pointer flex items-center justify-center w-48 h-48 border border-gray-300 bg-gray-50"
+            className="relative group cursor-pointer flex items-center justify-center w-48 h-48 border border-gray-300 bg-gray-50 dark:bg-black dark:border-gray-700"
         >
             <motion.span
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
-                className="text-2xl font-bold"
+                className="text-2xl font-bold text-gray-900 dark:text-gray-100"
             >
                 {item.chord}
             </motion.span>
@@ -171,6 +174,16 @@ function SortableChord({ id, item, onPlay, toggleLock, onRemove, loading }: Sort
 }
 
 export default function Home() {
+    // Dark mode state and effect
+    const [darkMode, setDarkMode] = useState(false);
+    useEffect(() => {
+        if (darkMode) {
+            document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
+        }
+    }, [darkMode]);
+
     const [prompt, setPrompt] = useState<string>("");
     const [chords, setChords] = useState<ChordItem[]>([]);
     const [fullLoading, setFullLoading] = useState<boolean>(false);
@@ -243,7 +256,7 @@ export default function Home() {
         );
     }, []);
 
-    // Define generateChords before any function that uses it.
+    // Generate chords based on the prompt
     const generateChords = useCallback(
         async (customPrompt?: string, attempt: number = 0) => {
             const MAX_ATTEMPTS = 3;
@@ -279,7 +292,7 @@ export default function Home() {
                     .filter((c: string) => c);
 
                 let valid = true;
-                // Validate each chord. If a chord is invalid, mark the whole progression as invalid.
+                // Validate each chord.
                 const newChords: (ChordItem | null)[] = cleaned.map((c: string) => {
                     const chordData = Chord.get(c);
                     if (!chordData || !chordData.notes || chordData.notes.length === 0) {
@@ -293,7 +306,6 @@ export default function Home() {
                     };
                 });
 
-                // If any chord is invalid, retry up to MAX_ATTEMPTS.
                 if (!valid) {
                     if (attempt < MAX_ATTEMPTS) {
                         console.warn("Invalid chord detected, reattempting generation", attempt + 1);
@@ -305,7 +317,7 @@ export default function Home() {
                     }
                 }
 
-                // If chords already exist, preserve locked chords.
+                // Preserve locked chords if they already exist.
                 let finalChords = newChords as ChordItem[];
                 if (chords.length > 0) {
                     finalChords = finalChords.map((newChord: ChordItem, idx: number): ChordItem => {
@@ -324,7 +336,6 @@ export default function Home() {
         [prompt, chords]
     );
 
-    // Now handleExampleClick can safely use generateChords.
     const handleExampleClick = useCallback(
         (example: string) => {
             setPrompt(example);
@@ -333,33 +344,23 @@ export default function Home() {
         [generateChords]
     );
 
-    // Play a chord using Tone.js and update active notes for the piano display
     const playChord = useCallback(async (chord: string) => {
         if (!chord) return;
         await Tone.start();
-
-        // Get chord notes, trim and append octave if needed
         const chordNotes = Chord.get(chord).notes.map((n) => {
             const trimmed = n.trim();
             return /\d/.test(trimmed) ? trimmed : `${trimmed}4`;
         });
-
-        // If chordNotes is empty or contains invalid values, skip playing
         if (!chordNotes.length || chordNotes.some(note => !note)) return;
-
         setActiveNotes(chordNotes);
         pianoRef.current?.triggerAttackRelease(chordNotes, "2n");
-
         setTimeout(() => setActiveNotes([]), 500);
     }, []);
 
-
-    // Create a MIDI file URL from the current chord progression
     const makeMidiUrl = useCallback((values: string[]): string => {
         const track = new MidiWriter.Track();
         track.setTimeSignature(4, 4, 24, 8);
         track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 1 }));
-
         values.forEach((ch) => {
             const notes = Chord.get(ch).notes.map((n) => (/\d/.test(n) ? n : `${n}4`));
             track.addEvent(
@@ -369,13 +370,11 @@ export default function Home() {
                 })
             );
         });
-
         return URL.createObjectURL(
             new Blob([new MidiWriter.Writer(track).buildFile()], { type: "audio/midi" })
         );
     }, []);
 
-    // Update the MIDI URL whenever the chord progression changes
     useEffect(() => {
         if (!chords.length) {
             setMidiUrl("");
@@ -386,7 +385,6 @@ export default function Home() {
         return () => URL.revokeObjectURL(url);
     }, [chords, makeMidiUrl]);
 
-    // Automatically clear error messages after 3 seconds
     useEffect(() => {
         if (error) {
             const timer = setTimeout(() => setError(""), 3000);
@@ -394,12 +392,10 @@ export default function Home() {
         }
     }, [error]);
 
-    // Handle Enter key to trigger chord generation
     const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") generateChords();
     }, [generateChords]);
 
-    // Handle drag end event for reordering chords
     const handleDragEnd = useCallback(
         ({ active, over }: DragEndEvent) => {
             if (!over || active.id === over.id) return;
@@ -412,21 +408,17 @@ export default function Home() {
         []
     );
 
-    // Add a new chord at a specific position in the progression
     const addChordAt = useCallback(
         async (position: number) => {
             if (chords.length >= 8) return;
-
             const newChordId = generateUniqueId();
             const placeholderChord: ChordItem = { id: newChordId, chord: "", locked: false };
-
             setChords((prev) => [
                 ...prev.slice(0, position),
                 placeholderChord,
                 ...prev.slice(position),
             ]);
             setLoadingChordId(newChordId);
-
             try {
                 const res = await fetch("/api/generate", {
                     method: "POST",
@@ -458,7 +450,6 @@ export default function Home() {
         [chords, prompt]
     );
 
-    // Spacer component between chords that shows an add button on hover
     const Spacer = useCallback(({ position }: { position: number }) => {
         const [hover, setHover] = useState(false);
         return (
@@ -474,7 +465,7 @@ export default function Home() {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.8 }}
                             transition={{ duration: 0.2 }}
-                            className="absolute inset-0 m-auto w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
+                            className="absolute inset-0 m-auto w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full"
                             onClick={() => addChordAt(position)}
                         >
                             <Plus className="h-5 w-5" />
@@ -485,7 +476,6 @@ export default function Home() {
         );
     }, [chords.length, addChordAt]);
 
-    // Build the chord row with spacers and sortable chord cards
     let chordRow: React.ReactNode = null;
     if (chords.length > 0) {
         const elements: React.ReactNode[] = chords.flatMap((chord, index) => [
@@ -508,7 +498,6 @@ export default function Home() {
             </motion.div>,
         ]);
         elements.push(<Spacer key={`spacer-${chords.length}`} position={chords.length} />);
-
         chordRow = (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={chords.map((ch) => ch.id)} strategy={horizontalListSortingStrategy}>
@@ -538,110 +527,105 @@ export default function Home() {
     });
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
             <header className="absolute top-0 left-0 p-8">
-                <h1 className="text-4xl font-bold">Chord Generator</h1>
+                <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">Chord Generator</h1>
             </header>
 
-            <div className="absolute top-0 right-0 p-8">
+            <div className="absolute top-0 right-0 p-8 flex items-center gap-4">
+                {/* Dark mode toggle */}
+                <div className="flex items-center gap-2">
+                    <Sun className="h-6 w-6 text-yellow-500" />
+                    <Switch
+                        checked={darkMode}
+                        onCheckedChange={(checked: boolean) => setDarkMode(checked)}
+                    />
+                    <Moon className="h-6 w-6 text-gray-300" />
+                </div>
                 <Dialog>
                     <DialogTrigger asChild>
                         <Button variant="ghost" size="icon" aria-label="How it works">
                             <Info className="h-6 w-6" />
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-3xl p-8">
+                    {/* Updated DialogContent: white background in light mode and black in dark mode with full contrast text */}
+                    <DialogContent className="max-w-3xl p-8 bg-white dark:bg-black">
                         <DialogHeader>
-                            <DialogTitle className="text-2xl font-bold mb-4">How It Works</DialogTitle>
+                            <DialogTitle className="text-2xl font-bold mb-4 text-black dark:text-white">
+                                How It Works
+                            </DialogTitle>
                         </DialogHeader>
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
-                                    <RefreshCw className="h-5 w-5" /> Generating Progressions
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    Enter a description (e.g., "happy jazz in C major") and click refresh to generate a new progression.
-                                </p>
+                        <DialogDescription>
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <RefreshCw className="h-5 w-5" /> Generating Progressions
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Enter a description (e.g., "happy jazz in C major") and click refresh to generate a new progression.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <PlayCircle className="h-5 w-5" /> Playing Chords
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Click a chord to hear it played on the piano.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <Lock className="h-5 w-5" /> Locking Chords
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Hover and lock a chord to keep it during generation.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <MoveHorizontal className="h-5 w-5" /> Rearranging Chords
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Hover to see the move icon, then drag to rearrange.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <Plus className="h-5 w-5" /> Adding Chords
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Hover between chords and click plus to add a new one.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <X className="h-5 w-5" /> Removing Chords
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Hover and click X to remove a chord.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <Download className="h-5 w-5" /> Downloading MIDI
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Download your progression as a MIDI file.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <PianoIcon className="h-5 w-5" /> Piano Interface
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Highlights notes as chords play; you can also play manually.
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
-                                    <PlayCircle className="h-5 w-5" /> Playing Chords
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    Click a chord to hear it played on the piano.
-                                </p>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
-                                    <Lock className="h-5 w-5" /> Locking Chords
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    Hover and lock a chord to keep it during generation.
-                                </p>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
-                                    <MoveHorizontal className="h-5 w-5" /> Rearranging Chords
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    Hover to see the move icon, then drag to rearrange.
-                                </p>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
-                                    <Plus className="h-5 w-5" /> Adding Chords
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    Hover between chords and click plus to add a new one.
-                                </p>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
-                                    <X className="h-5 w-5" /> Removing Chords
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    Hover and click X to remove a chord.
-                                </p>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
-                                    <Download className="h-5 w-5" /> Downloading MIDI
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    Download your progression as a MIDI file.
-                                </p>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
-                                    <PianoIcon className="h-5 w-5" /> Piano Interface
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                    Highlights notes as chords play; you can play manually too.
-                                </p>
-                            </div>
-                        </div>
+                        </DialogDescription>
                     </DialogContent>
                 </Dialog>
             </div>
-
-            <AnimatePresence>
-                {error && (
-                    <motion.div
-                        key="alert"
-                        initial={{ x: "100%", opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: "100%", opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="fixed top-20 right-4 z-50"
-                    >
-                        <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Error</AlertTitle>
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             <motion.main
                 className="flex flex-col items-center w-full"
@@ -650,7 +634,7 @@ export default function Home() {
                 transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
             >
                 <div className="w-full max-w-3xl">
-                    <p className="text-sm text-gray-600 mb-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
                         What chord progression do you want to generate?
                     </p>
                     <div className="flex gap-4 mb-8">
@@ -720,9 +704,8 @@ export default function Home() {
                 </AnimatePresence>
             </motion.main>
 
-
-            {/* React-piano interface */}
-            <div className="fixed bottom-0 left-0 right-0 flex justify-center bg-gray-50 p-4">
+            {/* Piano fixed at the bottom */}
+            <div className="fixed bottom-0 left-0 right-0 flex justify-center p-4">
                 <div className="max-w-[600px] w-full">
                     <Piano
                         noteRange={{ first: firstNote, last: lastNote }}
