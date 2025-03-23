@@ -721,7 +721,7 @@ export default function Home() {
                             const note = MidiNumbers.getAttributes(midiNumber).note;
                             pianoRef.current?.triggerRelease(note);
                         }}
-                        activeNotes={activeNotes.map((note) => MidiNumbers.fromNote(note))}
+                        activeNotes={activeNotes.filter(note => note).map((note) => MidiNumbers.fromNote(note))}
                         width={600}
                         renderNoteLabel={() => null}
                     />
