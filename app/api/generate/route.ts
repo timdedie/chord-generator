@@ -1,85 +1,127 @@
 import OpenAI from 'openai';
 
+interface ChordObject {
+    chord: string;
+    locked: boolean;
+}
+
+interface RequestBody {
+    prompt?: string;
+    existingChords?: ChordObject[];
+    addChordPosition?: number;
+}
+
+interface ApiError extends Error {
+    status?: number;
+}
+
 const openai = new OpenAI({
     baseURL: 'https://api.deepseek.com',
     apiKey: process.env.DEEPSEEK_API_KEY as string,
 });
 
+const MODEL_SELECTION = {
+    DEFAULT: 'deepseek-chat',
+    ADVANCED: 'deepseek-reasoner'
+};
+
+const CHORD_FORMATTING_RULES = `
+Chord formatting rules:
+• Root = uppercase A–G (use # or b for accidentals)
+• Major triad = just the root (C, F)
+• Minor = “m” (Am, Dm7)
+• Dominant seventh = “7” (G7)
+• Major seventh = “maj7” (no △)
+• Minor seventh = “m7”
+• Suspended = “sus2” or “sus4”
+• Extensions/alterations allowed: 9, add9, #5, b9, #11, 13, etc.
+`;
+
+function createResponse(data: any, status: number = 200): Response {
+    return new Response(JSON.stringify(data), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+    });
+}
+
+function createProgressionString(chords: ChordObject[]): string {
+    return chords
+        .map((chord) => chord.locked ? `${chord.chord} (locked)` : chord.chord)
+        .join(' - ');
+}
+
+async function createChatCompletion(userMessage: string): Promise<string> {
+    console.log('User message:', userMessage);
+    const completion = await openai.chat.completions.create({
+        model: MODEL_SELECTION.DEFAULT,
+        messages: [
+            { role: 'system', content: 'You are a chord generator.' },
+            { role: 'user', content: userMessage },
+        ],
+    });
+
+    const message = completion.choices[0]?.message?.content?.trim();
+    if (!message) throw new Error('No valid response from API');
+    console.log('API response:', message);
+    return message;
+}
+
 export async function POST(request: Request): Promise<Response> {
-    const { prompt, existingChords, addChordPosition } = await request.json();
-
-    // --- Handle Add Chord Case ---
-    if (typeof addChordPosition !== "undefined") {
-        // Create a progression string from the current chords
-        const progression = Array.isArray(existingChords) && existingChords.length > 0
-            ? existingChords
-                .map((chordObj: { chord: string; locked: boolean }) =>
-                    chordObj.locked ? `${chordObj.chord} (locked)` : chordObj.chord
-                )
-                .join(" - ")
-            : "";
-
-        const userMessage = progression
-            ? `I currently have the following chord progression: ${progression}. I want to insert a new chord at position ${addChordPosition}. Please provide a chord that fits well in this position, keeping locked chords unchanged. Respond only with the chord name.`
-            : `Generate a chord for a new progression. Respond only with the chord name.`;
-
-        console.log("Message sent to API for adding chord:", userMessage);
-
-        try {
-            const completion = await openai.chat.completions.create({
-                model: 'deepseek-chat',
-                messages: [
-                    { role: 'system', content: 'You are a chord generator.' },
-                    { role: 'user', content: userMessage },
-                ],
-            });
-
-            const message = completion.choices[0].message;
-            if (!message || !message.content) {
-                throw new Error("Invalid API response: missing message content");
-            }
-            const newChord = message.content.trim();
-            console.log("Response from API (new chord):", newChord);
-
-            return new Response(JSON.stringify({ chord: newChord }), { status: 200 });
-        } catch (error: any) {
-            console.error("Error during API call:", error.message);
-            return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-        }
-    }
-
-    // --- Original Generation Logic ---
-    if (!prompt) {
-        return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400 });
-    }
-
-    let userMessage: string;
-    if (Array.isArray(existingChords) && existingChords.length > 0) {
-        const progression = existingChords
-            .map((chordObj: { chord: string; locked: boolean }) =>
-                chordObj.locked ? `${chordObj.chord} (locked)` : chordObj.chord
-            )
-            .join(" - ");
-        userMessage = `I currently have the following chord progression: ${progression}. Replace only the chords that are not locked with new suggestions and keep the locked chords unchanged. For the unlocked chords use new chords if possible. Respond only with the updated chord progression in the format C‑G‑Am‑F, without any extra text.`;
-    } else {
-        userMessage = `Generate a chord progression with 4 chords for "${prompt}". Respond only with the chord progression in the format C‑G‑Am‑F, without any extra text.`;
-    }
-
-    console.log("Message sent to API:", userMessage);
-
     try {
-        const completion = await openai.chat.completions.create({
-            model: 'deepseek-chat',
-            messages: [
-                { role: 'system', content: 'You are a chord generator.' },
-                { role: 'user', content: userMessage },
-            ],
-        });
-        const chords = completion.choices[0].message.content;
-        console.log("Response from API:", chords);
-        return new Response(JSON.stringify({ chords }), { status: 200 });
-    } catch (error: any) {
-        console.error("Error during API call:", error.message);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        const { prompt, existingChords = [], addChordPosition } = await request.json() as RequestBody;
+
+        // Handle Add Chord Case
+        if (typeof addChordPosition !== 'undefined') {
+            const hasExistingChords = existingChords.length > 0;
+            const progression = createProgressionString(existingChords);
+
+            const messageParts = [];
+            if (hasExistingChords) {
+                messageParts.push(`I currently have: ${progression}. Insert a new chord at position ${addChordPosition}.`);
+                messageParts.push('Keep locked chords unchanged.');
+            } else {
+                messageParts.push('Generate a single chord for a new progression.');
+            }
+
+            if (prompt) {
+                messageParts.push(`The tone must exactly match: "${prompt}".`);
+            } else if (hasExistingChords) {
+                messageParts.push('The new chord should maintain musical consistency with the existing progression.');
+            }
+
+            messageParts.push(`Respond ONLY with the chord name. ${CHORD_FORMATTING_RULES}`);
+
+            const userMessage = messageParts.join(' ');
+            console.log(userMessage);
+            const newChord = await createChatCompletion(userMessage);
+            console.log('Received new chord:', newChord);
+            return createResponse({ chord: newChord });
+        }
+
+        // Handle Original Generation/Replacement
+        if (!prompt) throw Object.assign(new Error('Prompt is required for generation'), { status: 400 });
+
+        const hasExistingChords = existingChords.length > 0;
+        const progression = createProgressionString(existingChords);
+
+        const userMessage = hasExistingChords
+            ? `Current progression: ${progression}. Regenerate ONLY unlocked chords with these requirements:
+            1. Strictly match tone: "${prompt}"
+            2. New chords must be different from original unlocked chords
+            3. Maintain musical logic with locked chords
+            Respond ONLY with updated progression using hyphens. ${CHORD_FORMATTING_RULES}`
+                        : `Generate a 4-chord progression for: "${prompt}". 
+            Respond ONLY with 4 chords separated by hyphens. ${CHORD_FORMATTING_RULES}`;
+        const chords = await createChatCompletion(userMessage);
+        console.log('Received new progression:', chords);
+        return createResponse({ chords });
+
+    } catch (error: unknown) {
+        console.error('API Error:', error);
+        const err = error as ApiError;
+        return createResponse(
+            { error: err.message || 'Internal server error' },
+            err.status || 500
+        );
     }
 }
