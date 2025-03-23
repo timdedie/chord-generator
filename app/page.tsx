@@ -555,7 +555,7 @@ export default function Home() {
                                 How It Works
                             </DialogTitle>
                         </DialogHeader>
-                        <DialogDescription>
+                        <DialogDescription asChild>
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
