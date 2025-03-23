@@ -1,39 +1,13 @@
 "use client";
 
-import { useEffect, useState, KeyboardEvent, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import exampleInputs from "@/public/example-inputs.json";
-import {
-    AlertCircle,
-    Lock,
-    Unlock,
-    MoveHorizontal,
-    Plus,
-    RefreshCw,
-    X,
-    Info,
-    PlayCircle,
-    Download,
-    Piano as PianoIcon,
-} from "lucide-react";
-import * as Tone from "tone";
-import { Chord } from "tonal";
-import MidiWriter from "midi-writer-js";
+import React, { useEffect, useState, useCallback, KeyboardEvent, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Piano, KeyboardShortcuts, MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import * as Tone from "tone";
+import { Chord } from "tonal";
+import MidiWriter from "midi-writer-js";
+
 import {
     DndContext,
     closestCenter,
@@ -49,20 +23,46 @@ import {
     horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import React from "react";
 
-/**
- * Define the shape of a chord item in your progression.
- */
+// UI Components
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+
+// Icons
+import {
+    AlertCircle,
+    Lock,
+    Unlock,
+    MoveHorizontal,
+    Plus,
+    RefreshCw,
+    X,
+    Info,
+    PlayCircle,
+    Download,
+    Piano as PianoIcon,
+} from "lucide-react";
+
+import exampleInputs from "@/public/example-inputs.json";
+
+// Type definitions
 interface ChordItem {
     id: string;
     chord: string;
     locked: boolean;
 }
 
-/**
- * SortableChord component props.
- */
 interface SortableChordProps {
     id: string;
     item: ChordItem;
@@ -72,32 +72,18 @@ interface SortableChordProps {
     loading: boolean;
 }
 
-/**
- * SkeletonCard renders a Skeleton matching the card's dimensions.
- */
+// Helper: Generate a unique ID for each chord.
+const generateUniqueId = () => `${Date.now()}-${Math.random()}`;
+
 function SkeletonCard() {
     return <Skeleton className="w-48 h-48 rounded-xl" />;
 }
 
-/**
- * SortableChord returns only a SkeletonCard when a chord (that is not locked) is loading.
- */
-function SortableChord({
-                           id,
-                           item,
-                           onPlay,
-                           toggleLock,
-                           onRemove,
-                           loading,
-                       }: SortableChordProps) {
-    if (loading) {
-        return <SkeletonCard />;
-    }
-
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-        id,
-    });
+function SortableChord({ id, item, onPlay, toggleLock, onRemove, loading }: SortableChordProps) {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
     const [hover, setHover] = useState(false);
+
+    if (loading) return <SkeletonCard />;
 
     return (
         <Card
@@ -119,7 +105,7 @@ function SortableChord({
                 {item.chord}
             </motion.span>
 
-            {/* Remove chord (X icon) */}
+            {/* Delete button */}
             <AnimatePresence>
                 {hover && (
                     <motion.div
@@ -159,7 +145,7 @@ function SortableChord({
                 )}
             </AnimatePresence>
 
-            {/* Lock/unlock */}
+            {/* Lock/unlock control */}
             <AnimatePresence>
                 {(item.locked || hover) && (
                     <motion.div
@@ -176,11 +162,7 @@ function SortableChord({
                         whileTap={{ scale: 0.9 }}
                         className="absolute bottom-2 left-1/2 -translate-x-1/2 cursor-pointer"
                     >
-                        {item.locked ? (
-                            <Lock className="h-6 w-6" />
-                        ) : (
-                            <Unlock className="h-6 w-6" />
-                        )}
+                        {item.locked ? <Lock className="h-6 w-6" /> : <Unlock className="h-6 w-6" />}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -199,94 +181,15 @@ export default function Home() {
     const [examples, setExamples] = useState<string[]>([]);
     const [randomExamples, setRandomExamples] = useState<string[]>([]);
 
-    // Always call sensor hooks unconditionally
+    // Initialize DnD sensors and piano sampler ref
     const sensors = useSensors(useSensor(PointerSensor));
+    const pianoRef = useRef<Tone.Sampler | null>(null);
 
-    // On mount, load the JSON examples & pick 5 random ones.
+    // On mount, load examples and initialize piano sampler
     useEffect(() => {
         setExamples(exampleInputs as string[]);
         pickRandomExamples(exampleInputs as string[]);
     }, []);
-
-    function pickRandomExamples(lines: string[]) {
-        const shuffled = [...lines].sort(() => 0.5 - Math.random());
-        setRandomExamples(shuffled.slice(0, 5));
-    }
-
-    function toggleLock(id: string) {
-        setChords((prev) =>
-            prev.map((ch) => (ch.id === id ? { ...ch, locked: !ch.locked } : ch))
-        );
-    }
-
-    function handleExampleClick(example: string) {
-        setPrompt(example);
-        generateChords(example);
-    }
-
-    async function generateChords(customPrompt?: string) {
-        const usedPrompt = customPrompt ?? prompt;
-        if (!usedPrompt.trim()) {
-            setError("Please describe your chord progression before generating.");
-            return;
-        }
-        setError("");
-        setFullLoading(true);
-
-        try {
-            const res = await fetch("/api/generate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: usedPrompt, existingChords: chords }),
-            });
-            const data = await res.json();
-            console.log("API response:", data);
-
-            if (data.error) {
-                setError(data.error);
-                setFullLoading(false);
-                return;
-            }
-
-            // Clean up the returned chord progression
-            const cleaned = data.chords
-                .replace(/^chords:\s*['"]?/, "")
-                .replace(/['"]?$/, "")
-                .trim()
-                .replace(/△/g, "")
-                .split(/[-‐‑–—]/)
-                .map((c: string) => c.trim())
-                .filter((c: string) => c);
-
-            // Build new chords
-            let newChords: ChordItem[] = cleaned.map((c: string) => ({
-                id: `${Date.now()}-${Math.random()}`,
-                chord: c,
-                locked: false,
-            }));
-
-            // If we already have chords, preserve any that are locked
-            if (chords.length > 0) {
-                newChords = newChords.map((newChord: ChordItem, idx: number): ChordItem => {
-                    const oldChord = chords[idx];
-                    if (oldChord && oldChord.locked) {
-                        // Keep locked chord exactly
-                        return oldChord;
-                    }
-                    // Otherwise, replace with the newly generated chord
-                    return newChord;
-                });
-            }
-
-            setChords(newChords);
-        } catch (e) {
-            console.error("Generation error:", e);
-            setError("Error generating chords. Please try again.");
-        }
-        setFullLoading(false);
-    }
-
-    const pianoRef = useRef<Tone.Sampler | null>(null);
 
     useEffect(() => {
         pianoRef.current = new Tone.Sampler({
@@ -327,27 +230,127 @@ export default function Home() {
         }).toDestination();
     }, []);
 
-    async function playChord(chord: string) {
+    // Helper: pick 5 random examples
+    const pickRandomExamples = useCallback((lines: string[]) => {
+        const shuffled = [...lines].sort(() => 0.5 - Math.random());
+        setRandomExamples(shuffled.slice(0, 5));
+    }, []);
+
+    // Toggle lock on a chord
+    const toggleLock = useCallback((id: string) => {
+        setChords((prev) =>
+            prev.map((ch) => (ch.id === id ? { ...ch, locked: !ch.locked } : ch))
+        );
+    }, []);
+
+    // Define generateChords before any function that uses it.
+    const generateChords = useCallback(
+        async (customPrompt?: string, attempt: number = 0) => {
+            const MAX_ATTEMPTS = 3;
+            const usedPrompt = customPrompt ?? prompt;
+            if (!usedPrompt.trim()) {
+                setError("Please describe your chord progression before generating.");
+                return;
+            }
+            setError("");
+            setFullLoading(true);
+
+            try {
+                const res = await fetch("/api/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt: usedPrompt, existingChords: chords }),
+                });
+                const data = await res.json();
+                if (data.error) {
+                    setError(data.error);
+                    setFullLoading(false);
+                    return;
+                }
+
+                // Clean and split the API response.
+                const cleaned = data.chords
+                    .replace(/^chords:\s*['"]?/, "")
+                    .replace(/['"]?$/, "")
+                    .trim()
+                    .replace(/△/g, "")
+                    .split(/[-‐‑–—]/)
+                    .map((c: string) => c.trim())
+                    .filter((c: string) => c);
+
+                let valid = true;
+                // Validate each chord. If a chord is invalid, mark the whole progression as invalid.
+                const newChords: (ChordItem | null)[] = cleaned.map((c: string) => {
+                    const chordData = Chord.get(c);
+                    if (!chordData || !chordData.notes || chordData.notes.length === 0) {
+                        valid = false;
+                        return null;
+                    }
+                    return {
+                        id: generateUniqueId(),
+                        chord: c,
+                        locked: false,
+                    };
+                });
+
+                // If any chord is invalid, retry up to MAX_ATTEMPTS.
+                if (!valid) {
+                    if (attempt < MAX_ATTEMPTS) {
+                        console.warn("Invalid chord detected, reattempting generation", attempt + 1);
+                        return generateChords(customPrompt, attempt + 1);
+                    } else {
+                        setError("Could not generate valid chords after several attempts.");
+                        setFullLoading(false);
+                        return;
+                    }
+                }
+
+                // If chords already exist, preserve locked chords.
+                let finalChords = newChords as ChordItem[];
+                if (chords.length > 0) {
+                    finalChords = finalChords.map((newChord: ChordItem, idx: number): ChordItem => {
+                        const oldChord = chords[idx];
+                        return oldChord && oldChord.locked ? oldChord : newChord;
+                    });
+                }
+
+                setChords(finalChords);
+            } catch (e) {
+                console.error("Generation error:", e);
+                setError("Error generating chords. Please try again.");
+            }
+            setFullLoading(false);
+        },
+        [prompt, chords]
+    );
+
+    // Now handleExampleClick can safely use generateChords.
+    const handleExampleClick = useCallback(
+        (example: string) => {
+            setPrompt(example);
+            generateChords(example);
+        },
+        [generateChords]
+    );
+
+    // Play a chord using Tone.js and update active notes for the piano display
+    const playChord = useCallback(async (chord: string) => {
         if (!chord) return;
         await Tone.start();
-
-        // Force notes into at least the 4th octave if no digit is present
         const notes = Chord.get(chord).notes.map((n) => (/\d/.test(n) ? n : `${n}4`));
         setActiveNotes(notes);
-
         pianoRef.current?.triggerAttackRelease(notes, "2n");
         setTimeout(() => setActiveNotes([]), 500);
-    }
+    }, []);
 
-    function makeMidiUrl(values: string[]): string {
+    // Create a MIDI file URL from the current chord progression
+    const makeMidiUrl = useCallback((values: string[]): string => {
         const track = new MidiWriter.Track();
         track.setTimeSignature(4, 4, 24, 8);
         track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 1 }));
 
         values.forEach((ch) => {
-            const notes = Chord.get(ch).notes.map((n) =>
-                /\d/.test(n) ? n : `${n}4`
-            );
+            const notes = Chord.get(ch).notes.map((n) => (/\d/.test(n) ? n : `${n}4`));
             track.addEvent(
                 new MidiWriter.NoteEvent({
                     pitch: notes,
@@ -357,13 +360,11 @@ export default function Home() {
         });
 
         return URL.createObjectURL(
-            new Blob([new MidiWriter.Writer(track).buildFile()], {
-                type: "audio/midi",
-            })
+            new Blob([new MidiWriter.Writer(track).buildFile()], { type: "audio/midi" })
         );
-    }
+    }, []);
 
-    // Update MIDI whenever chords change
+    // Update the MIDI URL whenever the chord progression changes
     useEffect(() => {
         if (!chords.length) {
             setMidiUrl("");
@@ -372,9 +373,9 @@ export default function Home() {
         const url = makeMidiUrl(chords.map((c) => c.chord));
         setMidiUrl(url);
         return () => URL.revokeObjectURL(url);
-    }, [chords]);
+    }, [chords, makeMidiUrl]);
 
-    // Automatically clear error after 3 seconds
+    // Automatically clear error messages after 3 seconds
     useEffect(() => {
         if (error) {
             const timer = setTimeout(() => setError(""), 3000);
@@ -382,28 +383,31 @@ export default function Home() {
         }
     }, [error]);
 
-    // Build chord row
-    let chordRow: React.ReactNode = null;
+    // Handle Enter key to trigger chord generation
+    const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") generateChords();
+    }, [generateChords]);
 
-    if (chords.length > 0) {
-        const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    // Handle drag end event for reordering chords
+    const handleDragEnd = useCallback(
+        ({ active, over }: DragEndEvent) => {
             if (!over || active.id === over.id) return;
             setChords((items) => {
                 const oldIndex = items.findIndex((i) => i.id === active.id);
                 const newIndex = items.findIndex((i) => i.id === over.id);
                 return arrayMove(items, oldIndex, newIndex);
             });
-        };
+        },
+        []
+    );
 
-        async function addChordAt(position: number) {
+    // Add a new chord at a specific position in the progression
+    const addChordAt = useCallback(
+        async (position: number) => {
             if (chords.length >= 8) return;
 
-            const newChordId = `${Date.now()}-${Math.random()}`;
-            const placeholderChord: ChordItem = {
-                id: newChordId,
-                chord: "Loading...",
-                locked: false,
-            };
+            const newChordId = generateUniqueId();
+            const placeholderChord: ChordItem = { id: newChordId, chord: "", locked: false };
 
             setChords((prev) => [
                 ...prev.slice(0, position),
@@ -429,12 +433,7 @@ export default function Home() {
                     setLoadingChordId(null);
                     return;
                 }
-
-                const updatedChord: ChordItem = {
-                    id: newChordId,
-                    chord: data.chord.trim(),
-                    locked: false,
-                };
+                const updatedChord: ChordItem = { id: newChordId, chord: data.chord.trim(), locked: false };
                 setChords((prev) =>
                     prev.map((ch) => (ch.id === newChordId ? updatedChord : ch))
                 );
@@ -444,76 +443,64 @@ export default function Home() {
                 setChords((prev) => prev.filter((ch) => ch.id !== newChordId));
             }
             setLoadingChordId(null);
-        }
+        },
+        [chords, prompt]
+    );
 
-        function Spacer({ position }: { position: number }) {
-            const [hover, setHover] = useState(false);
-            return (
-                <div
-                    className="w-[30px] h-48 relative"
-                    onMouseEnter={() => setHover(true)}
-                    onMouseLeave={() => setHover(false)}
-                >
-                    <AnimatePresence>
-                        {hover && chords.length < 8 && (
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                transition={{ duration: 0.2 }}
-                                className="absolute inset-0 m-auto w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
-                                onClick={() => addChordAt(position)}
-                            >
-                                <Plus className="h-5 w-5" />
-                            </motion.button>
-                        )}
-                    </AnimatePresence>
-                </div>
-            );
-        }
-
-        const elements: React.ReactNode[] = [];
-
-        chords.forEach((chord, index) => {
-            elements.push(<Spacer key={`spacer-${index}`} position={index} />);
-            const isLoading = !chord.locked && (fullLoading || loadingChordId === chord.id);
-            elements.push(
-                <motion.div
-                    key={chord.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.2 }}
-                >
-                    <SortableChord
-                        id={chord.id}
-                        item={chord}
-                        onPlay={() => playChord(chord.chord)}
-                        toggleLock={toggleLock}
-                        onRemove={() =>
-                            setChords((prev) => prev.filter((ch) => ch.id !== chord.id))
-                        }
-                        loading={isLoading}
-                    />
-                </motion.div>
-            );
-        });
-
-        // Spacer after the last chord
-        elements.push(
-            <Spacer key={`spacer-${chords.length}`} position={chords.length} />
+    // Spacer component between chords that shows an add button on hover
+    const Spacer = useCallback(({ position }: { position: number }) => {
+        const [hover, setHover] = useState(false);
+        return (
+            <div
+                className="w-[30px] h-48 relative"
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+            >
+                <AnimatePresence>
+                    {hover && chords.length < 8 && (
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute inset-0 m-auto w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full"
+                            onClick={() => addChordAt(position)}
+                        >
+                            <Plus className="h-5 w-5" />
+                        </motion.button>
+                    )}
+                </AnimatePresence>
+            </div>
         );
+    }, [chords.length, addChordAt]);
+
+    // Build the chord row with spacers and sortable chord cards
+    let chordRow: React.ReactNode = null;
+    if (chords.length > 0) {
+        const elements: React.ReactNode[] = chords.flatMap((chord, index) => [
+            <Spacer key={`spacer-${index}`} position={index} />,
+            <motion.div
+                key={chord.id}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+            >
+                <SortableChord
+                    id={chord.id}
+                    item={chord}
+                    onPlay={() => playChord(chord.chord)}
+                    toggleLock={toggleLock}
+                    onRemove={() => setChords((prev) => prev.filter((ch) => ch.id !== chord.id))}
+                    loading={!chord.locked && (fullLoading || loadingChordId === chord.id)}
+                />
+            </motion.div>,
+        ]);
+        elements.push(<Spacer key={`spacer-${chords.length}`} position={chords.length} />);
 
         chordRow = (
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-            >
-                <SortableContext
-                    items={chords.map((ch) => ch.id)}
-                    strategy={horizontalListSortingStrategy}
-                >
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={chords.map((ch) => ch.id)} strategy={horizontalListSortingStrategy}>
                     <div className="flex gap-4 justify-center w-full">
                         <AnimatePresence>{elements}</AnimatePresence>
                     </div>
@@ -524,23 +511,13 @@ export default function Home() {
         chordRow = (
             <div className="flex gap-4">
                 {[...Array(4)].map((_, i) => (
-                    <div key={i}>
-                        <SkeletonCard />
-                    </div>
+                    <SkeletonCard key={i} />
                 ))}
             </div>
         );
     }
 
     const hasChords = chords.length > 0 || fullLoading;
-
-    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
-            generateChords();
-        }
-    };
-
-    // Define note range and keyboard shortcuts for react-piano
     const firstNote = MidiNumbers.fromNote("C3");
     const lastNote = MidiNumbers.fromNote("C5");
     const keyboardShortcuts = KeyboardShortcuts.create({
@@ -564,24 +541,17 @@ export default function Home() {
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl p-8">
                         <DialogHeader>
-                            <DialogTitle className="text-2xl font-bold mb-4">
-                                How It Works
-                            </DialogTitle>
+                            <DialogTitle className="text-2xl font-bold mb-4">How It Works</DialogTitle>
                         </DialogHeader>
-
                         <div className="grid grid-cols-2 gap-6">
-                            {/* Generating Progressions */}
                             <div>
                                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                                     <RefreshCw className="h-5 w-5" /> Generating Progressions
                                 </h3>
                                 <p className="text-sm text-gray-600">
-                                    Enter a description (e.g., "happy jazz in C major") and click refresh
-                                    to generate a new progression.
+                                    Enter a description (e.g., "happy jazz in C major") and click refresh to generate a new progression.
                                 </p>
                             </div>
-
-                            {/* Playing Chords */}
                             <div>
                                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                                     <PlayCircle className="h-5 w-5" /> Playing Chords
@@ -590,8 +560,6 @@ export default function Home() {
                                     Click a chord to hear it played on the piano.
                                 </p>
                             </div>
-
-                            {/* Locking Chords */}
                             <div>
                                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                                     <Lock className="h-5 w-5" /> Locking Chords
@@ -600,8 +568,6 @@ export default function Home() {
                                     Hover and lock a chord to keep it during generation.
                                 </p>
                             </div>
-
-                            {/* Rearranging Chords */}
                             <div>
                                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                                     <MoveHorizontal className="h-5 w-5" /> Rearranging Chords
@@ -610,8 +576,6 @@ export default function Home() {
                                     Hover to see the move icon, then drag to rearrange.
                                 </p>
                             </div>
-
-                            {/* Adding Chords */}
                             <div>
                                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                                     <Plus className="h-5 w-5" /> Adding Chords
@@ -620,8 +584,6 @@ export default function Home() {
                                     Hover between chords and click plus to add a new one.
                                 </p>
                             </div>
-
-                            {/* Removing Chords */}
                             <div>
                                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                                     <X className="h-5 w-5" /> Removing Chords
@@ -630,8 +592,6 @@ export default function Home() {
                                     Hover and click X to remove a chord.
                                 </p>
                             </div>
-
-                            {/* Downloading MIDI */}
                             <div>
                                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                                     <Download className="h-5 w-5" /> Downloading MIDI
@@ -640,8 +600,6 @@ export default function Home() {
                                     Download your progression as a MIDI file.
                                 </p>
                             </div>
-
-                            {/* Piano Interface */}
                             <div>
                                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                                     <PianoIcon className="h-5 w-5" /> Piano Interface
@@ -655,7 +613,6 @@ export default function Home() {
                 </Dialog>
             </div>
 
-            {/* Fixed position Alert container */}
             <AnimatePresence>
                 {error && (
                     <motion.div
@@ -740,11 +697,7 @@ export default function Home() {
                             transition={{ duration: 0.3 }}
                             className="w-full max-w-3xl flex justify-end mt-8"
                         >
-                            <Button
-                                asChild
-                                disabled={!midiUrl}
-                                className="transition transform hover:scale-105 gap-2"
-                            >
+                            <Button asChild disabled={!midiUrl} className="transition transform hover:scale-105 gap-2">
                                 <a href={midiUrl} download="chord_progression.mid" className="flex items-center">
                                     <Download className="h-5 w-5" />
                                     Download MIDI
@@ -755,7 +708,7 @@ export default function Home() {
                 </AnimatePresence>
             </main>
 
-            {/* React-piano integration */}
+            {/* React-piano interface */}
             <div className="fixed bottom-0 left-0 right-0 flex justify-center bg-gray-50 p-4">
                 <div className="max-w-[600px] w-full">
                     <Piano
@@ -770,8 +723,6 @@ export default function Home() {
                         }}
                         activeNotes={activeNotes.map((note) => MidiNumbers.fromNote(note))}
                         width={600}
-                        // Remove keyboard shortcuts and note labels to keep it simple
-                        keyboardShortcuts={keyboardShortcuts}
                         renderNoteLabel={() => null}
                     />
                 </div>
