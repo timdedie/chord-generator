@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import exampleInputs from "@/public/example-inputs.json"; // <-- JSON import
+import exampleInputs from "@/public/example-inputs.json";
 import {
     AlertCircle,
     Lock,
@@ -28,7 +28,8 @@ import { Piano, KeyboardShortcuts, MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
 import {
     Dialog,
-    DialogContent, DialogDescription,
+    DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -48,13 +49,39 @@ import {
     horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import React from "react";
 
-// SkeletonCard renders a Skeleton matching the card's dimensions.
+/**
+ * Define the shape of a chord item in your progression.
+ */
+interface ChordItem {
+    id: string;
+    chord: string;
+    locked: boolean;
+}
+
+/**
+ * SortableChord component props.
+ */
+interface SortableChordProps {
+    id: string;
+    item: ChordItem;
+    onPlay: () => void;
+    toggleLock: (id: string) => void;
+    onRemove: (id: string) => void;
+    loading: boolean;
+}
+
+/**
+ * SkeletonCard renders a Skeleton matching the card's dimensions.
+ */
 function SkeletonCard() {
     return <Skeleton className="w-48 h-48 rounded-xl" />;
 }
 
-// SortableChord returns only a SkeletonCard when a chord (that is not locked) is loading.
+/**
+ * SortableChord returns only a SkeletonCard when a chord (that is not locked) is loading.
+ */
 function SortableChord({
                            id,
                            item,
@@ -62,20 +89,14 @@ function SortableChord({
                            toggleLock,
                            onRemove,
                            loading,
-                       }: {
-    id: string;
-    item: { id: string; chord: string; locked: boolean };
-    onPlay: () => void;
-    toggleLock: (id: string) => void;
-    onRemove: (id: string) => void;
-    loading: boolean;
-}) {
+                       }: SortableChordProps) {
     if (loading) {
         return <SkeletonCard />;
     }
 
-    const { attributes, listeners, setNodeRef, transform, transition } =
-        useSortable({ id });
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+        id,
+    });
     const [hover, setHover] = useState(false);
 
     return (
@@ -98,6 +119,7 @@ function SortableChord({
                 {item.chord}
             </motion.span>
 
+            {/* Remove chord (X icon) */}
             <AnimatePresence>
                 {hover && (
                     <motion.div
@@ -119,6 +141,7 @@ function SortableChord({
                 )}
             </AnimatePresence>
 
+            {/* Drag handle */}
             <AnimatePresence>
                 {hover && (
                     <motion.div
@@ -136,6 +159,7 @@ function SortableChord({
                 )}
             </AnimatePresence>
 
+            {/* Lock/unlock */}
             <AnimatePresence>
                 {(item.locked || hover) && (
                     <motion.div
@@ -165,14 +189,12 @@ function SortableChord({
 }
 
 export default function Home() {
-    const [prompt, setPrompt] = useState("");
-    const [chords, setChords] = useState<
-        { id: string; chord: string; locked: boolean }[]
-    >([]);
-    const [fullLoading, setFullLoading] = useState(false);
+    const [prompt, setPrompt] = useState<string>("");
+    const [chords, setChords] = useState<ChordItem[]>([]);
+    const [fullLoading, setFullLoading] = useState<boolean>(false);
     const [loadingChordId, setLoadingChordId] = useState<string | null>(null);
-    const [error, setError] = useState("");
-    const [midiUrl, setMidiUrl] = useState("");
+    const [error, setError] = useState<string>("");
+    const [midiUrl, setMidiUrl] = useState<string>("");
     const [activeNotes, setActiveNotes] = useState<string[]>([]);
     const [examples, setExamples] = useState<string[]>([]);
     const [randomExamples, setRandomExamples] = useState<string[]>([]);
@@ -182,8 +204,8 @@ export default function Home() {
 
     // On mount, load the JSON examples & pick 5 random ones.
     useEffect(() => {
-        setExamples(exampleInputs);
-        pickRandomExamples(exampleInputs);
+        setExamples(exampleInputs as string[]);
+        pickRandomExamples(exampleInputs as string[]);
     }, []);
 
     function pickRandomExamples(lines: string[]) {
@@ -236,7 +258,8 @@ export default function Home() {
                 .map((c: string) => c.trim())
                 .filter((c: string) => c);
 
-            let newChords = cleaned.slice(0, 4).map((c: string) => ({
+            // Build new chords
+            let newChords: ChordItem[] = cleaned.map((c: string) => ({
                 id: `${Date.now()}-${Math.random()}`,
                 chord: c,
                 locked: false,
@@ -244,15 +267,15 @@ export default function Home() {
 
             // If we already have chords, preserve any that are locked
             if (chords.length > 0) {
-                newChords = newChords.map(
-                    (newChord: { id: string; chord: string; locked: boolean }, idx: number) => {
-                        const oldChord = chords[idx];
-                        if (oldChord && oldChord.locked) {
-                            return oldChord;
-                        }
-                        return newChord;
+                newChords = newChords.map((newChord: ChordItem, idx: number): ChordItem => {
+                    const oldChord = chords[idx];
+                    if (oldChord && oldChord.locked) {
+                        // Keep locked chord exactly
+                        return oldChord;
                     }
-                );
+                    // Otherwise, replace with the newly generated chord
+                    return newChord;
+                });
             }
 
             setChords(newChords);
@@ -263,7 +286,7 @@ export default function Home() {
         setFullLoading(false);
     }
 
-    const pianoRef = useRef<any>(null);
+    const pianoRef = useRef<Tone.Sampler | null>(null);
 
     useEffect(() => {
         pianoRef.current = new Tone.Sampler({
@@ -307,13 +330,16 @@ export default function Home() {
     async function playChord(chord: string) {
         if (!chord) return;
         await Tone.start();
+
+        // Force notes into at least the 4th octave if no digit is present
         const notes = Chord.get(chord).notes.map((n) => (/\d/.test(n) ? n : `${n}4`));
         setActiveNotes(notes);
-        pianoRef.current.triggerAttackRelease(notes, "2n");
+
+        pianoRef.current?.triggerAttackRelease(notes, "2n");
         setTimeout(() => setActiveNotes([]), 500);
     }
 
-    function makeMidiUrl(values: string[]) {
+    function makeMidiUrl(values: string[]): string {
         const track = new MidiWriter.Track();
         track.setTimeSignature(4, 4, 24, 8);
         track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 1 }));
@@ -373,7 +399,7 @@ export default function Home() {
             if (chords.length >= 8) return;
 
             const newChordId = `${Date.now()}-${Math.random()}`;
-            const placeholderChord = {
+            const placeholderChord: ChordItem = {
                 id: newChordId,
                 chord: "Loading...",
                 locked: false,
@@ -404,7 +430,7 @@ export default function Home() {
                     return;
                 }
 
-                const updatedChord = {
+                const updatedChord: ChordItem = {
                     id: newChordId,
                     chord: data.chord.trim(),
                     locked: false,
@@ -446,11 +472,11 @@ export default function Home() {
             );
         }
 
-        const elements = [];
+        const elements: React.ReactNode[] = [];
+
         chords.forEach((chord, index) => {
             elements.push(<Spacer key={`spacer-${index}`} position={index} />);
-            const isLoading =
-                !chord.locked && (fullLoading || loadingChordId === chord.id);
+            const isLoading = !chord.locked && (fullLoading || loadingChordId === chord.id);
             elements.push(
                 <motion.div
                     key={chord.id}
@@ -472,6 +498,8 @@ export default function Home() {
                 </motion.div>
             );
         });
+
+        // Spacer after the last chord
         elements.push(
             <Spacer key={`spacer-${chords.length}`} position={chords.length} />
         );
@@ -507,7 +535,9 @@ export default function Home() {
     const hasChords = chords.length > 0 || fullLoading;
 
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") generateChords();
+        if (e.key === "Enter") {
+            generateChords();
+        }
     };
 
     // Define note range and keyboard shortcuts for react-piano
@@ -534,7 +564,9 @@ export default function Home() {
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl p-8">
                         <DialogHeader>
-                            <DialogTitle className="text-2xl font-bold mb-4">How It Works</DialogTitle>
+                            <DialogTitle className="text-2xl font-bold mb-4">
+                                How It Works
+                            </DialogTitle>
                         </DialogHeader>
 
                         <div className="grid grid-cols-2 gap-6">
@@ -544,7 +576,8 @@ export default function Home() {
                                     <RefreshCw className="h-5 w-5" /> Generating Progressions
                                 </h3>
                                 <p className="text-sm text-gray-600">
-                                    Enter a description (e.g., "happy jazz in C major") and click refresh to generate a new progression.
+                                    Enter a description (e.g., "happy jazz in C major") and click refresh
+                                    to generate a new progression.
                                 </p>
                             </div>
 
@@ -665,9 +698,7 @@ export default function Home() {
                             className="w-16 h-16 flex items-center justify-center transition transform hover:scale-105"
                             disabled={fullLoading}
                         >
-                            <RefreshCw
-                                className={`h-8 w-8 ${fullLoading ? "animate-spin" : ""}`}
-                            />
+                            <RefreshCw className={`h-8 w-8 ${fullLoading ? "animate-spin" : ""}`} />
                         </Button>
                     </div>
 
@@ -731,16 +762,16 @@ export default function Home() {
                         noteRange={{ first: firstNote, last: lastNote }}
                         playNote={(midiNumber: number) => {
                             const note = MidiNumbers.getAttributes(midiNumber).note;
-                            pianoRef.current.triggerAttack(note);
+                            pianoRef.current?.triggerAttack(note);
                         }}
                         stopNote={(midiNumber: number) => {
                             const note = MidiNumbers.getAttributes(midiNumber).note;
-                            pianoRef.current.triggerRelease(note);
+                            pianoRef.current?.triggerRelease(note);
                         }}
                         activeNotes={activeNotes.map((note) => MidiNumbers.fromNote(note))}
                         width={600}
-                        // Remove keyboard shortcuts to prevent triggering with the computer keyboard
-                        // and remove the note labels by returning null in renderNoteLabel.
+                        // Remove keyboard shortcuts and note labels to keep it simple
+                        keyboardShortcuts={keyboardShortcuts}
                         renderNoteLabel={() => null}
                     />
                 </div>

@@ -40,7 +40,7 @@ Chord formatting rules:
 function createResponse(data: any, status: number = 200): Response {
     return new Response(JSON.stringify(data), {
         status,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
     });
 }
 
@@ -55,8 +55,8 @@ async function createChatCompletion(userMessage: string): Promise<string> {
     const completion = await openai.chat.completions.create({
         model: MODEL_SELECTION.DEFAULT,
         messages: [
-            { role: 'system', content: 'You are a chord generator.' },
-            { role: 'user', content: userMessage },
+            {role: 'system', content: 'You are a chord generator.'},
+            {role: 'user', content: userMessage},
         ],
     });
 
@@ -68,7 +68,7 @@ async function createChatCompletion(userMessage: string): Promise<string> {
 
 export async function POST(request: Request): Promise<Response> {
     try {
-        const { prompt, existingChords = [], addChordPosition } = await request.json() as RequestBody;
+        const {prompt, existingChords = [], addChordPosition} = await request.json() as RequestBody;
 
         // Handle Add Chord Case
         if (typeof addChordPosition !== 'undefined') {
@@ -95,32 +95,58 @@ export async function POST(request: Request): Promise<Response> {
             console.log(userMessage);
             const newChord = await createChatCompletion(userMessage);
             console.log('Received new chord:', newChord);
-            return createResponse({ chord: newChord });
+            return createResponse({chord: newChord});
         }
 
         // Handle Original Generation/Replacement
-        if (!prompt) throw Object.assign(new Error('Prompt is required for generation'), { status: 400 });
+        if (!prompt) {
+            throw Object.assign(
+                new Error("Prompt is required for generation"),
+                {status: 400}
+            );
+        }
 
         const hasExistingChords = existingChords.length > 0;
         const progression = createProgressionString(existingChords);
 
-        const userMessage = hasExistingChords
-            ? `Current progression: ${progression}. Regenerate ONLY unlocked chords with these requirements:
-            1. Strictly match tone: "${prompt}"
-            2. New chords must be different from original unlocked chords
-            3. Maintain musical logic with locked chords
-            Respond ONLY with updated progression using hyphens. ${CHORD_FORMATTING_RULES}`
-                        : `Generate a 4-chord progression for: "${prompt}". 
-            Respond ONLY with 4 chords separated by hyphens. ${CHORD_FORMATTING_RULES}`;
+        let userMessage: string;
+
+        if (hasExistingChords) {
+            // REGENERATE CASE
+            userMessage = `
+Current progression: ${progression}.
+Regenerate ONLY the unlocked chords with these requirements:
+1. Strictly match tone: "${prompt}"
+2. Keep the chord count exactly: ${existingChords.length}
+3. Maintain musical logic with the locked chords
+4. Do NOT change the order of chords
+
+Respond ONLY with updated progression using hyphens.
+
+${CHORD_FORMATTING_RULES}
+  `;
+        } else {
+            // FIRST-TIME GENERATION CASE
+            userMessage = `
+Generate a 4-chord progression for: "${prompt}".
+Respond ONLY with 4 chords separated by hyphens.
+
+${CHORD_FORMATTING_RULES}
+  `;
+        }
+
+// Now call the model with your userMessage:
         const chords = await createChatCompletion(userMessage);
-        console.log('Received new progression:', chords);
-        return createResponse({ chords });
+        console.log("Received new progression:", chords);
+
+// Finally, return the result:
+        return createResponse({chords});
 
     } catch (error: unknown) {
         console.error('API Error:', error);
         const err = error as ApiError;
         return createResponse(
-            { error: err.message || 'Internal server error' },
+            {error: err.message || 'Internal server error'},
             err.status || 500
         );
     }
