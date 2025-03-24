@@ -45,6 +45,26 @@ export default function ClientHome() {
         pickRandomExamples(exampleInputs as string[]);
     }, []);
 
+    // Add this useEffect near the top level of your component
+    useEffect(() => {
+        if (isMobile) {
+            const resumeAudio = async () => {
+                try {
+                    await Tone.start();
+                    console.log("Audio context resumed");
+                } catch (err) {
+                    console.error("Error resuming audio", err);
+                }
+            };
+
+            // Listen for the first touch event
+            window.addEventListener("touchstart", resumeAudio, { once: true });
+            return () => {
+                window.removeEventListener("touchstart", resumeAudio);
+            };
+        }
+    }, [isMobile]);
+
     // Helper: pick 5 random examples
     const pickRandomExamples = useCallback((lines: string[]) => {
         const shuffled = [...lines].sort(() => 0.5 - Math.random());
