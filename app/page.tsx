@@ -74,7 +74,7 @@ export default function Home() {
     const generateChords = useCallback(
         async (customPrompt?: string, attempt: number = 0) => {
             const MAX_ATTEMPTS = 3;
-            const usedPrompt = customPrompt ?? prompt;
+            const usedPrompt = String(customPrompt ?? prompt);
             if (!usedPrompt.trim()) {
                 setError("Please describe your chord progression before generating.");
                 return;
