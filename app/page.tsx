@@ -8,6 +8,8 @@ import * as Tone from "tone";
 import { Chord } from "tonal";
 import MidiWriter from "midi-writer-js";
 import SortableChord, { ChordItem } from "@/components/SortableChord";
+import Spacer from "@/components/Spacer";
+
 
 import {
     DndContext,
@@ -353,36 +355,15 @@ export default function Home() {
         [chords, prompt]
     );
 
-    const Spacer = useCallback(({ position }: { position: number }) => {
-        const [hover, setHover] = useState(false);
-        return (
-            <div
-                className="w-[30px] h-48 relative"
-                onMouseEnter={() => setHover(true)}
-                onMouseLeave={() => setHover(false)}
-            >
-                <AnimatePresence>
-                    {hover && chords.length < 8 && (
-                        <motion.button
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            transition={{ duration: 0.2 }}
-                            className="absolute inset-0 m-auto w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full"
-                            onClick={() => addChordAt(position)}
-                        >
-                            <Plus className="h-5 w-5" />
-                        </motion.button>
-                    )}
-                </AnimatePresence>
-            </div>
-        );
-    }, [chords.length, addChordAt]);
-
     let chordRow: React.ReactNode = null;
     if (chords.length > 0) {
         const elements: React.ReactNode[] = chords.flatMap((chord, index) => [
-            <Spacer key={`spacer-${index}`} position={index} />,
+            <Spacer
+                key={`spacer-${index}`}
+                position={index}
+                chordsCount={chords.length}
+                addChordAt={addChordAt}
+            />,
             <motion.div
                 key={chord.id}
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -400,7 +381,14 @@ export default function Home() {
                 />
             </motion.div>,
         ]);
-        elements.push(<Spacer key={`spacer-${chords.length}`} position={chords.length} />);
+        elements.push(
+            <Spacer
+                key={`spacer-${chords.length}`}
+                position={chords.length}
+                chordsCount={chords.length}
+                addChordAt={addChordAt}
+            />
+        );
         chordRow = (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={chords.map((ch) => ch.id)} strategy={horizontalListSortingStrategy}>
