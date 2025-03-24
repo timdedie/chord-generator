@@ -24,13 +24,15 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import DarkModeToggle from "@/components/DarkModeToggle";
+
 
 interface HeaderProps {
     darkMode: boolean;
     onToggleDarkMode: (checked: boolean) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ darkMode, onToggleDarkMode }) => {
+const Header: React.FC = () => {
     return (
         <>
             {/* Left side: Page Title */}
@@ -43,11 +45,7 @@ const Header: React.FC<HeaderProps> = ({ darkMode, onToggleDarkMode }) => {
             {/* Right side: Dark Mode Toggle & Info Dialog */}
             <div className="absolute top-0 right-0 p-8 flex items-center gap-4">
                 {/* Dark Mode Toggle */}
-                <div className="flex items-center gap-2">
-                    <Sun className="h-6 w-6 text-yellow-500" />
-                    <Switch checked={darkMode} onCheckedChange={onToggleDarkMode} />
-                    <Moon className="h-6 w-6 text-gray-300" />
-                </div>
+                <DarkModeToggle />
 
                 {/* "How It Works" Dialog */}
                 <Dialog>

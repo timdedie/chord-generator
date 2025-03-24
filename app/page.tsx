@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useEffect, useState, useCallback, KeyboardEvent, useRef, useContext} from "react";
+import React, {useEffect, useState, useCallback, KeyboardEvent, useContext} from "react";
 import {motion, AnimatePresence} from "framer-motion";
 import {MidiNumbers} from "react-piano";
 import "react-piano/dist/styles.css";
@@ -33,16 +33,6 @@ import exampleInputs from "@/public/example-inputs.json";
 const generateUniqueId = () => `${Date.now()}-${Math.random()}`;
 
 export default function Home() {
-    // Dark mode state and effect
-    const [darkMode, setDarkMode] = useState(false);
-    useEffect(() => {
-        if (darkMode) {
-            document.documentElement.classList.add("dark");
-        } else {
-            document.documentElement.classList.remove("dark");
-        }
-    }, [darkMode]);
-
     const [prompt, setPrompt] = useState<string>("");
     const [chords, setChords] = useState<ChordItem[]>([]);
     const [fullLoading, setFullLoading] = useState<boolean>(false);
@@ -55,7 +45,6 @@ export default function Home() {
 
     // Initialize DnD sensors and piano sampler ref
     const sensors = useSensors(useSensor(PointerSensor));
-    const pianoRef = useRef<Tone.Sampler | null>(null);
 
     // On mount, load examples and initialize piano sampler
     useEffect(() => {
@@ -279,7 +268,8 @@ export default function Home() {
     return (
         <PianoProvider>
             <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
-                <Header darkMode={darkMode} onToggleDarkMode={setDarkMode}/>
+                <Header />
+
 
                 <motion.main
                     className="flex flex-col items-center w-full"
