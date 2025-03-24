@@ -7,6 +7,7 @@ export default function HomePage() {
             <Head>
                 {/* Primary Meta Tags */}
                 <title>ChordGen – Free AI Chord Generator & MIDI Export Tool</title>
+                <meta name="author" content="ChordGen Team" />
                 <meta
                     name="description"
                     content="Generate unique chord progressions instantly using natural language with ChordGen. Free to use! Edit chords, rearrange them, and download MIDI files for your music production."
@@ -55,6 +56,50 @@ export default function HomePage() {
                                 "priceCurrency": "USD"
                             },
                             "image": "https://www.chordgen.org/chordgen_logo.png"
+                        }),
+                    }}
+                />
+                {/* FAQ Structured Data */}
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                            "@context": "https://schema.org",
+                            "@type": "FAQPage",
+                            "mainEntity": [
+                                {
+                                    "@type": "Question",
+                                    "name": "Is ChordGen free to use?",
+                                    "acceptedAnswer": {
+                                        "@type": "Answer",
+                                        "text": "Yes! ChordGen is 100% free. You can generate, edit, and download MIDI chord progressions without creating an account."
+                                    }
+                                },
+                                {
+                                    "@type": "Question",
+                                    "name": "Can I export the chords as MIDI files?",
+                                    "acceptedAnswer": {
+                                        "@type": "Answer",
+                                        "text": "Absolutely. Once you've generated or edited your chord progression, you can download it instantly as a standard MIDI file."
+                                    }
+                                },
+                                {
+                                    "@type": "Question",
+                                    "name": "How does ChordGen work?",
+                                    "acceptedAnswer": {
+                                        "@type": "Answer",
+                                        "text": "ChordGen uses advanced AI models to interpret your natural language input and create musically coherent chord progressions tailored to your request."
+                                    }
+                                },
+                                {
+                                    "@type": "Question",
+                                    "name": "Do I need musical knowledge to use ChordGen?",
+                                    "acceptedAnswer": {
+                                        "@type": "Answer",
+                                        "text": "No prior music theory knowledge is required. Simply describe the mood or style you want, and ChordGen handles the rest."
+                                    }
+                                }
+                            ]
                         }),
                     }}
                 />
