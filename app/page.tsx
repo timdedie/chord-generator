@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useEffect, useState, useCallback, KeyboardEvent, useRef} from "react";
+import React, {useEffect, useState, useCallback, KeyboardEvent, useRef, useContext} from "react";
 import {motion, AnimatePresence} from "framer-motion";
 import {MidiNumbers} from "react-piano";
 import "react-piano/dist/styles.css";
@@ -13,6 +13,7 @@ import PianoKeyboard from "@/components/PianoKeyboard";
 import ChordRow from "@/components/ChordRow";
 import ChordGenerator from "@/components/ChordGenerator";
 import MidiDownloader from "@/components/MidiDownloader";
+import PianoProvider, {PianoContext} from "@/components/PianoProvider";
 
 
 import {
@@ -60,45 +61,6 @@ export default function Home() {
     useEffect(() => {
         setExamples(exampleInputs as string[]);
         pickRandomExamples(exampleInputs as string[]);
-    }, []);
-
-    useEffect(() => {
-        pianoRef.current = new Tone.Sampler({
-            urls: {
-                A0: "A0.mp3",
-                A1: "A1.mp3",
-                A2: "A2.mp3",
-                A3: "A3.mp3",
-                A4: "A4.mp3",
-                A5: "A5.mp3",
-                A6: "A6.mp3",
-                A7: "A7.mp3",
-                C1: "C1.mp3",
-                C2: "C2.mp3",
-                C3: "C3.mp3",
-                C4: "C4.mp3",
-                C5: "C5.mp3",
-                C6: "C6.mp3",
-                C7: "C7.mp3",
-                C8: "C8.mp3",
-                "D#1": "Dsharp1.mp3",
-                "D#2": "Dsharp2.mp3",
-                "D#3": "Dsharp3.mp3",
-                "D#4": "Dsharp4.mp3",
-                "D#5": "Dsharp5.mp3",
-                "D#6": "Dsharp6.mp3",
-                "D#7": "Dsharp7.mp3",
-                "F#1": "Fsharp1.mp3",
-                "F#2": "Fsharp2.mp3",
-                "F#3": "Fsharp3.mp3",
-                "F#4": "Fsharp4.mp3",
-                "F#5": "Fsharp5.mp3",
-                "F#6": "Fsharp6.mp3",
-                "F#7": "Fsharp7.mp3",
-            },
-            release: 1,
-            baseUrl: "/piano/",
-        }).toDestination();
     }, []);
 
     // Helper: pick 5 random examples
@@ -202,18 +164,18 @@ export default function Home() {
         [generateChords]
     );
 
+    const piano = useContext(PianoContext);
+
     const playChord = useCallback(async (chord: string) => {
         if (!chord) return;
         await Tone.start();
-        const chordNotes = Chord.get(chord).notes.map((n) => {
-            const trimmed = n.trim();
-            return /\d/.test(trimmed) ? trimmed : `${trimmed}4`;
-        });
-        if (!chordNotes.length || chordNotes.some(note => !note)) return;
+        const chordNotes = Chord.get(chord).notes.map((n) =>
+            /\d/.test(n.trim()) ? n.trim() : `${n.trim()}4`
+        );
         setActiveNotes(chordNotes);
-        pianoRef.current?.triggerAttackRelease(chordNotes, "2n");
+        piano?.triggerAttackRelease(chordNotes, "2n");
         setTimeout(() => setActiveNotes([]), 500);
-    }, []);
+    }, [piano]);
 
     const makeMidiUrl = useCallback((values: string[]): string => {
         const track = new MidiWriter.Track();
@@ -315,51 +277,52 @@ export default function Home() {
 
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
-            <Header darkMode={darkMode} onToggleDarkMode={setDarkMode}/>
+        <PianoProvider>
+            <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
+                <Header darkMode={darkMode} onToggleDarkMode={setDarkMode}/>
 
-            <motion.main
-                className="flex flex-col items-center w-full"
-                initial={{paddingTop: "45vh"}}
-                animate={{paddingTop: hasChords ? "20vh" : "35vh"}}
-                transition={{duration: 0.5, ease: [0.4, 0, 0.2, 1]}}
-            >
-                <ChordGenerator
-                    prompt={prompt}
-                    setPrompt={setPrompt}
-                    handleKeyDown={handleKeyDown}
-                    generateChords={generateChords}
-                    fullLoading={fullLoading}
-                    chordsLength={chords.length}
-                    randomExamples={randomExamples}
-                    handleExampleClick={handleExampleClick}
-                />
-
-                {(chords.length > 0 || fullLoading) && (
-                    <ChordRow
-                        chords={chords}
+                <motion.main
+                    className="flex flex-col items-center w-full"
+                    initial={{paddingTop: "45vh"}}
+                    animate={{paddingTop: hasChords ? "20vh" : "35vh"}}
+                    transition={{duration: 0.5, ease: [0.4, 0, 0.2, 1]}}
+                >
+                    <ChordGenerator
+                        prompt={prompt}
+                        setPrompt={setPrompt}
+                        handleKeyDown={handleKeyDown}
+                        generateChords={generateChords}
                         fullLoading={fullLoading}
-                        loadingChordId={loadingChordId}
-                        sensors={sensors}
-                        handleDragEnd={handleDragEnd}
-                        addChordAt={addChordAt}
-                        playChord={playChord}
-                        toggleLock={toggleLock}
-                        setChords={setChords}
+                        chordsLength={chords.length}
+                        randomExamples={randomExamples}
+                        handleExampleClick={handleExampleClick}
                     />
-                )}
 
-                <AnimatePresence>
-                    <MidiDownloader midiUrl={midiUrl}/>
-                </AnimatePresence>
-            </motion.main>
+                    {(chords.length > 0 || fullLoading) && (
+                        <ChordRow
+                            chords={chords}
+                            fullLoading={fullLoading}
+                            loadingChordId={loadingChordId}
+                            sensors={sensors}
+                            handleDragEnd={handleDragEnd}
+                            addChordAt={addChordAt}
+                            playChord={playChord}
+                            toggleLock={toggleLock}
+                            setChords={setChords}
+                        />
+                    )}
 
-            <PianoKeyboard
-                firstNote={firstNote}
-                lastNote={lastNote}
-                activeNotes={activeNotes}
-                pianoRef={pianoRef}
-            />
-        </div>
+                    <AnimatePresence>
+                        <MidiDownloader midiUrl={midiUrl}/>
+                    </AnimatePresence>
+                </motion.main>
+
+                <PianoKeyboard
+                    firstNote={firstNote}
+                    lastNote={lastNote}
+                    activeNotes={activeNotes}
+                />
+            </div>
+        </PianoProvider>
     );
 }

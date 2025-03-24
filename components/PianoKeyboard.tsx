@@ -1,14 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useContext } from "react";
 import { Piano, MidiNumbers } from "react-piano";
-import * as Tone from "tone";
+import { PianoContext } from "./PianoProvider";
 
 interface PianoKeyboardProps {
     firstNote: number;
     lastNote: number;
     activeNotes: string[];
-    pianoRef: React.MutableRefObject<Tone.Sampler | null>;
     width?: number;
 }
 
@@ -16,17 +15,18 @@ export default function PianoKeyboard({
                                           firstNote,
                                           lastNote,
                                           activeNotes,
-                                          pianoRef,
                                           width = 600,
                                       }: PianoKeyboardProps) {
+    const piano = useContext(PianoContext);
+
     const handlePlayNote = (midiNumber: number) => {
         const note = MidiNumbers.getAttributes(midiNumber).note;
-        pianoRef.current?.triggerAttack(note);
+        piano?.triggerAttack(note);
     };
 
     const handleStopNote = (midiNumber: number) => {
         const note = MidiNumbers.getAttributes(midiNumber).note;
-        pianoRef.current?.triggerRelease(note);
+        piano?.triggerRelease(note);
     };
 
     return (
@@ -37,7 +37,7 @@ export default function PianoKeyboard({
                     playNote={handlePlayNote}
                     stopNote={handleStopNote}
                     activeNotes={activeNotes
-                        .filter((note) => note && note.trim() !== "")
+                        .filter((note) => note.trim() !== "")
                         .map((note) => MidiNumbers.fromNote(note.trim()))}
                     width={width}
                     renderNoteLabel={() => null}
