@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,26 @@ import {
 } from "@/components/ui/dialog";
 
 const MobileHeader: React.FC = () => {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true); // This ensures Dialog only mounts on the client side
+    }, []);
+
+    if (!mounted) {
+        return (
+            <header className="flex justify-between items-center p-4 bg-white dark:bg-black shadow-md">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    Chord Generator
+                </h1>
+                {/* Placeholder button to match layout */}
+                <Button variant="ghost" size="icon" aria-label="How it works" disabled>
+                    <Info className="h-6 w-6" />
+                </Button>
+            </header>
+        );
+    }
+
     return (
         <header className="flex justify-between items-center p-4 bg-white dark:bg-black shadow-md">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
