@@ -166,34 +166,6 @@ export default function Home() {
         setTimeout(() => setActiveNotes([]), 500);
     }, [piano]);
 
-    const makeMidiUrl = useCallback((values: string[]): string => {
-        const track = new MidiWriter.Track();
-        track.setTimeSignature(4, 4, 24, 8);
-        track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1}));
-        values.forEach((ch) => {
-            const notes = Chord.get(ch).notes.map((n) => (/\d/.test(n) ? n : `${n}4`));
-            track.addEvent(
-                new MidiWriter.NoteEvent({
-                    pitch: notes,
-                    duration: "1",
-                })
-            );
-        });
-        return URL.createObjectURL(
-            new Blob([new MidiWriter.Writer(track).buildFile()], {type: "audio/midi"})
-        );
-    }, []);
-
-    useEffect(() => {
-        if (!chords.length) {
-            setMidiUrl("");
-            return;
-        }
-        const url = makeMidiUrl(chords.map((c) => c.chord));
-        setMidiUrl(url);
-        return () => URL.revokeObjectURL(url);
-    }, [chords, makeMidiUrl]);
-
     useEffect(() => {
         if (error) {
             const timer = setTimeout(() => setError(""), 3000);
@@ -303,7 +275,7 @@ export default function Home() {
                     )}
 
                     <AnimatePresence>
-                        <MidiDownloader midiUrl={midiUrl}/>
+                        <MidiDownloader chords={chords.map((c) => c.chord)} />
                     </AnimatePresence>
                 </motion.main>
 
