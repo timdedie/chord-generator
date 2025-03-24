@@ -240,7 +240,7 @@ export default function Home() {
     return (
         <PianoProvider>
             <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
-                <Header />
+                <Header/>
 
 
                 <motion.main
@@ -275,7 +275,7 @@ export default function Home() {
                     )}
 
                     <AnimatePresence>
-                        <MidiDownloader chords={chords.map((c) => c.chord)} />
+                        <MidiDownloader chords={chords.map((c) => c.chord)}/>
                     </AnimatePresence>
                 </motion.main>
 
