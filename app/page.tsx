@@ -12,7 +12,7 @@ import Header from "@/components/Header";
 import PianoKeyboard from "@/components/PianoKeyboard";
 import ChordRow from "@/components/ChordRow";
 import ChordGenerator from "@/components/ChordGenerator";
-
+import MidiDownloader from "@/components/MidiDownloader";
 
 
 import {
@@ -24,16 +24,6 @@ import {
 import {
     arrayMove,
 } from "@dnd-kit/sortable";
-
-// UI Components
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-
-// Lucide Icons
-import {
-    RefreshCw,
-    Download
-} from "lucide-react";
 
 import exampleInputs from "@/public/example-inputs.json";
 
@@ -360,23 +350,7 @@ export default function Home() {
                 )}
 
                 <AnimatePresence>
-                    {midiUrl && chords.length > 0 && (
-                        <motion.div
-                            key="download"
-                            initial={{opacity: 0, y: 16}}
-                            animate={{opacity: 1, y: 0}}
-                            exit={{opacity: 0, y: 16}}
-                            transition={{duration: 0.3}}
-                            className="w-full max-w-3xl flex justify-end mt-8"
-                        >
-                            <Button asChild disabled={!midiUrl} className="transition transform hover:scale-105 gap-2">
-                                <a href={midiUrl} download="chord_progression.mid" className="flex items-center">
-                                    <Download className="h-5 w-5"/>
-                                    Download MIDI
-                                </a>
-                            </Button>
-                        </motion.div>
-                    )}
+                    <MidiDownloader midiUrl={midiUrl}/>
                 </AnimatePresence>
             </motion.main>
 
