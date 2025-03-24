@@ -1,7 +1,19 @@
 "use client";
 
 import React from "react";
-import { Sun, Moon, Info, RefreshCw } from "lucide-react";
+import {
+    Sun,
+    Moon,
+    Lock,
+    MoveHorizontal,
+    Plus,
+    RefreshCw,
+    X,
+    Info,
+    PlayCircle,
+    Download,
+    Piano as PianoIcon
+} from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,17 +74,65 @@ const Header: React.FC<HeaderProps> = ({ darkMode, onToggleDarkMode }) => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
-                                        <Info className="h-5 w-5" /> Playing Chords
+                                        <PlayCircle className="h-5 w-5" /> Playing Chords
                                     </h3>
                                     <p className="text-sm text-black dark:text-white">
                                         Click a chord to hear it played on the piano.
                                     </p>
                                 </div>
-                                {/* You can add more sections as needed */}
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <Lock className="h-5 w-5" /> Locking Chords
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Hover and lock a chord to keep it during generation.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <MoveHorizontal className="h-5 w-5" /> Rearranging Chords
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Hover to see the move icon, then drag to rearrange.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <Plus className="h-5 w-5" /> Adding Chords
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Hover between chords and click plus to add a new one.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <X className="h-5 w-5" /> Removing Chords
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Hover and click X to remove a chord.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <Download className="h-5 w-5" /> Downloading MIDI
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Download your progression as a MIDI file.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold flex items-center gap-2 mb-2 text-black dark:text-white">
+                                        <PianoIcon className="h-5 w-5" /> Piano Interface
+                                    </h3>
+                                    <p className="text-sm text-black dark:text-white">
+                                        Highlights notes as chords play; you can also play manually.
+                                    </p>
+                                </div>
                             </div>
                         </DialogDescription>
                     </DialogContent>
                 </Dialog>
+
             </div>
         </>
     );

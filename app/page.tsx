@@ -1,86 +1,45 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, KeyboardEvent, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Piano, KeyboardShortcuts, MidiNumbers } from "react-piano";
+import React, {useEffect, useState, useCallback, KeyboardEvent, useRef} from "react";
+import {motion, AnimatePresence} from "framer-motion";
+import {MidiNumbers} from "react-piano";
 import "react-piano/dist/styles.css";
 import * as Tone from "tone";
-import { Chord } from "tonal";
+import {Chord} from "tonal";
 import MidiWriter from "midi-writer-js";
-import SortableChord, { ChordItem } from "@/components/SortableChord";
-import Spacer from "@/components/Spacer";
+import {ChordItem} from "@/components/SortableChord";
 import Header from "@/components/Header";
 import PianoKeyboard from "@/components/PianoKeyboard";
-
+import ChordRow from "@/components/ChordRow";
+import ChordGenerator from "@/components/ChordGenerator";
 
 
 
 import {
-    DndContext,
-    closestCenter,
     PointerSensor,
     useSensor,
     useSensors,
     DragEndEvent,
 } from "@dnd-kit/core";
 import {
-    SortableContext,
-    useSortable,
     arrayMove,
-    horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 // UI Components
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
 
 // Lucide Icons
 import {
-    Sun,
-    Moon,
-    AlertCircle,
-    Lock,
-    Unlock,
-    MoveHorizontal,
-    Plus,
     RefreshCw,
-    X,
-    Info,
-    PlayCircle,
-    Download,
-    Piano as PianoIcon
+    Download
 } from "lucide-react";
 
 import exampleInputs from "@/public/example-inputs.json";
 
-interface SortableChordProps {
-    id: string;
-    item: ChordItem;
-    onPlay: () => void;
-    toggleLock: (id: string) => void;
-    onRemove: (id: string) => void;
-    loading: boolean;
-}
 
 // Helper: Generate a unique ID for each chord.
 const generateUniqueId = () => `${Date.now()}-${Math.random()}`;
-
-function SkeletonCard() {
-    return <Skeleton className="w-48 h-48 rounded-xl" />;
-}
 
 export default function Home() {
     // Dark mode state and effect
@@ -161,7 +120,7 @@ export default function Home() {
     // Toggle lock on a chord
     const toggleLock = useCallback((id: string) => {
         setChords((prev) =>
-            prev.map((ch) => (ch.id === id ? { ...ch, locked: !ch.locked } : ch))
+            prev.map((ch) => (ch.id === id ? {...ch, locked: !ch.locked} : ch))
         );
     }, []);
 
@@ -180,8 +139,8 @@ export default function Home() {
             try {
                 const res = await fetch("/api/generate", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt: usedPrompt, existingChords: chords }),
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({prompt: usedPrompt, existingChords: chords}),
                 });
                 const data = await res.json();
                 if (data.error) {
@@ -269,7 +228,7 @@ export default function Home() {
     const makeMidiUrl = useCallback((values: string[]): string => {
         const track = new MidiWriter.Track();
         track.setTimeSignature(4, 4, 24, 8);
-        track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 1 }));
+        track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1}));
         values.forEach((ch) => {
             const notes = Chord.get(ch).notes.map((n) => (/\d/.test(n) ? n : `${n}4`));
             track.addEvent(
@@ -280,7 +239,7 @@ export default function Home() {
             );
         });
         return URL.createObjectURL(
-            new Blob([new MidiWriter.Writer(track).buildFile()], { type: "audio/midi" })
+            new Blob([new MidiWriter.Writer(track).buildFile()], {type: "audio/midi"})
         );
     }, []);
 
@@ -306,7 +265,7 @@ export default function Home() {
     }, [generateChords]);
 
     const handleDragEnd = useCallback(
-        ({ active, over }: DragEndEvent) => {
+        ({active, over}: DragEndEvent) => {
             if (!over || active.id === over.id) return;
             setChords((items) => {
                 const oldIndex = items.findIndex((i) => i.id === active.id);
@@ -321,7 +280,7 @@ export default function Home() {
         async (position: number) => {
             if (chords.length >= 8) return;
             const newChordId = generateUniqueId();
-            const placeholderChord: ChordItem = { id: newChordId, chord: "", locked: false };
+            const placeholderChord: ChordItem = {id: newChordId, chord: "", locked: false};
             setChords((prev) => [
                 ...prev.slice(0, position),
                 placeholderChord,
@@ -331,7 +290,7 @@ export default function Home() {
             try {
                 const res = await fetch("/api/generate", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({
                         existingChords: chords,
                         addChordPosition: position,
@@ -345,7 +304,7 @@ export default function Home() {
                     setLoadingChordId(null);
                     return;
                 }
-                const updatedChord: ChordItem = { id: newChordId, chord: data.chord.trim(), locked: false };
+                const updatedChord: ChordItem = {id: newChordId, chord: data.chord.trim(), locked: false};
                 setChords((prev) =>
                     prev.map((ch) => (ch.id === newChordId ? updatedChord : ch))
                 );
@@ -359,141 +318,60 @@ export default function Home() {
         [chords, prompt]
     );
 
-    let chordRow: React.ReactNode = null;
-    if (chords.length > 0) {
-        const elements: React.ReactNode[] = chords.flatMap((chord, index) => [
-            <Spacer
-                key={`spacer-${index}`}
-                position={index}
-                chordsCount={chords.length}
-                addChordAt={addChordAt}
-            />,
-            <motion.div
-                key={chord.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.2 }}
-            >
-                <SortableChord
-                    id={chord.id}
-                    item={chord}
-                    onPlay={() => playChord(chord.chord)}
-                    toggleLock={toggleLock}
-                    onRemove={() => setChords((prev) => prev.filter((ch) => ch.id !== chord.id))}
-                    loading={!chord.locked && (fullLoading || loadingChordId === chord.id)}
-                />
-            </motion.div>,
-        ]);
-        elements.push(
-            <Spacer
-                key={`spacer-${chords.length}`}
-                position={chords.length}
-                chordsCount={chords.length}
-                addChordAt={addChordAt}
-            />
-        );
-        chordRow = (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={chords.map((ch) => ch.id)} strategy={horizontalListSortingStrategy}>
-                    <div className="flex gap-4 justify-center w-full">
-                        <AnimatePresence>{elements}</AnimatePresence>
-                    </div>
-                </SortableContext>
-            </DndContext>
-        );
-    } else if (fullLoading) {
-        chordRow = (
-            <div className="flex gap-4">
-                {[...Array(4)].map((_, i) => (
-                    <SkeletonCard key={i} />
-                ))}
-            </div>
-        );
-    }
 
     const hasChords = chords.length > 0 || fullLoading;
     const firstNote = MidiNumbers.fromNote("C3");
     const lastNote = MidiNumbers.fromNote("C5");
-    const keyboardShortcuts = KeyboardShortcuts.create({
-        firstNote,
-        lastNote,
-        keyboardConfig: KeyboardShortcuts.HOME_ROW,
-    });
+
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
-            <Header darkMode={darkMode} onToggleDarkMode={setDarkMode} />
+            <Header darkMode={darkMode} onToggleDarkMode={setDarkMode}/>
 
             <motion.main
                 className="flex flex-col items-center w-full"
-                initial={{ paddingTop: "45vh" }}
-                animate={{ paddingTop: hasChords ? "20vh" : "35vh" }}
-                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                initial={{paddingTop: "45vh"}}
+                animate={{paddingTop: hasChords ? "20vh" : "35vh"}}
+                transition={{duration: 0.5, ease: [0.4, 0, 0.2, 1]}}
             >
-                <div className="w-full max-w-3xl">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                        What chord progression do you want to generate?
-                    </p>
-                    <div className="flex gap-4 mb-8">
-                        <Input
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            placeholder="Describe a mood, style, genre or key ..."
-                            className="flex-grow px-8 h-16 placeholder:text-2xl !text-2xl"
-                            disabled={fullLoading}
-                        />
-                        <Button
-                            onClick={() => generateChords()}
-                            className="w-16 h-16 flex items-center justify-center transition transform hover:scale-105"
-                            disabled={fullLoading}
-                        >
-                            <RefreshCw className={`h-8 w-8 ${fullLoading ? "animate-spin" : ""}`} />
-                        </Button>
-                    </div>
+                <ChordGenerator
+                    prompt={prompt}
+                    setPrompt={setPrompt}
+                    handleKeyDown={handleKeyDown}
+                    generateChords={generateChords}
+                    fullLoading={fullLoading}
+                    chordsLength={chords.length}
+                    randomExamples={randomExamples}
+                    handleExampleClick={handleExampleClick}
+                />
 
-                    <AnimatePresence>
-                        {!fullLoading && chords.length === 0 && (
-                            <motion.div
-                                key="example-buttons"
-                                initial={{ opacity: 1 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0, height: 0, overflow: "hidden" }}
-                                transition={{ duration: 0.3 }}
-                                className="flex flex-wrap gap-2 mb-6"
-                            >
-                                {randomExamples.map((ex, i) => (
-                                    <Button
-                                        key={i}
-                                        variant="secondary"
-                                        disabled={fullLoading}
-                                        onClick={() => handleExampleClick(ex)}
-                                        className="hover:scale-101"
-                                    >
-                                        {ex}
-                                    </Button>
-                                ))}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-
-                {chordRow}
+                {(chords.length > 0 || fullLoading) && (
+                    <ChordRow
+                        chords={chords}
+                        fullLoading={fullLoading}
+                        loadingChordId={loadingChordId}
+                        sensors={sensors}
+                        handleDragEnd={handleDragEnd}
+                        addChordAt={addChordAt}
+                        playChord={playChord}
+                        toggleLock={toggleLock}
+                        setChords={setChords}
+                    />
+                )}
 
                 <AnimatePresence>
                     {midiUrl && chords.length > 0 && (
                         <motion.div
                             key="download"
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 16 }}
-                            transition={{ duration: 0.3 }}
+                            initial={{opacity: 0, y: 16}}
+                            animate={{opacity: 1, y: 0}}
+                            exit={{opacity: 0, y: 16}}
+                            transition={{duration: 0.3}}
                             className="w-full max-w-3xl flex justify-end mt-8"
                         >
                             <Button asChild disabled={!midiUrl} className="transition transform hover:scale-105 gap-2">
                                 <a href={midiUrl} download="chord_progression.mid" className="flex items-center">
-                                    <Download className="h-5 w-5" />
+                                    <Download className="h-5 w-5"/>
                                     Download MIDI
                                 </a>
                             </Button>
