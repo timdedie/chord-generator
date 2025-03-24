@@ -10,6 +10,8 @@ import MidiWriter from "midi-writer-js";
 import SortableChord, { ChordItem } from "@/components/SortableChord";
 import Spacer from "@/components/Spacer";
 import Header from "@/components/Header";
+import PianoKeyboard from "@/components/PianoKeyboard";
+
 
 
 
@@ -500,27 +502,12 @@ export default function Home() {
                 </AnimatePresence>
             </motion.main>
 
-            {/* Piano fixed at the bottom */}
-            <div className="fixed bottom-0 left-0 right-0 flex justify-center p-4">
-                <div className="max-w-[600px] w-full">
-                    <Piano
-                        noteRange={{ first: firstNote, last: lastNote }}
-                        playNote={(midiNumber: number) => {
-                            const note = MidiNumbers.getAttributes(midiNumber).note;
-                            pianoRef.current?.triggerAttack(note);
-                        }}
-                        stopNote={(midiNumber: number) => {
-                            const note = MidiNumbers.getAttributes(midiNumber).note;
-                            pianoRef.current?.triggerRelease(note);
-                        }}
-                        activeNotes={activeNotes
-                            .filter(note => note && note.trim() !== "")
-                            .map(note => MidiNumbers.fromNote(note.trim()))}
-                        width={600}
-                        renderNoteLabel={() => null}
-                    />
-                </div>
-            </div>
+            <PianoKeyboard
+                firstNote={firstNote}
+                lastNote={lastNote}
+                activeNotes={activeNotes}
+                pianoRef={pianoRef}
+            />
         </div>
     );
 }
