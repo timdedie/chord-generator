@@ -14,6 +14,8 @@ import ChordRow from "@/components/ChordRow";
 import ChordGenerator from "@/components/ChordGenerator";
 import MidiDownloader from "@/components/MidiDownloader";
 import PianoProvider, {PianoContext} from "@/components/PianoProvider";
+import MobileChordGrid from "@/components/MobileChordRow";
+import MobileHeader from "@/components/MobileHeader";
 
 
 import {
@@ -27,6 +29,7 @@ import {
 } from "@dnd-kit/sortable";
 
 import exampleInputs from "@/public/example-inputs.json";
+import {useMediaQuery} from "react-responsive";
 
 
 // Helper: Generate a unique ID for each chord.
@@ -42,6 +45,8 @@ export default function Home() {
     const [activeNotes, setActiveNotes] = useState<string[]>([]);
     const [examples, setExamples] = useState<string[]>([]);
     const [randomExamples, setRandomExamples] = useState<string[]>([]);
+
+    const isMobile = useMediaQuery({maxWidth: 768});
 
     // Initialize DnD sensors and piano sampler ref
     const sensors = useSensors(useSensor(PointerSensor));
@@ -240,8 +245,7 @@ export default function Home() {
     return (
         <PianoProvider>
             <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
-                <Header/>
-
+                {isMobile ? <MobileHeader/> : <Header/>}
 
                 <motion.main
                     className="flex flex-col items-center w-full"
@@ -261,17 +265,23 @@ export default function Home() {
                     />
 
                     {(chords.length > 0 || fullLoading) && (
-                        <ChordRow
-                            chords={chords}
-                            fullLoading={fullLoading}
-                            loadingChordId={loadingChordId}
-                            sensors={sensors}
-                            handleDragEnd={handleDragEnd}
-                            addChordAt={addChordAt}
-                            playChord={playChord}
-                            toggleLock={toggleLock}
-                            setChords={setChords}
-                        />
+                        <>
+                            {isMobile ? (
+                                <MobileChordGrid chords={chords} playChord={playChord} toggleLock={toggleLock}/>
+                            ) : (
+                                <ChordRow
+                                    chords={chords}
+                                    fullLoading={fullLoading}
+                                    loadingChordId={loadingChordId}
+                                    sensors={sensors}
+                                    handleDragEnd={handleDragEnd}
+                                    addChordAt={addChordAt}
+                                    playChord={playChord}
+                                    toggleLock={toggleLock}
+                                    setChords={setChords}
+                                />
+                            )}
+                        </>
                     )}
 
                     <AnimatePresence>
