@@ -250,7 +250,7 @@ export default function Home() {
                 <motion.main
                     className="flex flex-col items-center w-full"
                     initial={false}
-                    animate={{ paddingTop: hasChords ? (isMobile ? "10vh" : "20vh") : (isMobile ? "15vh" : "35vh") }}
+                    animate={{ paddingTop: hasChords ? (isMobile ? "10vh" : "20vh") : (isMobile ? "12vh" : "35vh") }}
                     transition={{duration: 0.5, ease: [0.4, 0, 0.2, 1]}}
                 >
                     <ChordGenerator

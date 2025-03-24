@@ -28,7 +28,7 @@ export default function ChordGenerator({
                                            handleExampleClick,
                                        }: ChordGeneratorProps) {
     return (
-        <div className="w-full max-w-3xl">
+        <div className="w-full max-w-3xl px-4">
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
                 What chord progression do you want to generate?
             </p>
