@@ -53,7 +53,6 @@ const MobileHeader: React.FC = () => {
                         <p>• Tap chords to play them.</p>
                         <p>• Long press chords to lock/unlock.</p>
                         <p>• Generate new progressions with refresh.</p>
-                        <p>• Download MIDI files directly from your device.</p>
                     </div>
                 </DialogContent>
             </Dialog>
