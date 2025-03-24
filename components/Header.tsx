@@ -35,13 +35,11 @@ interface HeaderProps {
 const Header: React.FC = () => {
     return (
         <>
-            {/* Left side: Page Title */}
             <header className="absolute top-0 left-0 p-8">
                 <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">
                     Chord Generator
                 </h1>
             </header>
-
             {/* Right side: Dark Mode Toggle & Info Dialog */}
             <div className="absolute top-0 right-0 p-8 flex items-center gap-4">
                 {/* Dark Mode Toggle */}

@@ -1,5 +1,3 @@
-// /app/sitemap.xml/route.ts
-
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -7,20 +5,20 @@ export async function GET() {
 
     const pages = [
         '', // homepage
-        // Add other static pages if needed
+        // Add other static pages here
     ];
 
     const body = `<?xml version="1.0" encoding="UTF-8"?>
   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     ${pages
-        .map(
-            (page) => `
+        .map((page) => {
+            const loc = page ? `${baseUrl}/${page}` : baseUrl;
+            return `
       <url>
-        <loc>${baseUrl}/${page}</loc>
+        <loc>${loc}</loc>
         <lastmod>${new Date().toISOString()}</lastmod>
-      </url>
-    `
-        )
+      </url>`;
+        })
         .join('')}
   </urlset>`;
 
