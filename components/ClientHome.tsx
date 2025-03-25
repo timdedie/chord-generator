@@ -324,7 +324,6 @@ export default function ClientHome() {
             "Checking consistency...",
         ];
 
-
         const [shuffledMessages, setShuffledMessages] = useState<string[]>([]);
         const [currentIndex, setCurrentIndex] = useState(0);
 
