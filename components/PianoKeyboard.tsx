@@ -35,8 +35,22 @@ export default function PianoKeyboard({
 
     // Use Framer Motion to track the scroll position and animate the opacity
     const { scrollY } = useViewportScroll();
+
     // When scrollY is 0, opacity is 1; when scrollY reaches 100, opacity becomes 0.
     const opacity = useTransform(scrollY, [0, 100], [1, 0]);
+
+    const sanitizedActiveNotes = activeNotes
+        .map(n => n.trim())
+        .filter(n => /^[A-G](?:#|b)?\d$/.test(n))
+        .map(n => {
+            try {
+                return MidiNumbers.fromNote(n);
+            } catch {
+                console.warn(`⚠️ Invalid note dropped: "${n}"`);
+                return null;
+            }
+        })
+        .filter((midi): midi is number => midi !== null);
 
     return (
         <motion.div style={{ opacity }} className="fixed bottom-0 left-0 right-0 flex justify-center p-4">
@@ -51,9 +65,7 @@ export default function PianoKeyboard({
                         noteRange={{ first: firstNote, last: lastNote }}
                         playNote={handlePlayNote}
                         stopNote={handleStopNote}
-                        activeNotes={activeNotes
-                            .filter((note) => note.trim() !== "")
-                            .map((note) => MidiNumbers.fromNote(note.trim()))}
+                        activeNotes={sanitizedActiveNotes}
                         width={responsiveWidth}
                         renderNoteLabel={() => null}
                     />
