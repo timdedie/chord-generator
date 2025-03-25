@@ -4,6 +4,16 @@ import { Gloock } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import React from "react";
+import {
+    Lock,
+    MoveHorizontal,
+    Plus,
+    RefreshCw,
+    X,
+    PlayCircle,
+    Download,
+    Piano as PianoIcon
+} from "lucide-react";
 
 // Existing font import
 const poppins = Gloock({ subsets: ["latin"], weight: "400" });
@@ -234,6 +244,79 @@ export default function RootLayout({
                 </a>
             </div>
 
+            {/* How It Works Section */}
+            {/* How it works */}
+            {/* How it works */}
+            <div className="text-left max-w-xl mx-auto mt-8 space-y-6">
+                <h3 className="font-semibold mb-4">How it works</h3>
+                <div className="space-y-4">
+                    <div>
+                        <strong className="flex items-center gap-2">
+                            <RefreshCw className="h-5 w-5 opacity-75" />
+                            Generating Progressions
+                        </strong>
+                        <p>Enter a description (e.g., “happy jazz in C major”) and click refresh to generate a new progression.</p>
+                    </div>
+
+                    <div>
+                        <strong className="flex items-center gap-2">
+                            <PlayCircle className="h-5 w-5 opacity-75" />
+                            Playing Chords
+                        </strong>
+                        <p>Click a chord to hear it played on the piano.</p>
+                    </div>
+
+                    <div>
+                        <strong className="flex items-center gap-2">
+                            <Lock className="h-5 w-5 opacity-75" />
+                            Locking Chords
+                        </strong>
+                        <p>Hover and lock a chord to keep it during generation.</p>
+                    </div>
+
+                    <div>
+                        <strong className="flex items-center gap-2">
+                            <MoveHorizontal className="h-5 w-5 opacity-75" />
+                            Rearranging Chords
+                        </strong>
+                        <p>Hover to see the move icon, then drag to rearrange.</p>
+                    </div>
+
+                    <div>
+                        <strong className="flex items-center gap-2">
+                            <Plus className="h-5 w-5 opacity-75" />
+                            Adding Chords
+                        </strong>
+                        <p>Hover between chords and click plus to add a new one.</p>
+                    </div>
+
+                    <div>
+                        <strong className="flex items-center gap-2">
+                            <X className="h-5 w-5 opacity-75" />
+                            Removing Chords
+                        </strong>
+                        <p>Hover and click X to remove a chord.</p>
+                    </div>
+
+                    <div>
+                        <strong className="flex items-center gap-2">
+                            <Download className="h-5 w-5 opacity-75" />
+                            Downloading MIDI
+                        </strong>
+                        <p>Download your progression as a MIDI file.</p>
+                    </div>
+
+                    <div>
+                        <strong className="flex items-center gap-2">
+                            <PianoIcon className="h-5 w-5 opacity-75" />
+                            Piano Interface
+                        </strong>
+                        <p>Highlights notes as chords play; you can also play manually.</p>
+                    </div>
+                </div>
+            </div>
+
+
             {/* SEO-Friendly FAQ Section */}
             <div className="text-left max-w-xl mx-auto mt-8">
                 <h3 className="font-semibold mb-4">Frequently Asked Questions</h3>
@@ -270,6 +353,7 @@ export default function RootLayout({
                 </div>
             </div>
         </footer>
+
         </body>
         </html>
     );
