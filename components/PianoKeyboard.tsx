@@ -55,11 +55,6 @@ export default function PianoKeyboard({
     return (
         <motion.div style={{ opacity }} className="fixed bottom-0 left-0 right-0 flex justify-center p-4">
             <div className={`w-full ${isMobile ? 'max-w-[320px]' : 'max-w-[600px]'} bg-transparent`}>
-                {isMobile && (
-                    <p className="text-xs text-center text-gray-500 mt-2">
-                        Use the desktop version to move, delete, or add chords and download MIDI
-                    </p>
-                )}
                 <div className="bg-transparent drop-shadow-md">
                     <Piano
                         noteRange={{ first: firstNote, last: lastNote }}
