@@ -7,7 +7,6 @@ import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
 import * as Tone from "tone";
 import { Chord } from "tonal";
-import MidiWriter from "midi-writer-js";
 import { ChordItem } from "@/components/SortableChord";
 import Header from "@/components/Header";
 import PianoKeyboard from "@/components/PianoKeyboard";
@@ -31,7 +30,6 @@ export default function ClientHome() {
     const [fullLoading, setFullLoading] = useState<boolean>(false);
     const [loadingChordId, setLoadingChordId] = useState<string | null>(null);
     const [error, setError] = useState<string>("");
-    const [midiUrl, setMidiUrl] = useState<string>("");
     const [activeNotes, setActiveNotes] = useState<string[]>([]);
     const [examples, setExamples] = useState<string[]>([]);
     const [randomExamples, setRandomExamples] = useState<string[]>([]);

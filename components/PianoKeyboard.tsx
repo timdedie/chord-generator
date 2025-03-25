@@ -4,7 +4,7 @@ import React, { useContext } from "react";
 import { Piano, MidiNumbers } from "react-piano";
 import { PianoContext } from "./PianoProvider";
 import { useMediaQuery } from "react-responsive";
-import { motion, useViewportScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 interface PianoKeyboardProps {
     firstNote: number;
@@ -33,10 +33,10 @@ export default function PianoKeyboard({
         piano?.triggerRelease(note);
     };
 
-    // Use Framer Motion to track the scroll position and animate the opacity
-    const { scrollY } = useViewportScroll();
+    // 👉 DEPRECATED useViewportScroll() replaced with useScroll()
+    const { scrollY } = useScroll();
 
-    // When scrollY is 0, opacity is 1; when scrollY reaches 100, opacity becomes 0.
+    // Fade out between scrollY 0 → 100
     const opacity = useTransform(scrollY, [0, 100], [1, 0]);
 
     const sanitizedActiveNotes = activeNotes
@@ -68,7 +68,4 @@ export default function PianoKeyboard({
             </div>
         </motion.div>
     );
-
-
-
 }

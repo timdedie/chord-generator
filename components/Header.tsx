@@ -2,8 +2,6 @@
 
 import React from "react";
 import {
-    Sun,
-    Moon,
     Lock,
     MoveHorizontal,
     Plus,
@@ -14,7 +12,6 @@ import {
     Download,
     Piano as PianoIcon
 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -25,12 +22,6 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import DarkModeToggle from "@/components/DarkModeToggle";
-
-
-interface HeaderProps {
-    darkMode: boolean;
-    onToggleDarkMode: (checked: boolean) => void;
-}
 
 const Header: React.FC = () => {
     return (
