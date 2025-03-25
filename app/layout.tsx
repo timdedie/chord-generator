@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import React from "react";
 
+// Existing font import
 const poppins = Gloock({ subsets: ["latin"], weight: "400" });
 
 // JSON-LD Schemas
@@ -58,6 +59,57 @@ const faqSchema = {
             },
         },
     ],
+};
+
+// NEW: HowTo Schema
+const howToSchema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "How to Use ChordGen",
+    description:
+        "Learn how to generate, play, lock, rearrange, and download chords using ChordGen.",
+    step: [
+        {
+            "@type": "HowToStep",
+            name: "Generating Progressions",
+            text: "Enter a description (e.g., 'happy jazz in C major') and click refresh to generate a new progression."
+        },
+        {
+            "@type": "HowToStep",
+            name: "Playing Chords",
+            text: "Click a chord to hear it played on the piano."
+        },
+        {
+            "@type": "HowToStep",
+            name: "Locking Chords",
+            text: "Hover and lock a chord to keep it during generation."
+        },
+        {
+            "@type": "HowToStep",
+            name: "Rearranging Chords",
+            text: "Hover to see the move icon, then drag to rearrange."
+        },
+        {
+            "@type": "HowToStep",
+            name: "Adding Chords",
+            text: "Hover between chords and click the plus button to add a new chord."
+        },
+        {
+            "@type": "HowToStep",
+            name: "Removing Chords",
+            text: "Hover over a chord and click X to remove it."
+        },
+        {
+            "@type": "HowToStep",
+            name: "Downloading MIDI",
+            text: "Download your chord progression as a MIDI file."
+        },
+        {
+            "@type": "HowToStep",
+            name: "Piano Interface",
+            text: "Highlights notes as chords play. You can also play manually on the piano."
+        }
+    ]
 };
 
 export default function RootLayout({
@@ -135,7 +187,6 @@ export default function RootLayout({
                     __html: JSON.stringify(webAppSchema),
                 }}
             />
-
             {/* JSON-LD: FAQ */}
             <Script
                 id="faq-schema"
@@ -144,20 +195,27 @@ export default function RootLayout({
                     __html: JSON.stringify(faqSchema),
                 }}
             />
+            {/* JSON-LD: HowTo */}
+            <Script
+                id="howto-schema"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(howToSchema),
+                }}
+            />
         </head>
         <body className={poppins.className}>
         <main className="flex-grow">{children}</main>
         <Analytics />
         <footer className="w-full text-center text-sm text-gray-500 dark:text-gray-400 p-8 space-y-6">
-            {/* Short About Section with Keywords */}
+            {/* Short About Section */}
             <div>
                 <p>
                     <strong>ChordGen</strong> is a free AI-powered chord progression
-                    generator. Describe the mood, style, or vibe you want, and
-                    ChordGen will instantly generate unique chord progressions
-                    tailored to your input. Edit, rearrange, and download your chords
-                    as MIDI files for seamless integration into your music production
-                    workflow.
+                    generator. Describe the mood, style, or vibe you want, and ChordGen
+                    will instantly generate unique chord progressions tailored to your input.
+                    Edit, rearrange, and download your chords as MIDI files for seamless
+                    integration into your music production workflow.
                 </p>
                 <p className="mt-2">
                     Whether you're a producer, songwriter, or composer, ChordGen helps
@@ -190,17 +248,16 @@ export default function RootLayout({
                     <div>
                         <strong>Can I export the chords as MIDI files?</strong>
                         <p>
-                            Absolutely. Once you've generated or edited your chord
-                            progression, you can download it instantly as a standard MIDI
-                            file.
+                            Absolutely. Once you've generated or edited your chord progression,
+                            you can download it instantly as a standard MIDI file.
                         </p>
                     </div>
                     <div>
                         <strong>How does ChordGen work?</strong>
                         <p>
-                            ChordGen uses advanced AI models to interpret your natural
-                            language input and create musically coherent chord
-                            progressions tailored to your request.
+                            ChordGen uses advanced AI models to interpret your natural language
+                            input and create musically coherent chord progressions tailored to
+                            your request.
                         </p>
                     </div>
                     <div>
