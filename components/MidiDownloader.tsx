@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import MidiWriter from "midi-writer-js";
 import { Chord } from "tonal";
+import { toast } from "sonner";
 
 interface MidiDownloaderProps {
     chords: string[];
@@ -13,11 +14,13 @@ interface MidiDownloaderProps {
 
 const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords }) => {
     const [midiUrl, setMidiUrl] = useState<string>("");
+    const [hasValidChords, setHasValidChords] = useState<boolean>(false);
 
     useEffect(() => {
-        // Clean up old URL if any
-        if (!chords.length) {
+        if (!chords || chords.length === 0) {
+            if (midiUrl) URL.revokeObjectURL(midiUrl);
             setMidiUrl("");
+            setHasValidChords(false);
             return;
         }
 
@@ -25,42 +28,92 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords }) => {
         track.setTimeSignature(4, 4, 24, 8);
         track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 1 }));
 
+        let validChordsFound = false;
         chords.forEach((ch) => {
-            const notes = Chord.get(ch).notes.map((n) =>
+            const chordData = Chord.get(ch);
+            if (chordData.empty || !chordData.notes || chordData.notes.length === 0) {
+                console.warn(`Skipping empty or invalid chord for MIDI: ${ch}`);
+                return;
+            }
+            const notes = chordData.notes.map((n) =>
                 /\d/.test(n) ? n : `${n}4`
             );
             track.addEvent(new MidiWriter.NoteEvent({ pitch: notes, duration: "1" }));
+            validChordsFound = true;
         });
 
-        const blob = new Blob([new MidiWriter.Writer(track).buildFile()], {
+        if (!validChordsFound) {
+            if (midiUrl) URL.revokeObjectURL(midiUrl);
+            setMidiUrl("");
+            setHasValidChords(false);
+            return;
+        }
+
+        setHasValidChords(true);
+        const writer = new MidiWriter.Writer([track]);
+        const blob = new Blob([writer.buildFile()], {
             type: "audio/midi",
         });
-        const url = URL.createObjectURL(blob);
-        setMidiUrl(url);
+        const newUrl = URL.createObjectURL(blob);
 
-        return () => URL.revokeObjectURL(url);
+        if (midiUrl) {
+            URL.revokeObjectURL(midiUrl);
+        }
+        setMidiUrl(newUrl);
+
+        return () => {
+            URL.revokeObjectURL(newUrl);
+        };
     }, [chords]);
 
+    const handleDownloadClick = () => {
+        if (!midiUrl || !hasValidChords) {
+            toast.error("MIDI Not Ready", {
+                description: "No valid chords to download.",
+            });
+            return;
+        }
+        toast.success("Download Started!", {
+            description: "Drag the MIDI file into your DAW to use it.",
+        });
+    };
+
+    const buttonAppearAnimation = {
+        initial: { opacity: 0, y: 10 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: 10 },
+        transition: { duration: 0.3, ease: "easeInOut" }
+    };
+
     return (
-        <AnimatePresence>
-            {midiUrl && (
-                <motion.div
-                    key="download"
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 16 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-full max-w-3xl flex justify-end mt-8"
-                >
-                    <Button asChild disabled={!midiUrl} className="transition transform hover:scale-105 gap-2">
-                        <a href={midiUrl} download="chord_progression.mid" className="flex items-center">
-                            <Download className="h-5 w-5" />
-                            Download MIDI
-                        </a>
-                    </Button>
-                </motion.div>
-            )}
-        </AnimatePresence>
+        <div>
+            <AnimatePresence>
+                {(midiUrl && hasValidChords) && (
+                    <motion.div
+                        key="downloadButtonActual"
+                        initial={buttonAppearAnimation.initial}
+                        animate={buttonAppearAnimation.animate}
+                        exit={buttonAppearAnimation.exit}
+                        transition={buttonAppearAnimation.transition}
+                    >
+                        <Button
+                            asChild
+                            className="transition transform gap-2 max-w-xs sm:w-auto" // Removed hover:scale-105
+                            onClick={handleDownloadClick}
+                        >
+                            <a
+                                href={midiUrl}
+                                download="chord_progression.mid"
+                                className="flex items-center"
+                            >
+                                <Download className="h-5 w-5" />
+                                Download MIDI
+                            </a>
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
 

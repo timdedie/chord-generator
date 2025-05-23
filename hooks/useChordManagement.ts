@@ -1,55 +1,38 @@
 import { DragEndEvent } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable"; // Corrected import for arrayMove
-import { useState, useCallback, useEffect } from "react";
+import { arrayMove } from "@dnd-kit/sortable";
+import { useState, useCallback } from "react"; // Removed useEffect as it's not used
 import { Chord } from "tonal";
-// import { ChordItem } from "@/components/SortableChord"; // Assuming this type definition exists
+import { toast } from "sonner"; // Import toast from sonner
 
-// Temporary ChordItem definition if not available elsewhere yet for the sake of the hook
 export interface ChordItem {
     id: string;
     chord: string;
     locked: boolean;
 }
 
+const generateUniqueId = () => `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-const generateUniqueId = () => `${Date.now()}-${Math.random()}`;
-
-// Interface for props if you want to pass initial values
 interface UseChordManagementProps {
     initialPrompt?: string;
     initialChords?: ChordItem[];
-    examplePrompts?: string[]; // If examples are managed here
 }
 
 export function useChordManagement(props?: UseChordManagementProps) {
+    // toast function from sonner is directly available
     const [prompt, setPrompt] = useState<string>(props?.initialPrompt || "");
     const [chords, setChords] = useState<ChordItem[]>(props?.initialChords || []);
     const [fullLoading, setFullLoading] = useState<boolean>(false);
     const [loadingChordId, setLoadingChordId] = useState<string | null>(null);
-    const [error, setError] = useState<string>("");
-    // If managing examples here:
-    // const [examples, setExamples] = useState<string[]>(props?.examplePrompts || []);
-    // const [randomExamples, setRandomExamples] = useState<string[]>([]);
 
+    const showErrorToast = useCallback((title: string, description?: string) => {
+        // sonner's API for error toasts is typically toast.error(title, { description: ... })
+        toast.error(title, {
+            description: description,
+            // duration: 5000, // Optional: sonner has its own defaults
+            // action: { label: "Dismiss", onClick: () => {} }, // Optional
+        });
+    }, []);
 
-    // --- Effects ---
-    useEffect(() => {
-        if (error) {
-            const timer = setTimeout(() => setError(""), 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [error]);
-
-    // Example: if managing example prompts here
-    // useEffect(() => {
-    //   if (examples.length > 0) {
-    //     const shuffled = [...examples].sort(() => 0.5 - Math.random());
-    //     setRandomExamples(shuffled.slice(0, 5));
-    //   }
-    // }, [examples]);
-
-
-    // --- Callbacks ---
     const toggleLock = useCallback((id: string) => {
         setChords((prev) =>
             prev.map((ch) => (ch.id === id ? { ...ch, locked: !ch.locked } : ch))
@@ -57,13 +40,13 @@ export function useChordManagement(props?: UseChordManagementProps) {
     }, []);
 
     const generateChordsInternal = useCallback(
-        async (currentPrompt: string, currentChords: ChordItem[], attempt: number = 0): Promise<ChordItem[] | null> => {
+        async (currentPromptInternal: string, currentChords: ChordItem[], attempt: number = 0): Promise<ChordItem[] | null> => {
             const MAX_ATTEMPTS = 3;
-            if (!currentPrompt.trim()) {
-                setError("Please describe your chord progression before generating.");
-                return null; // Indicate failure or no chords
+            if (!currentPromptInternal.trim()) {
+                showErrorToast("Input Error", "Please describe your chord progression before generating.");
+                setFullLoading(false);
+                return null;
             }
-            setError("");
             setFullLoading(true);
             let generatedChordsResult = null;
 
@@ -71,11 +54,12 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 const res = await fetch("/api/generate", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt: currentPrompt, existingChords: currentChords }),
+                    body: JSON.stringify({ prompt: currentPromptInternal, existingChords: currentChords }),
                 });
                 const data = await res.json();
-                if (data.error) {
-                    setError(data.error);
+                if (!res.ok || data.error) {
+                    const errorMsg = data.error || "Failed to generate chords from server.";
+                    showErrorToast("Generation Failed", errorMsg);
                     setFullLoading(false);
                     return null;
                 }
@@ -95,11 +79,11 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 });
 
                 if (!valid) {
-                    if (attempt < MAX_ATTEMPTS) {
+                    if (attempt < MAX_ATTEMPTS - 1) {
                         console.warn("Invalid chord detected, reattempting generation", attempt + 1);
-                        return generateChordsInternal(currentPrompt, currentChords, attempt + 1);
+                        return generateChordsInternal(currentPromptInternal, currentChords, attempt + 1);
                     } else {
-                        setError("Could not generate valid chords after several attempts.");
+                        showErrorToast("Generation Error", "Could not generate valid chords after several attempts.");
                         setFullLoading(false); return null;
                     }
                 }
@@ -107,26 +91,46 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 const validNewChords = newChords.filter(Boolean) as ChordItem[];
 
                 if (currentChords.some(c => c.locked)) {
-                    generatedChordsResult = validNewChords.map((newChord, idx) => {
-                        const oldChord = currentChords[idx];
-                        return oldChord && oldChord.locked ? oldChord : newChord;
-                    });
+                    const finalResult: ChordItem[] = [];
+                    let newChordIdx = 0;
+                    // Iterate based on the length of the original chords array to preserve positions
+                    for(let i=0; i < currentChords.length; i++) {
+                        if(currentChords[i].locked) {
+                            finalResult[i] = currentChords[i];
+                        } else if (newChordIdx < validNewChords.length) {
+                            // Fill unlocked slot with a new chord
+                            finalResult[i] = validNewChords[newChordIdx++];
+                        } else {
+                            // If no new chords left for this unlocked slot (new progression is shorter)
+                            // This slot will be empty and filtered out later, effectively removing the old unlocked chord
+                        }
+                    }
+                    // Add any remaining new chords if the new progression was longer than original
+                    if (newChordIdx < validNewChords.length) {
+                        finalResult.push(...validNewChords.slice(newChordIdx));
+                    }
+                    generatedChordsResult = finalResult.filter(Boolean); // Remove any empty slots
                 } else {
                     generatedChordsResult = validNewChords;
                 }
 
-            } catch (e) {
+            } catch (e: any) {
                 console.error("Generation error:", e);
-                setError("Error generating chords. Please try again.");
+                showErrorToast("Network Error", e.message || "Error generating chords. Please try again.");
             }
             setFullLoading(false);
             return generatedChordsResult;
         },
-        [] // Dependencies for fetch, etc.
+        [showErrorToast]
     );
 
-    const generateChords = useCallback(async (customPrompt?: string) => {
-        const usedPrompt = customPrompt ?? prompt;
+    const generateChords = useCallback(async (customPromptArg?: string | unknown) => {
+        let usedPrompt: string;
+        if (typeof customPromptArg === 'string') {
+            usedPrompt = customPromptArg;
+        } else {
+            usedPrompt = prompt;
+        }
         const result = await generateChordsInternal(usedPrompt, chords);
         if (result) {
             setChords(result);
@@ -136,7 +140,10 @@ export function useChordManagement(props?: UseChordManagementProps) {
 
     const addChordAt = useCallback(
         async (position: number) => {
-            if (chords.length >= 8) return;
+            if (chords.length >= 8) {
+                showErrorToast("Limit Reached", "Maximum of 8 chords allowed.");
+                return;
+            }
             const newChordId = generateUniqueId();
             const placeholderChord: ChordItem = { id: newChordId, chord: "", locked: false };
 
@@ -156,32 +163,43 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     body: JSON.stringify({
                         existingChords: originalChords,
                         addChordPosition: position,
-                        prompt: prompt || "add chord",
+                        prompt: prompt || "add one suitable chord here",
                     }),
                 });
                 const data = await res.json();
-                if (data.error) {
-                    setError(data.error);
+
+                if (!res.ok || data.error) {
+                    const errorMsg = data.error || "Failed to add chord from server.";
+                    showErrorToast("Add Chord Failed", errorMsg);
                     setChords(originalChords);
                     setLoadingChordId(null);
                     return;
                 }
+
+                const receivedChordSymbol = data.chord?.trim();
+                if (!receivedChordSymbol || !Chord.get(receivedChordSymbol).name) {
+                    showErrorToast("Invalid Chord", "Received an invalid chord from the server.");
+                    setChords(originalChords);
+                    setLoadingChordId(null);
+                    return;
+                }
+
                 const updatedChord: ChordItem = {
                     id: newChordId,
-                    chord: data.chord.trim(),
+                    chord: receivedChordSymbol,
                     locked: false,
                 };
                 setChords((prev) =>
                     prev.map((ch) => (ch.id === newChordId ? updatedChord : ch))
                 );
-            } catch (e) {
+            } catch (e: any) {
                 console.error("Error adding chord:", e);
-                setError("Error adding chord. Please try again.");
+                showErrorToast("Network Error", e.message || "Error adding chord. Please try again.");
                 setChords(originalChords);
             }
             setLoadingChordId(null);
         },
-        [chords, prompt]
+        [chords, prompt, showErrorToast]
     );
 
     const handleDragEnd = useCallback(
@@ -190,6 +208,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
             setChords((items) => {
                 const oldIndex = items.findIndex((i) => i.id === active.id);
                 const newIndex = items.findIndex((i) => i.id === over.id);
+                if (oldIndex === -1 || newIndex === -1) return items;
                 return arrayMove(items, oldIndex, newIndex);
             });
         },
@@ -197,17 +216,20 @@ export function useChordManagement(props?: UseChordManagementProps) {
     );
 
     const generateChordsFromExample = useCallback((examplePrompt: string) => {
-        setPrompt(examplePrompt);
-        generateChords(examplePrompt);
-    }, [generateChords, setPrompt]);
-
+        if (typeof examplePrompt === 'string') {
+            setPrompt(examplePrompt);
+            generateChords(examplePrompt);
+        } else {
+            console.error("generateChordsFromExample received a non-string prompt:", examplePrompt);
+            showErrorToast("Input Error", "Invalid example prompt type.");
+        }
+    }, [generateChords, setPrompt, showErrorToast]);
 
     return {
         prompt, setPrompt,
         chords, setChords,
         fullLoading,
         loadingChordId,
-        error,
         toggleLock,
         generateChords,
         addChordAt,

@@ -1,6 +1,6 @@
 // app/layout.tsx
 import "./globals.css";
-import { Gloock } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import React from "react";
@@ -14,11 +14,16 @@ import {
     Download,
     Piano as PianoIcon
 } from "lucide-react";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 
-// Existing font import
-const poppins = Gloock({ subsets: ["latin"], weight: "400" });
+const outfit = Outfit({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700"],
+    variable: "--font-outfit",
+    display: "swap",
+});
 
-// JSON-LD Schemas
+// JSON-LD Schemas (keeping them as they are)
 const webAppSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -71,7 +76,6 @@ const faqSchema = {
     ],
 };
 
-// NEW: HowTo Schema
 const howToSchema = {
     "@context": "https://schema.org",
     "@type": "HowTo",
@@ -214,11 +218,11 @@ export default function RootLayout({
                 }}
             />
         </head>
-        <body className={poppins.className}>
+        <body className={outfit.className}>
         <main className="flex-grow">{children}</main>
         <Analytics />
         <footer className="w-full text-center text-sm text-gray-500 dark:text-gray-400 p-8 space-y-6">
-            {/* Short About Section */}
+            {/* ... existing footer content ... */}
             <div>
                 <p>
                     <strong>ChordGen</strong> is a free AI-powered chord progression
@@ -233,7 +237,6 @@ export default function RootLayout({
                 </p>
             </div>
 
-            {/* Internal Link (boosts SEO) */}
             <div>
                 <a
                     href="https://www.chordgen.org"
@@ -243,10 +246,6 @@ export default function RootLayout({
                     Try ChordGen – Free AI Chord Progression Generator
                 </a>
             </div>
-
-            {/* How It Works Section */}
-            {/* How it works */}
-            {/* How it works */}
             <div className="text-left max-w-xl mx-auto mt-8 space-y-6">
                 <h3 className="font-semibold mb-4">How it works</h3>
                 <div className="space-y-4">
@@ -317,7 +316,6 @@ export default function RootLayout({
             </div>
 
 
-            {/* SEO-Friendly FAQ Section */}
             <div className="text-left max-w-xl mx-auto mt-8">
                 <h3 className="font-semibold mb-4">Frequently Asked Questions</h3>
                 <div className="space-y-4">
@@ -353,7 +351,7 @@ export default function RootLayout({
                 </div>
             </div>
         </footer>
-
+        <SonnerToaster richColors position="bottom-right" /> {/* Changed position here */}
         </body>
         </html>
     );
