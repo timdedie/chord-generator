@@ -1,9 +1,51 @@
+/*
+  Tailwind CSS v4 Core Import
+  This is the correct way to import Tailwind's base styles and utilities in v4.
+*/
 @import "tailwindcss";
-@import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/*
+  ACTION REQUIRED: Review 'tw-animate-css'
+  This import can contribute significantly to render-blocking CSS and bundle size.
+  - Is the entire library necessary?
+  - Can you use Tailwind's built-in animation utilities or custom CSS for your needs?
+  - Can you import only specific animations if the library supports it?
+  It's commented out below to help isolate other parsing errors.
+  If your site's animations are missing, you'll need to uncomment this and decide
+  on the best approach, or find an alternative.
+*/
+/* @import "tw-animate-css"; */
 
-@theme inline {
+
+/*
+  CRITICAL ACTION REQUIRED: Resolve Issues with Custom Directives
+  The '@custom-variant' and '@theme' directives below are NOT standard Tailwind CSS.
+  They are provided by Tailwind CSS plugins (e.g., for theming, like tailwindcss-themer,
+  or as part of a UI library like shadcn/ui's theming setup).
+
+  The "Identifier expected" and "':' expected" errors are VERY LIKELY originating from these
+  custom directives due to:
+  1. The plugin being incompatible with Tailwind CSS v4.
+  2. The plugin requiring a different syntax or configuration for Tailwind CSS v4.
+
+  STEPS TO FIX:
+  1. Identify the Plugin: Check your `tailwind.config.js` file in the `plugins: []` array
+     to see which plugin(s) might be providing these.
+  2. Check Plugin Documentation: Visit the plugin's official documentation or GitHub page.
+     Look for information on Tailwind CSS v4 compatibility, migration guides, or updated usage instructions.
+  3. Update or Reconfigure: You may need to update the plugin to a newer version or
+     change how it's configured in `tailwind.config.js` or used in this CSS file.
+  4. Temporary Isolation: To confirm these are the cause, you can temporarily comment out
+     the entire '@custom-variant' and '@theme' blocks. If your build then succeeds
+     (without theming), it confirms the issue lies with these plugin-provided directives.
+
+  The blocks are included below as per your original file, but they are the
+  PRIMARY SUSPECTS for your build errors.
+*/
+
+@custom-variant dark (&:is(.dark *)); /* LIKELY CAUSING PARSING ERRORS WITH V4 */
+
+@theme inline { /* LIKELY CAUSING PARSING ERRORS WITH V4 */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -41,6 +83,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* CSS Variables for Theming */
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -110,7 +153,13 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
+/* Base Layer Styles */
 @layer base {
+  /*
+    CONSIDERATION: Applying border and outline to *every* element (*)
+    can be less performant than applying them more selectively.
+    This is a micro-optimization but something to be aware of for complex pages.
+  */
   * {
     @apply border-border outline-ring/50;
   }
