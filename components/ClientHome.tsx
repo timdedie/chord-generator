@@ -1,4 +1,3 @@
-// components/ClientHome.tsx (Client Component)
 "use client";
 
 import React, { useEffect, useState, useCallback, KeyboardEvent, useContext } from "react";
@@ -7,7 +6,14 @@ import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
 import * as Tone from "tone";
 import { Chord } from "tonal";
-import { ChordItem } from "@/components/SortableChord";
+import { ChordItem } from "@/components/SortableChord"; // Assuming this is used by ChordRow/MobileChordGrid or other children
+
+// Import Custom Hooks
+import { useChordManagement } from "@/hooks/useChordManagement";
+import { useExamplePrompts } from "@/hooks/useExamplePrompts"; // <-- NEW HOOK
+
+// Import Components
+import ThinkingMessages from "@/components/ThinkingMessages";
 import Header from "@/components/Header";
 import PianoKeyboard from "@/components/PianoKeyboard";
 import ChordRow from "@/components/ChordRow";
@@ -16,34 +22,35 @@ import MidiDownloader from "@/components/MidiDownloader";
 import PianoProvider, { PianoContext } from "@/components/PianoProvider";
 import MobileChordGrid from "@/components/MobileChordRow";
 import MobileHeader from "@/components/MobileHeader";
-import { PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import exampleInputs from "@/public/example-inputs.json";
+import { PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useMediaQuery } from "react-responsive";
-
-// Helper: Generate a unique ID for each chord.
-const generateUniqueId = () => `${Date.now()}-${Math.random()}`;
+// exampleInputs.json is no longer imported here directly
 
 export default function ClientHome() {
-    const [prompt, setPrompt] = useState<string>("");
-    const [chords, setChords] = useState<ChordItem[]>([]);
-    const [fullLoading, setFullLoading] = useState<boolean>(false);
-    const [loadingChordId, setLoadingChordId] = useState<string | null>(null);
-    const [error, setError] = useState<string>("");
-    const [activeNotes, setActiveNotes] = useState<string[]>([]);
-    const [examples, setExamples] = useState<string[]>([]);
-    const [randomExamples, setRandomExamples] = useState<string[]>([]);
+    // --- Use the custom hook for chord management ---
+    const {
+        prompt, setPrompt,
+        chords, setChords,
+        fullLoading,
+        loadingChordId,
+        error,
+        toggleLock,
+        generateChords,
+        addChordAt,
+        handleDragEnd,
+        generateChordsFromExample,
+    } = useChordManagement();
 
+    // --- Use the custom hook for example prompts ---
+    const { randomExamples /*, pickNewRandomExamples */ } = useExamplePrompts(); // <-- USING NEW HOOK
+
+    // --- Audio State and Logic (still managed by ClientHome for now) ---
+    const [activeNotes, setActiveNotes] = useState<string[]>([]);
     const isMobile = useMediaQuery({ maxWidth: 768 });
     const sensors = useSensors(useSensor(PointerSensor));
+    const piano = useContext(PianoContext);
 
-    // On mount, load examples and initialize piano sampler
-    useEffect(() => {
-        setExamples(exampleInputs as string[]);
-        pickRandomExamples(exampleInputs as string[]);
-    }, []);
-
-    // Resume Tone.js audio on mobile devices.
+    // Resume Tone.js audio on mobile devices
     useEffect(() => {
         if (isMobile) {
             const resumeAudio = async () => {
@@ -61,114 +68,18 @@ export default function ClientHome() {
         }
     }, [isMobile]);
 
-    // Helper: pick 5 random examples.
-    const pickRandomExamples = useCallback((lines: string[]) => {
-        const shuffled = [...lines].sort(() => 0.5 - Math.random());
-        setRandomExamples(shuffled.slice(0, 5));
-    }, []);
-
-    // Toggle lock on a chord.
-    const toggleLock = useCallback((id: string) => {
-        setChords((prev) =>
-            prev.map((ch) => (ch.id === id ? { ...ch, locked: !ch.locked } : ch))
-        );
-    }, []);
-
-    // Generate chords based on the prompt.
-    const generateChords = useCallback(
-        async (customPrompt?: string, attempt: number = 0) => {
-            const MAX_ATTEMPTS = 3;
-            const usedPrompt = String(customPrompt ?? prompt);
-            if (!usedPrompt.trim()) {
-                setError("Please describe your chord progression before generating.");
+    // Play a given chord
+    const playChord = useCallback(
+        async (chordSymbol: string) => {
+            if (!chordSymbol) return;
+            await Tone.start(); // Ensure audio context is running
+            const chordData = Chord.get(chordSymbol);
+            if (!chordData || !chordData.notes || chordData.notes.length === 0) {
+                console.warn(`Could not get notes for chord: ${chordSymbol}`);
+                setActiveNotes([]);
                 return;
             }
-            setError("");
-            setFullLoading(true);
-
-            try {
-                const res = await fetch("/api/generate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt: usedPrompt, existingChords: chords }),
-                });
-                const data = await res.json();
-                if (data.error) {
-                    setError(data.error);
-                    setFullLoading(false);
-                    return;
-                }
-
-                // Clean and split the API response.
-                const cleaned = data.chords
-                    .replace(/^chords:\s*['"]?/, "")
-                    .replace(/['"]?$/, "")
-                    .trim()
-                    .replace(/△/g, "")
-                    .split(/[-‐‑–—]/)
-                    .map((c: string) => c.trim())
-                    .filter((c: string) => c);
-
-                let valid = true;
-                // Validate each chord.
-                const newChords: (ChordItem | null)[] = cleaned.map((c: string) => {
-                    const chordData = Chord.get(c);
-                    if (!chordData || !chordData.notes || chordData.notes.length === 0) {
-                        valid = false;
-                        return null;
-                    }
-                    return {
-                        id: generateUniqueId(),
-                        chord: c,
-                        locked: false,
-                    };
-                });
-
-                if (!valid) {
-                    if (attempt < MAX_ATTEMPTS) {
-                        console.warn("Invalid chord detected, reattempting generation", attempt + 1);
-                        return generateChords(customPrompt, attempt + 1);
-                    } else {
-                        setError("Could not generate valid chords after several attempts.");
-                        setFullLoading(false);
-                        return;
-                    }
-                }
-
-                // Preserve locked chords if they already exist.
-                let finalChords = newChords as ChordItem[];
-                if (chords.length > 0) {
-                    finalChords = finalChords.map((newChord: ChordItem, idx: number): ChordItem => {
-                        const oldChord = chords[idx];
-                        return oldChord && oldChord.locked ? oldChord : newChord;
-                    });
-                }
-
-                setChords(finalChords);
-            } catch (e) {
-                console.error("Generation error:", e);
-                setError("Error generating chords. Please try again.");
-            }
-            setFullLoading(false);
-        },
-        [prompt, chords]
-    );
-
-    const handleExampleClick = useCallback(
-        (example: string) => {
-            setPrompt(example);
-            generateChords(example);
-        },
-        [generateChords]
-    );
-
-    const piano = useContext(PianoContext);
-
-    const playChord = useCallback(
-        async (chord: string) => {
-            if (!chord) return;
-            await Tone.start();
-            const chordNotes = Chord.get(chord).notes.map((n) =>
+            const chordNotes = chordData.notes.map((n) =>
                 /\d/.test(n.trim()) ? n.trim() : `${n.trim()}4`
             );
             setActiveNotes(chordNotes);
@@ -178,183 +89,20 @@ export default function ClientHome() {
         [piano]
     );
 
-    useEffect(() => {
-        if (error) {
-            const timer = setTimeout(() => setError(""), 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [error]);
-
+    // Handle 'Enter' key press in the prompt input
     const handleKeyDown = useCallback(
         (e: KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter") generateChords();
+            if (e.key === "Enter") {
+                generateChords();
+            }
         },
         [generateChords]
     );
 
-    const handleDragEnd = useCallback(
-        ({ active, over }: DragEndEvent) => {
-            if (!over || active.id === over.id) return;
-            setChords((items) => {
-                const oldIndex = items.findIndex((i) => i.id === active.id);
-                const newIndex = items.findIndex((i) => i.id === over.id);
-                return arrayMove(items, oldIndex, newIndex);
-            });
-        },
-        []
-    );
-
-    const addChordAt = useCallback(
-        async (position: number) => {
-            if (chords.length >= 8) return;
-            const newChordId = generateUniqueId();
-            const placeholderChord: ChordItem = { id: newChordId, chord: "", locked: false };
-            setChords((prev) => [
-                ...prev.slice(0, position),
-                placeholderChord,
-                ...prev.slice(position),
-            ]);
-            setLoadingChordId(newChordId);
-            try {
-                const res = await fetch("/api/generate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        existingChords: chords,
-                        addChordPosition: position,
-                        prompt: prompt || "add chord",
-                    }),
-                });
-                const data = await res.json();
-                if (data.error) {
-                    setError(data.error);
-                    setChords((prev) => prev.filter((ch) => ch.id !== newChordId));
-                    setLoadingChordId(null);
-                    return;
-                }
-                const updatedChord: ChordItem = {
-                    id: newChordId,
-                    chord: data.chord.trim(),
-                    locked: false,
-                };
-                setChords((prev) =>
-                    prev.map((ch) => (ch.id === newChordId ? updatedChord : ch))
-                );
-            } catch (e) {
-                console.error("Error adding chord:", e);
-                setError("Error adding chord. Please try again.");
-                setChords((prev) => prev.filter((ch) => ch.id !== newChordId));
-            }
-            setLoadingChordId(null);
-        },
-        [chords, prompt]
-    );
-
+    // --- Derived State and Constants ---
     const hasChords = chords.length > 0 || fullLoading;
     const firstNote = MidiNumbers.fromNote("C3");
     const lastNote = MidiNumbers.fromNote("C5");
-
-    // New component for animated thinking messages.
-    const ThinkingMessages = () => {
-        const thinkingMessagesList = [
-            "Analyzing chords...",
-            "Processing harmony...",
-            "Generating chord ideas...",
-            "Exploring options...",
-            "Searching for chords...",
-            "Calculating progression...",
-            "Finding transitions...",
-            "Structuring sequence...",
-            "Evaluating combinations...",
-            "Building progression...",
-            "Refining selection...",
-            "Connecting chords...",
-            "Mapping harmony...",
-            "Balancing variation...",
-            "Running models...",
-            "Filtering choices...",
-            "Selecting transitions...",
-            "Assembling sequence...",
-            "Shaping harmony...",
-            "Thinking in chords...",
-            "Tuning flow...",
-            "Adjusting dynamics...",
-            "Choosing voicings...",
-            "Arranging chords...",
-            "Organizing structure...",
-            "Aligning progression...",
-            "Checking relationships...",
-            "Sequencing chords...",
-            "Resolving patterns...",
-            "Verifying structure...",
-            "Making decisions...",
-            "Constructing output...",
-            "Linking sections...",
-            "Working on flow...",
-            "Building structure...",
-            "Solving puzzle...",
-            "Ordering elements...",
-            "Reviewing options...",
-            "Placing chords...",
-            "Designing sequence...",
-            "Curating harmony...",
-            "Modeling progression...",
-            "Layering harmonies...",
-            "Weighing chord paths...",
-            "Testing variations...",
-            "Outlining structure...",
-            "Blending transitions...",
-            "Auditioning ideas...",
-            "Organizing voicings...",
-            "Inspecting combinations...",
-            "Generating structure...",
-            "Drafting progression...",
-            "Fitting harmonic pieces...",
-            "Rechecking flow...",
-            "Forming connections...",
-            "Assembling ideas...",
-            "Weaving chord paths...",
-            "Simplifying structure...",
-            "Reviewing progression...",
-            "Tuning relationships...",
-            "Arranging flow...",
-            "Evaluating options...",
-            "Checking consistency...",
-        ];
-
-        const [shuffledMessages, setShuffledMessages] = useState<string[]>([]);
-        const [currentIndex, setCurrentIndex] = useState(0);
-
-        useEffect(() => {
-            // Shuffle messages on mount
-            const shuffled = [...thinkingMessagesList].sort(() => 0.5 - Math.random());
-            setShuffledMessages(shuffled);
-            setCurrentIndex(0);
-        }, []);
-
-        useEffect(() => {
-            if (shuffledMessages.length === 0) return;
-            const interval = setInterval(() => {
-                setCurrentIndex((prev) => (prev + 1) % shuffledMessages.length);
-            }, 2000); // ← stay on each message for 2.5s instead of 1.5s
-            return () => clearInterval(interval);
-        }, [shuffledMessages]);
-
-        return (
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={shuffledMessages[currentIndex]}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 0.7, y: 0 }}    // ← target opacity lowered
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.5 }}
-                    className="mt-4 text-center text-gray-500 dark:text-gray-400"
-                >
-                    {shuffledMessages[currentIndex]}
-                </motion.div>
-            </AnimatePresence>
-        );
-    };
 
     return (
         <PianoProvider>
@@ -373,12 +121,18 @@ export default function ClientHome() {
                         prompt={prompt}
                         setPrompt={setPrompt}
                         handleKeyDown={handleKeyDown}
-                        generateChords={generateChords}
+                        generateChords={() => generateChords()}
                         fullLoading={fullLoading}
                         chordsLength={chords.length}
-                        randomExamples={randomExamples}
-                        handleExampleClick={handleExampleClick}
+                        randomExamples={randomExamples} // <-- From useExamplePrompts hook
+                        handleExampleClick={generateChordsFromExample}
                     />
+
+                    {error && (
+                        <div className="text-red-500 mt-2 text-center p-2 bg-red-100 dark:bg-red-900 dark:text-red-300 rounded-md">
+                            {error}
+                        </div>
+                    )}
 
                     {(chords.length > 0 || fullLoading) && (
                         <>
@@ -398,7 +152,7 @@ export default function ClientHome() {
                                 />
                             )}
                             <div className="h-8 flex items-center justify-center">
-                                    {fullLoading && <ThinkingMessages />}
+                                {fullLoading && <ThinkingMessages />}
                             </div>
                         </>
                     )}
