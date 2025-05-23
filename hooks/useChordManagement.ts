@@ -1,8 +1,8 @@
 import { DragEndEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { useState, useCallback } from "react"; // Removed useEffect as it's not used
+import { useState, useCallback } from "react";
 import { Chord } from "tonal";
-import { toast } from "sonner"; // Import toast from sonner
+import { toast } from "sonner";
 
 export interface ChordItem {
     id: string;
@@ -18,18 +18,14 @@ interface UseChordManagementProps {
 }
 
 export function useChordManagement(props?: UseChordManagementProps) {
-    // toast function from sonner is directly available
     const [prompt, setPrompt] = useState<string>(props?.initialPrompt || "");
     const [chords, setChords] = useState<ChordItem[]>(props?.initialChords || []);
     const [fullLoading, setFullLoading] = useState<boolean>(false);
     const [loadingChordId, setLoadingChordId] = useState<string | null>(null);
 
     const showErrorToast = useCallback((title: string, description?: string) => {
-        // sonner's API for error toasts is typically toast.error(title, { description: ... })
         toast.error(title, {
             description: description,
-            // duration: 5000, // Optional: sonner has its own defaults
-            // action: { label: "Dismiss", onClick: () => {} }, // Optional
         });
     }, []);
 
@@ -69,59 +65,87 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     .trim().replace(/△/g, "").split(/[-‐‑–—]/)
                     .map((c: string) => c.trim()).filter((c: string) => c);
 
-                let valid = true;
-                const newChords: (ChordItem | null)[] = cleaned.map((c: string) => {
-                    const chordData = Chord.get(c);
+                // NEW LOGIC STARTS HERE:
+                // First, ensure all chord names in 'cleaned' are valid before proceeding
+                let allCleanedChordsAreValid = true;
+                for (const chordName of cleaned) {
+                    const chordData = Chord.get(chordName);
                     if (!chordData || !chordData.notes || chordData.notes.length === 0) {
-                        valid = false; return null;
+                        allCleanedChordsAreValid = false;
+                        break;
                     }
-                    return { id: generateUniqueId(), chord: c, locked: false };
-                });
+                }
 
-                if (!valid) {
+                if (!allCleanedChordsAreValid) {
                     if (attempt < MAX_ATTEMPTS - 1) {
-                        console.warn("Invalid chord detected, reattempting generation", attempt + 1);
+                        console.warn(`Invalid chord name found in AI response ("${cleaned.join('-')}"), reattempting generation`, attempt + 1);
                         return generateChordsInternal(currentPromptInternal, currentChords, attempt + 1);
                     } else {
-                        showErrorToast("Generation Error", "Could not generate valid chords after several attempts.");
+                        showErrorToast("Generation Error", "AI returned invalid chord names after several attempts.");
                         setFullLoading(false); return null;
                     }
                 }
 
-                const validNewChords = newChords.filter(Boolean) as ChordItem[];
+                // At this point, 'cleaned' is an array of valid chord *names* from the AI.
+                // 'currentChords' is the state *before* this regeneration.
 
-                if (currentChords.some(c => c.locked)) {
-                    const finalResult: ChordItem[] = [];
-                    let newChordIdx = 0;
-                    // Iterate based on the length of the original chords array to preserve positions
-                    for(let i=0; i < currentChords.length; i++) {
-                        if(currentChords[i].locked) {
-                            finalResult[i] = currentChords[i];
-                        } else if (newChordIdx < validNewChords.length) {
-                            // Fill unlocked slot with a new chord
-                            finalResult[i] = validNewChords[newChordIdx++];
+                if (currentChords.length > 0) {
+                    // This is a regeneration (either some chords were locked, or all were unlocked but we're updating).
+                    // The AI is prompted to return a progression of the same length as currentChords.
+                    if (cleaned.length !== currentChords.length) {
+                        console.warn(`AI returned ${cleaned.length} chords, but expected ${currentChords.length} based on the original progression. Proceeding with AI's length for now, but this might be undesirable if strict length matching is critical.`);
+                        // If strict length matching is crucial, you might want to handle this more assertively:
+                        // showErrorToast("Generation Error", `AI returned ${cleaned.length} chords, expected ${currentChords.length}.`);
+                        // setFullLoading(false);
+                        // return null;
+                    }
+
+                    generatedChordsResult = cleaned.map((aiChordName: string, index: number) => {
+                        const originalChordInSlot = currentChords[index];
+
+                        if (originalChordInSlot && originalChordInSlot.locked) {
+                            // This slot was locked. Reuse its ID and locked status.
+                            // The AI was instructed to keep the chord name the same for locked chords.
+                            // We take aiChordName to be robust, in case AI changes it despite instructions.
+                            return {
+                                id: originalChordInSlot.id,
+                                chord: aiChordName, // Name from AI for this slot
+                                locked: true,
+                            };
                         } else {
-                            // If no new chords left for this unlocked slot (new progression is shorter)
-                            // This slot will be empty and filtered out later, effectively removing the old unlocked chord
+                            // This slot was unlocked, or it's a new slot (if AI returned more chords than original),
+                            // or originalChordInSlot is undefined (if AI returned fewer chords than original and index is out of bounds for currentChords).
+                            // In any of these cases, it's effectively a new/regenerated chord.
+                            return {
+                                id: (originalChordInSlot && !originalChordInSlot.locked) ? originalChordInSlot.id : generateUniqueId(), // Reuse ID if it was an unlocked slot, else new ID
+                                chord: aiChordName, // Name from AI for this slot
+                                locked: false,
+                            };
                         }
-                    }
-                    // Add any remaining new chords if the new progression was longer than original
-                    if (newChordIdx < validNewChords.length) {
-                        finalResult.push(...validNewChords.slice(newChordIdx));
-                    }
-                    generatedChordsResult = finalResult.filter(Boolean); // Remove any empty slots
+                    });
+                    // If AI returned fewer chords than original, and some original unlocked chords were at the end, they are now gone.
+                    // If AI returned more, new unlocked chords are added at the end. This map handles that.
+
                 } else {
-                    generatedChordsResult = validNewChords;
+                    // This is an initial generation (no existingChords).
+                    generatedChordsResult = cleaned.map((chordName: string) => ({
+                        id: generateUniqueId(),
+                        chord: chordName,
+                        locked: false,
+                    }));
                 }
+                // --- END OF NEW LOGIC ---
 
             } catch (e: any) {
                 console.error("Generation error:", e);
                 showErrorToast("Network Error", e.message || "Error generating chords. Please try again.");
+                setFullLoading(false); // Ensure loading is reset on catch
+                return null; // Return null on error
             }
             setFullLoading(false);
             return generatedChordsResult;
         },
-        [showErrorToast]
+        [showErrorToast] // No `chords` in dependencies, `currentChords` is passed as arg
     );
 
     const generateChords = useCallback(async (customPromptArg?: string | unknown) => {
@@ -131,11 +155,12 @@ export function useChordManagement(props?: UseChordManagementProps) {
         } else {
             usedPrompt = prompt;
         }
+        // Pass the current `chords` state directly to `generateChordsInternal`
         const result = await generateChordsInternal(usedPrompt, chords);
         if (result) {
             setChords(result);
         }
-    }, [prompt, chords, generateChordsInternal]);
+    }, [prompt, chords, generateChordsInternal]); // `chords` is needed here because it's passed to generateChordsInternal
 
 
     const addChordAt = useCallback(
@@ -147,6 +172,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
             const newChordId = generateUniqueId();
             const placeholderChord: ChordItem = { id: newChordId, chord: "", locked: false };
 
+            // Capture the current state of chords for potential rollback
             const originalChords = [...chords];
             const updatedChordsWithPlaceholder = [
                 ...originalChords.slice(0, position),
@@ -161,6 +187,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
+                        // Send the original chords *before* adding the placeholder for API context
                         existingChords: originalChords,
                         addChordPosition: position,
                         prompt: prompt || "add one suitable chord here",
@@ -171,31 +198,34 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 if (!res.ok || data.error) {
                     const errorMsg = data.error || "Failed to add chord from server.";
                     showErrorToast("Add Chord Failed", errorMsg);
-                    setChords(originalChords);
+                    setChords(originalChords); // Rollback
                     setLoadingChordId(null);
                     return;
                 }
 
                 const receivedChordSymbol = data.chord?.trim();
-                if (!receivedChordSymbol || !Chord.get(receivedChordSymbol).name) {
+                const chordData = receivedChordSymbol ? Chord.get(receivedChordSymbol) : null;
+
+                if (!receivedChordSymbol || !chordData || !chordData.name || chordData.notes.length === 0) {
                     showErrorToast("Invalid Chord", "Received an invalid chord from the server.");
-                    setChords(originalChords);
+                    setChords(originalChords); // Rollback
                     setLoadingChordId(null);
                     return;
                 }
 
                 const updatedChord: ChordItem = {
-                    id: newChordId,
-                    chord: receivedChordSymbol,
+                    id: newChordId, // Use the ID of the placeholder
+                    chord: chordData.name, // Use the validated/normalized chord name
                     locked: false,
                 };
+                // Update the placeholder with the received chord
                 setChords((prev) =>
                     prev.map((ch) => (ch.id === newChordId ? updatedChord : ch))
                 );
             } catch (e: any) {
                 console.error("Error adding chord:", e);
                 showErrorToast("Network Error", e.message || "Error adding chord. Please try again.");
-                setChords(originalChords);
+                setChords(originalChords); // Rollback
             }
             setLoadingChordId(null);
         },
@@ -208,22 +238,23 @@ export function useChordManagement(props?: UseChordManagementProps) {
             setChords((items) => {
                 const oldIndex = items.findIndex((i) => i.id === active.id);
                 const newIndex = items.findIndex((i) => i.id === over.id);
-                if (oldIndex === -1 || newIndex === -1) return items;
+                if (oldIndex === -1 || newIndex === -1) return items; // Should not happen if IDs are correct
                 return arrayMove(items, oldIndex, newIndex);
             });
         },
-        []
+        [] // No dependencies needed as it operates on the items passed to the updater
     );
 
     const generateChordsFromExample = useCallback((examplePrompt: string) => {
         if (typeof examplePrompt === 'string') {
             setPrompt(examplePrompt);
+            // Call generateChords, which will use the new prompt and current chords state
             generateChords(examplePrompt);
         } else {
             console.error("generateChordsFromExample received a non-string prompt:", examplePrompt);
             showErrorToast("Input Error", "Invalid example prompt type.");
         }
-    }, [generateChords, setPrompt, showErrorToast]);
+    }, [generateChords, setPrompt, showErrorToast]); // generateChords is a dependency
 
     return {
         prompt, setPrompt,
