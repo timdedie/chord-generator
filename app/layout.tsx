@@ -223,10 +223,11 @@ export default function RootLayout({
                 }}
             />
         </head>
-        <body className={outfit.className}>
+        <body className={`${outfit.className} flex flex-col min-h-screen`}> {/* Added flex flex-col min-h-screen here */}
         <main className="flex-grow">{children}</main>
         <Analytics />
-        <footer className="w-full text-center text-sm text-gray-500 dark:text-gray-400 p-8 space-y-8">
+        {/* Added relative and z-20 to the footer */}
+        <footer className="w-full text-center text-sm text-gray-500 dark:text-gray-400 p-8 space-y-8 relative z-20 bg-white dark:bg-black"> {/* Added bg-white dark:bg-black for explicit background */}
             {/* Short About Section */}
             <div>
                 <p>
@@ -362,7 +363,7 @@ export default function RootLayout({
                 </nav>
             </div>
         </footer>
-        <SonnerToaster richColors position="bottom-right" />
+        <SonnerToaster richColors position="bottom-right" /> {/* SonnerToaster usually has a high z-index like 50 or 9999 */}
         </body>
         </html>
     );
