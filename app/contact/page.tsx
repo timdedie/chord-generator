@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Mail, Home } from 'lucide-react';
+import { Mail, Home } from 'lucide-react'; // Mail is already here, perfect!
 
 export const metadata = {
     title: 'Contact Us – ChordGen',
@@ -14,6 +14,8 @@ export default function ContactPage() {
         <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-gray-100 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
             <div className="max-w-3xl mx-auto">
                 <header className="mb-10 text-center">
+                    {/* Icon Added Here */}
+                    <Mail className="h-16 w-16 text-primary mx-auto mb-4" />
                     <h1 className="text-4xl font-bold text-primary sm:text-5xl">
                         Contact Us
                     </h1>
@@ -30,7 +32,7 @@ export default function ContactPage() {
                         The best way to contact us is by email. We aim to respond to all inquiries within 48 business hours.
                     </p>
                     <div className="flex items-center space-x-3 bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
-                        <Mail className="h-6 w-6 text-primary" />
+                        <Mail className="h-6 w-6 text-primary" /> {/* This one was already here for the email link */}
                         <a
                             href={`mailto:${contactEmail}`}
                             className="text-lg font-medium text-primary hover:underline"
