@@ -27,27 +27,21 @@ export async function POST(request: Request) {
 
         const progressionString = chords.join(' - ');
 
-        // SYSTEM MESSAGE: Confident, clear, beginner-friendly tone
-        const systemMessage = `You are an expert music theory guide, explaining chord progressions with clarity and confidence. Your goal is to make the music theory behind a progression accessible and understandable for a beginner. Explain the established theoretical functions as clear aspects of the progression's design. Use simple Markdown (like **bold** or *italics*) for emphasis, but keep the overall text very short. Avoid overly repetitive phrasing across different explanations.`;
+        // SYSTEM MESSAGE: Focus on educational and clear music theory explanations.
+        const systemMessage = `You are a knowledgeable and friendly music theory assistant. Your purpose is to help users understand chord progressions by explaining the underlying music theory in a clear, educational, and beginner-friendly manner. Use simple Markdown (like **bolding key terms**) where it enhances readability.`;
 
-        // USER MESSAGE CONTENT: More general focus points, example illustrates style not rigid structure
+        // USER MESSAGE CONTENT: Simplified request for an educational explanation, emphasizing extreme brevity.
         const userMessageContent = `
-Please provide a **very short, clear, and beginner-friendly music theory explanation** for the chord progression: ${progressionString}.
-Present the theory as inherent to the progression's structure, with confidence and certainty, avoiding any speculative language or first-person ("I") statements.
+Please explain the music theory behind the chord progression: **${progressionString}**.
 
-Consider these aspects when forming your explanation:
-1.  **Tonal Center/Key (if applicable):** If the progression has a clear tonal center or key, identify it and briefly explain its significance in simple terms (e.g., as the point of resolution or stability).
-2.  **Function of Key Chords:** Describe the role of one or two important chords in establishing the harmonic direction or feeling, using simple language (e.g., how a chord creates tension, leads to another, or provides stability).
-3.  **Harmonic Movement/Flow:** Briefly describe the overall journey or flow of the chords in a way a beginner can grasp (e.g., "The chords move from a point of rest, build some anticipation, and then return to a sense of completion.").
+Make your explanation educational and relatively easy for a beginner to understand.
+Focus on the most important theoretical aspect or the overall feel.
 
-**Keep the entire explanation to a maximum of 3-4 short sentences (around 50-75 words).**
-Use simple, direct language. The explanation should be unique and insightful for the given progression, not a generic template.
-Use simple Markdown (like **bolding key terms** or *italicizing simple concepts*) if it helps.
+**Keep the explanation very short and to the point, ideally 2-3 concise sentences.**
 Start directly with the explanation.
 
-Example of the *style and simplicity desired* (but do not copy this structure or specific terms like 'home base' if not appropriate for every progression):
-For C - G - Am - F: "This progression in **C Major** uses the **G chord** to create a strong pull towards the **Am** (a softer, related sound to C), before moving to the **F chord**, which often prepares a return to C. It's a common way to create a cycle that feels both familiar and satisfying."
-For Dm - G7 - Cmaj7: "Here, the **Dm chord** starts a classic movement. The **G7** then builds significant tension that beautifully resolves to the stable **Cmaj7 chord**. This 'two-five-one' movement is a cornerstone of many musical styles."
+For example, for C - G - Am - F: "This progression in **C Major** uses **G** (dominant) to create tension towards **Am** (relative minor), with **F** (subdominant) often leading back to C. It's a common, satisfying pop sound."
+For Dm7 - G7 - Cmaj7: "A classic **ii-V-I** in C Major. **Dm7** leads to the tension of **G7** (dominant), which strongly resolves to the stable **Cmaj7** (tonic). Fundamental in jazz."
 `.trim();
 
         const messages: CoreMessage[] = [
@@ -58,7 +52,8 @@ For Dm - G7 - Cmaj7: "Here, the **Dm chord** starts a classic movement. The **G7
             model: deepseek(EXPLANATION_MODEL),
             system: systemMessage,
             messages: messages,
-            temperature: 0.6, // Adjusted temperature for a balance of creativity and focus
+            temperature: 0.6, // Slightly lower temperature might help with conciseness
+            maxTokens: 80, // Corrected: A tighter maxTokens for "very short" (e.g., for 2-3 sentences)
         });
 
         return result.toTextStreamResponse();
