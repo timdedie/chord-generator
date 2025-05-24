@@ -37,11 +37,10 @@ export default function ClientHome() {
         chords, setChords,
         fullLoading,
         loadingChordId,
-        toggleLock,
-        generateChords,
+        generateChords, // Hook's function
         addChordAt,
         handleDragEnd,
-        generateChordsFromExample,
+        generateChordsFromExample, // Hook's function
     } = useChordManagement();
 
     const { randomExamples } = useExamplePrompts();
@@ -50,6 +49,8 @@ export default function ClientHome() {
     const isMobile = useMediaQuery({ maxWidth: 768 });
     const sensors = useSensors(useSensor(PointerSensor));
     const piano = useContext(PianoContext);
+    const [numChordsToGenerate, setNumChordsToGenerate] = useState<number>(4);
+    const [useAdvancedModel, setUseAdvancedModel] = useState<boolean>(false); // New state for model choice
 
     const [isExplanationPopoverOpen, setIsExplanationPopoverOpen] = useState(false);
     const [currentExplanationText, setCurrentExplanationText] = useState("");
@@ -83,11 +84,29 @@ export default function ClientHome() {
         }, [piano]
     );
 
-    const handleKeyDown = useCallback(
+    const handleGenerateChordsRequest = useCallback(() => {
+        generateChords({ numChords: numChordsToGenerate, useAdvancedModel });
+    }, [generateChords, numChordsToGenerate, useAdvancedModel]);
+
+    const handleExampleClickRequest = useCallback((example: string) => {
+        generateChordsFromExample(example, numChordsToGenerate, useAdvancedModel);
+    }, [generateChordsFromExample, numChordsToGenerate, useAdvancedModel]);
+
+    const handleInputKeyDown = useCallback(
         (e: KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter") generateChords();
-        }, [generateChords]
+            if (e.key === "Enter") {
+                e.preventDefault();
+                generateChords({ numChords: numChordsToGenerate, useAdvancedModel });
+            }
+        }, [generateChords, numChordsToGenerate, useAdvancedModel]
     );
+
+    const handleAddChordRequest = useCallback((position: number) => {
+        // For addChordAt, we can also pass the model preference if needed
+        // The addChordAt in useChordManagement now accepts an optional params object
+        addChordAt(position, { useAdvancedModel });
+    }, [addChordAt, useAdvancedModel]);
+
 
     const fetchAndStreamExplanation = async (progressionKey: string) => {
         if (explanationAbortControllerRef.current) {
@@ -209,18 +228,25 @@ export default function ClientHome() {
                     <ChordGenerator
                         prompt={prompt}
                         setPrompt={setPrompt}
-                        handleKeyDown={handleKeyDown}
-                        generateChords={generateChords}
+                        handleKeyDown={handleInputKeyDown}
+                        generateChords={handleGenerateChordsRequest}
                         fullLoading={fullLoading}
                         chordsLength={chords.length}
                         randomExamples={randomExamples}
-                        handleExampleClick={generateChordsFromExample}
+                        handleExampleClick={handleExampleClickRequest}
+                        numChordsToGenerate={numChordsToGenerate}
+                        onNumChordsChange={setNumChordsToGenerate}
+                        useAdvancedModel={useAdvancedModel}
+                        onAdvancedModelChange={setUseAdvancedModel}
                     />
 
                     {(chords.length > 0 || fullLoading) && (
                         <div className="w-full max-w-fit mt-4">
                             {isMobile ? (
-                                <MobileChordGrid chords={chords} playChord={playChord} toggleLock={toggleLock} />
+                                <MobileChordGrid
+                                    chords={chords}
+                                    playChord={playChord}
+                                />
                             ) : (
                                 <ChordRow
                                     chords={chords}
@@ -228,10 +254,10 @@ export default function ClientHome() {
                                     loadingChordId={loadingChordId}
                                     sensors={sensors}
                                     handleDragEnd={handleDragEnd}
-                                    addChordAt={addChordAt}
+                                    addChordAt={handleAddChordRequest} // Updated to pass model preference
                                     playChord={playChord}
-                                    toggleLock={toggleLock}
                                     setChords={setChords}
+                                    numChordsToGenerate={numChordsToGenerate}
                                 />
                             )}
                             <div className="h-8 flex items-center justify-center mt-2">
@@ -254,11 +280,12 @@ export default function ClientHome() {
                                     <Popover open={isExplanationPopoverOpen} onOpenChange={onPopoverOpenChange}>
                                         <PopoverTrigger asChild>
                                             <Button
+                                                type="button"
                                                 onClick={handleExplainButtonClick}
                                                 variant="outline"
                                                 size="lg"
                                                 disabled={isExplanationLoading && currentProgressionKeyRef.current === chords.map(c=>c.chord).join('-')}
-                                                className="w-full max-w-xs sm:w-auto transition transform" // Removed hover:scale-105
+                                                className="w-full max-w-xs sm:w-auto transition transform"
                                             >
                                                 {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c=>c.chord).join('-')) ? <Sparkles className="mr-2 h-5 w-5 animate-pulse" /> : <BookOpenText className="mr-2 h-5 w-5" />}
                                                 {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c=>c.chord).join('-')) ? "Getting Explanation..." : "Explain Progression"}
@@ -284,13 +311,6 @@ export default function ClientHome() {
                                                         </ReactMarkdown>
                                                     </div>
                                                 )}
-                                                {/* REMOVED this block to prevent flashing icon during streaming
-                                                {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c=>c.chord).join('-') && currentExplanationText) && (
-                                                    <div className="flex items-center justify-center pt-2">
-                                                        <Sparkles className="h-3 w-3 animate-ping text-primary" />
-                                                    </div>
-                                                )}
-                                                */}
                                             </div>
                                         </PopoverContent>
                                     </Popover>

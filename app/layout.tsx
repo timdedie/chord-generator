@@ -5,14 +5,14 @@ import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import React from "react";
 import {
-    Lock,
     MoveHorizontal,
     Plus,
     RefreshCw,
     X,
     PlayCircle,
     Download,
-    Piano as PianoIcon
+    Piano as PianoIcon,
+    BookOpenText,
 } from "lucide-react";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 
@@ -23,14 +23,14 @@ const outfit = Outfit({
     display: "swap",
 });
 
-// JSON-LD Schemas (keeping them as they are)
+// JSON-LD Schemas (UPDATED CONTENT from previous correct version)
 const webAppSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: "ChordGen",
     url: "https://www.chordgen.org",
     description:
-        "Generate unique chord progressions with AI using natural language input. Free to use. Edit and download chords as MIDI files.",
+        "Generate unique chord progressions with AI using natural language input. Free to use. Edit, select chord count, use Deep Think, get explanations, and download chords as MIDI files.",
     applicationCategory: "MusicApplication",
     operatingSystem: "ALL",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -54,7 +54,7 @@ const faqSchema = {
             name: "Can I export the chords as MIDI files?",
             acceptedAnswer: {
                 "@type": "Answer",
-                text: "Absolutely. Once you've generated or edited your chord progression, you can download it instantly as a standard MIDI file.",
+                text: "Absolutely. Once you've generated or edited your chord progression, you can download it instantly as a standard MIDI file (desktop only).",
             },
         },
         {
@@ -62,7 +62,7 @@ const faqSchema = {
             name: "How does ChordGen work?",
             acceptedAnswer: {
                 "@type": "Answer",
-                text: "ChordGen uses advanced AI models to interpret your natural language input and create musically coherent chord progressions tailored to your request.",
+                text: "ChordGen uses advanced AI models (like Deepseek Chat and Deepseek Reasoner) to interpret your natural language input and create musically coherent chord progressions. You can choose the number of chords and enable 'Deep Think' for more advanced results.",
             },
         },
         {
@@ -70,7 +70,7 @@ const faqSchema = {
             name: "Do I need musical knowledge to use ChordGen?",
             acceptedAnswer: {
                 "@type": "Answer",
-                text: "No prior music theory knowledge is required. Simply describe the mood or style you want, and ChordGen handles the rest. You can even learn about the music theory behind your progressions with our AI-powered explanations.",
+                text: "No prior music theory knowledge is required. Simply describe the mood or style you want. You can also use the 'Explain Progression' feature to learn about the music theory behind your chords.",
             },
         },
     ],
@@ -79,55 +79,21 @@ const faqSchema = {
 const howToSchema = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: "How to Use ChordGen",
+    name: "How to Use ChordGen AI Chord Progression Generator",
     description:
-        "Learn how to generate, play, lock, rearrange, and download chords using ChordGen.",
+        "Learn how to generate AI chord progressions, select chord count, use Deep Think, get music theory explanations, play, edit, and download MIDI files with ChordGen.",
     step: [
-        {
-            "@type": "HowToStep",
-            name: "Generating Progressions",
-            text: "Enter a description (e.g., 'happy jazz in C major') and click refresh to generate a new progression."
-        },
-        {
-            "@type": "HowToStep",
-            name: "Playing Chords",
-            text: "Click a chord to hear it played on the piano."
-        },
-        {
-            "@type": "HowToStep",
-            name: "Locking Chords",
-            text: "Hover and lock a chord to keep it during generation."
-        },
-        {
-            "@type": "HowToStep",
-            name: "Rearranging Chords",
-            text: "Hover to see the move icon, then drag to rearrange."
-        },
-        {
-            "@type": "HowToStep",
-            name: "Adding Chords",
-            text: "Hover between chords and click the plus button to add a new chord."
-        },
-        {
-            "@type": "HowToStep",
-            name: "Removing Chords",
-            text: "Hover over a chord and click X to remove it."
-        },
-        {
-            "@type": "HowToStep",
-            name: "Downloading MIDI",
-            text: "Download your chord progression as a MIDI file."
-        },
-        {
-            "@type": "HowToStep",
-            name: "Piano Interface",
-            text: "Highlights notes as chords play. You can also play manually on the piano."
-        },
-        {
-            "@type": "HowToStep",
-            name: "Understanding Progressions",
-            text: "Use the 'Explain Progression' feature to get AI-generated insights into the music theory behind your chords."
-        }
+        { "@type": "HowToStep", name: "Describe Desired Chords", text: "Enter a text description (e.g., 'epic movie score chords', 'jazzy lofi progression in F minor') into the input field." },
+        { "@type": "HowToStep", name: "Select Number of Chords", text: "Use the dropdown to choose how many chords (2-8) you want in your progression." },
+        { "@type": "HowToStep", name: "Enable Deep Think (Optional)", text: "Toggle the 'Deep Think' switch to use a more advanced AI model for potentially richer or more complex chord suggestions. This may take slightly longer." },
+        { "@type": "HowToStep", name: "Generate Progression", text: "Click the refresh button or press Enter in the input field to generate your chord progression." },
+        { "@type": "HowToStep", name: "Play Chords", text: "Click on any of the generated chord cards to hear the chord played on the virtual piano." },
+        { "@type": "HowToStep", name: "Explain Progression", text: "Click the 'Explain Progression' button (appears after generation) to receive an AI-generated music theory explanation of the chord sequence." },
+        { "@type": "HowToStep", name: "Rearrange Chords (Desktop)", text: "On a desktop computer, hover over a chord card to reveal the move icon, then drag and drop the chord to a new position." },
+        { "@type": "HowToStep", name: "Add Chords (Desktop)", text: "On desktop, click the plus icon (+) that appears between chords to have the AI suggest and insert a new chord at that spot." },
+        { "@type": "HowToStep", name: "Remove Chords (Desktop)", text: "On desktop, hover over a chord card and click the 'X' icon to remove that chord from the progression." },
+        { "@type": "HowToStep", name: "Download MIDI (Desktop)", text: "Click the 'Download MIDI' button to save your current chord progression as a MIDI file, compatible with most DAWs." },
+        { "@type": "HowToStep", name: "Interact with Piano", text: "The on-screen piano highlights notes as chords play. You can also click the piano keys to play notes manually." }
     ]
 };
 
@@ -137,8 +103,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
-        <head>
+        <html lang="en">{/* Ensure no space/newline after <html lang="en"> and before <head> or after <html> and EOF */}
+        <head>{/* Ensure no space/newline after <head> and before first child or after last child and before </head> */}
             {/* Primary Title & Description */}
             <title>ChordGen – Free AI Chord Generator & MIDI Export Tool</title>
             <meta
@@ -148,28 +114,16 @@ export default function RootLayout({
             <meta name="author" content="ChordGen Team" />
             <meta
                 name="keywords"
-                content="Free AI chord generator, MIDI chord download, music composition tool, learn music theory, AI music explanation"
+                content="Free AI chord generator, MIDI chord download, music composition tool, learn music theory, AI music explanation, chord progression tool, Deep Think AI music"
             />
             <meta name="robots" content="index, follow" />
             <link rel="canonical" href="https://www.chordgen.org" />
-
             {/* Favicon / Manifest / Icons */}
-            <link
-                rel="icon"
-                href="/favicon-16x16.png"
-                type="image/png"
-                sizes="16x16"
-            />
-            <link
-                rel="icon"
-                href="/favicon-32x32.png"
-                type="image/png"
-                sizes="32x32"
-            />
+            <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16"/>
+            <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32"/>
             <link rel="icon" href="/favicon.ico" type="image/x-icon" />
             <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
             <link rel="manifest" href="/site.webmanifest" />
-
             {/* Open Graph */}
             <meta property="og:title" content="ChordGen – Free AI Chord Generator & Music Theory Helper" />
             <meta
@@ -178,56 +132,35 @@ export default function RootLayout({
             />
             <meta property="og:type" content="website" />
             <meta property="og:url" content="https://www.chordgen.org" />
-            <meta
-                property="og:image"
-                content="https://www.chordgen.org/chordgen_logo.png"
-            />
-
-            {/* Twitter */}
+            <meta property="og:image" content="https://www.chordgen.org/og-image.png"/>
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            {/* Twitter Card */}
             <meta name="twitter:card" content="summary_large_image" />
-            <meta
-                name="twitter:title"
-                content="ChordGen – Free AI Chord Generator & Music Theory Insights"
-            />
-            <meta
-                name="twitter:description"
-                content="Generate chord progressions with AI, download MIDI, and learn music theory. 100% free!"
-            />
-            <meta
-                name="twitter:image"
-                content="https://www.chordgen.org/chordgen_logo.png"
-            />
-
-            {/* JSON-LD: WebApp */}
+            <meta name="twitter:title" content="ChordGen – Free AI Chord Generator & Music Theory Insights"/>
+            <meta name="twitter:description" content="Generate chord progressions with AI, download MIDI, and learn music theory. 100% free!"/>
+            <meta name="twitter:image" content="https://www.chordgen.org/twitter-image.png"/>
+            {/* JSON-LD Schemas */}
             <Script
                 id="webapp-schema"
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{
-                    __html: JSON.stringify(webAppSchema),
-                }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }}
             />
-            {/* JSON-LD: FAQ */}
             <Script
                 id="faq-schema"
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{
-                    __html: JSON.stringify(faqSchema),
-                }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
             />
-            {/* JSON-LD: HowTo */}
             <Script
                 id="howto-schema"
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{
-                    __html: JSON.stringify(howToSchema),
-                }}
-            />
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
+            />{/* Ensure no space/newline after last Script tag and before </head> */}
         </head>
-        <body className={`${outfit.className} flex flex-col min-h-screen`}> {/* Added flex flex-col min-h-screen here */}
+        <body className={`${outfit.className} flex flex-col min-h-screen`}>{/* Ensure no space/newline after <body> and before <main> or after last child and before </body> */}
         <main className="flex-grow">{children}</main>
         <Analytics />
-        {/* Added relative and z-20 to the footer */}
-        <footer className="w-full text-center text-sm text-gray-500 dark:text-gray-400 p-8 space-y-8 relative z-20 bg-white dark:bg-black"> {/* Added bg-white dark:bg-black for explicit background */}
+        <footer className="w-full text-center text-sm text-gray-500 dark:text-gray-400 p-8 space-y-8 relative z-20 bg-white dark:bg-black">
             {/* Short About Section */}
             <div>
                 <p>
@@ -242,7 +175,6 @@ export default function RootLayout({
                     spark creativity, speed up your songwriting process, and deepen your understanding of music.
                 </p>
             </div>
-
             {/* Internal Link (Call to Action) */}
             <div>
                 <a
@@ -253,109 +185,69 @@ export default function RootLayout({
                     Try ChordGen – Free AI Chord Progression Generator
                 </a>
             </div>
-
             {/* How it works Section */}
             <div className="text-left max-w-xl mx-auto space-y-6">
-                <h3 className="font-semibold mb-4 text-base">How it works</h3>
+                <h3 className="font-semibold mb-4 text-base">How It Works</h3>
                 <div className="space-y-4">
                     <div>
                         <strong className="flex items-center gap-2">
                             <RefreshCw className="h-5 w-5 opacity-75" />
-                            Generating Progressions
+                            1. Describe & Generate
                         </strong>
-                        <p>Enter a description (e.g., “happy jazz in C major”) and click refresh to generate a new progression.</p>
+                        <p className="ml-7">Enter a description, choose chord count (2-8), optionally toggle "Deep Think" for advanced AI, then click refresh or press Enter.</p>
                     </div>
                     <div>
                         <strong className="flex items-center gap-2">
                             <PlayCircle className="h-5 w-5 opacity-75" />
-                            Playing Chords
+                            2. Play Chords
                         </strong>
-                        <p>Click a chord to hear it played on the piano.</p>
+                        <p className="ml-7">Click any generated chord card to hear it played.</p>
                     </div>
                     <div>
                         <strong className="flex items-center gap-2">
-                            <Lock className="h-5 w-5 opacity-75" />
-                            Locking Chords
+                            <BookOpenText className="h-5 w-5 opacity-75" />
+                            3. Explain Progression
                         </strong>
-                        <p>Hover and lock a chord to keep it during generation.</p>
+                        <p className="ml-7">Click "Explain Progression" for an AI music theory breakdown.</p>
                     </div>
                     <div>
                         <strong className="flex items-center gap-2">
                             <MoveHorizontal className="h-5 w-5 opacity-75" />
-                            Rearranging Chords
+                            4. Edit & Arrange (Desktop)
                         </strong>
-                        <p>Hover to see the move icon, then drag to rearrange.</p>
-                    </div>
-                    <div>
-                        <strong className="flex items-center gap-2">
-                            <Plus className="h-5 w-5 opacity-75" />
-                            Adding Chords
-                        </strong>
-                        <p>Hover between chords and click plus to add a new one.</p>
-                    </div>
-                    <div>
-                        <strong className="flex items-center gap-2">
-                            <X className="h-5 w-5 opacity-75" />
-                            Removing Chords
-                        </strong>
-                        <p>Hover and click X to remove a chord.</p>
+                        <p className="ml-7">Drag to reorder. Click '+' to add. Click 'X' to remove.</p>
                     </div>
                     <div>
                         <strong className="flex items-center gap-2">
                             <Download className="h-5 w-5 opacity-75" />
-                            Downloading MIDI
+                            5. Download MIDI (Desktop)
                         </strong>
-                        <p>Download your progression as a MIDI file.</p>
+                        <p className="ml-7">Save your progression as a MIDI file.</p>
                     </div>
                     <div>
                         <strong className="flex items-center gap-2">
                             <PianoIcon className="h-5 w-5 opacity-75" />
-                            Piano Interface
+                            6. Interact with Piano
                         </strong>
-                        <p>Highlights notes as chords play; you can also play manually.</p>
+                        <p className="ml-7">The piano highlights notes and can be played manually.</p>
                     </div>
                 </div>
             </div>
-
             {/* SEO-Friendly FAQ Section */}
             <div className="text-left max-w-xl mx-auto space-y-4">
                 <h3 className="font-semibold mb-4 text-base">Frequently Asked Questions</h3>
                 <div className="space-y-4">
-                    <div>
-                        <strong>Is ChordGen free to use?</strong>
-                        <p>
-                            Yes! ChordGen is 100% free. You can generate, edit, and
-                            download MIDI chord progressions without creating an account.
-                        </p>
-                    </div>
-                    <div>
-                        <strong>Can I export the chords as MIDI files?</strong>
-                        <p>
-                            Absolutely. Once you've generated or edited your chord progression,
-                            you can download it instantly as a standard MIDI file.
-                        </p>
-                    </div>
-                    <div>
-                        <strong>How does ChordGen work?</strong>
-                        <p>
-                            ChordGen uses advanced AI models to interpret your natural language
-                            input and create musically coherent chord progressions tailored to
-                            your request.
-                        </p>
-                    </div>
-                    <div>
-                        <strong>Do I need musical knowledge to use ChordGen?</strong>
-                        <p>
-                            No prior music theory knowledge is required. Simply describe
-                            the mood or style you want, and ChordGen handles the rest. You can even learn about the music theory behind your progressions with our AI-powered explanations.
-                        </p>
-                    </div>
+                    {faqSchema.mainEntity.map((faqItem, index) => (
+                        <div key={index}>
+                            <strong>{faqItem.name}</strong>
+                            <p>{faqItem.acceptedAnswer.text}</p>
+                        </div>
+                    ))}
                 </div>
             </div>
-
             {/* Copyright and Other Links Section */}
             <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
-                <p>&copy; {new Date().getFullYear()} ChordGen. All Rights Reserved.</p>
+                <p>© {new Date().getFullYear()} ChordGen. All Rights Reserved.</p>
                 <nav className="mt-2 space-x-4">
                     <a href="/privacy" className="underline hover:text-primary">Privacy Policy</a>
                     <a href="/terms" className="underline hover:text-primary">Terms of Service</a>
@@ -363,8 +255,8 @@ export default function RootLayout({
                 </nav>
             </div>
         </footer>
-        <SonnerToaster richColors position="bottom-right" /> {/* SonnerToaster usually has a high z-index like 50 or 9999 */}
-        </body>
+        <SonnerToaster richColors position="bottom-right" />
+        </body>{/* Ensure no space/newline after </body> and before </html> or after </html> and EOF */}
         </html>
     );
 }

@@ -10,27 +10,21 @@ import {
 import Spacer from "./Spacer";
 import SortableChord from "./SortableChord";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// Define the type for a chord item.
-export interface ChordItem {
-    id: string;
-    chord: string;
-    locked: boolean;
-}
+import { ChordItem } from "@/hooks/useChordManagement";
 
 interface ChordRowProps {
     chords: ChordItem[];
     fullLoading: boolean;
     loadingChordId: string | null;
-    sensors: any; // adjust sensor type if desired
+    sensors: any;
     handleDragEnd: (event: DragEndEvent) => void;
     addChordAt: (position: number) => void;
     playChord: (chord: string) => void;
-    toggleLock: (id: string) => void;
     setChords: React.Dispatch<React.SetStateAction<ChordItem[]>>;
+    numChordsToGenerate?: number;
 }
 
-function SkeletonCard() {
+function SkeletonCardUi() {
     return <Skeleton className="w-48 h-48 rounded-xl" />;
 }
 
@@ -42,15 +36,27 @@ export default function ChordRow({
                                      handleDragEnd,
                                      addChordAt,
                                      playChord,
-                                     toggleLock,
                                      setChords,
+                                     numChordsToGenerate = 4,
                                  }: ChordRowProps) {
     let content: React.ReactNode = null;
 
-    if (chords.length > 0) {
+    // Case 1: Initial loading (no chords yet, but fullLoading is true)
+    if (chords.length === 0 && fullLoading) {
+        const numberOfSkeletons = numChordsToGenerate > 0 ? numChordsToGenerate : 4;
+        content = (
+            <div className="flex gap-4">
+                {[...Array(numberOfSkeletons)].map((_, i) => (
+                    <SkeletonCardUi key={`skeleton-${i}`} />
+                ))}
+            </div>
+        );
+    }
+    // Case 2: Chords are present
+    else if (chords.length > 0) {
         const elements = chords.flatMap((chord, index) => [
             <Spacer
-                key={`spacer-${index}`}
+                key={`spacer-${index}-${chords.length}`}
                 position={index}
                 chordsCount={chords.length}
                 addChordAt={addChordAt}
@@ -60,27 +66,32 @@ export default function ChordRow({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                // No 'layout' prop here for smoother DND reordering as per previous fix
             >
                 <SortableChord
                     id={chord.id}
                     item={chord}
                     onPlay={() => playChord(chord.chord)}
-                    toggleLock={toggleLock}
                     onRemove={() =>
                         setChords((prev) => prev.filter((c) => c.id !== chord.id))
                     }
+                    // Updated loading logic:
+                    // A chord is loading if:
+                    // 1. It's the specific chord being added (loadingChordId matches).
+                    // 2. OR, a full regeneration is happening (fullLoading is true).
+                    //    This will make existing chords show as skeletons during regeneration.
                     loading={
-                        !chord.locked && (fullLoading || loadingChordId === chord.id)
+                        loadingChordId === chord.id || // True if this specific chord is being added
+                        fullLoading                     // True if a general regeneration is in progress
                     }
                 />
             </motion.div>,
         ]);
 
-        // Add a final spacer at the end.
         elements.push(
             <Spacer
-                key={`spacer-${chords.length}`}
+                key={`spacer-${chords.length}-${chords.length}`}
                 position={chords.length}
                 chordsCount={chords.length}
                 addChordAt={addChordAt}
@@ -97,22 +108,17 @@ export default function ChordRow({
                     items={chords.map((c) => c.id)}
                     strategy={horizontalListSortingStrategy}
                 >
-                    <div className="flex gap-4 justify-center w-full">
-                        <AnimatePresence>{elements}</AnimatePresence>
+                    <div className="flex gap-4 justify-center items-start w-full">
+                        <AnimatePresence>
+                            {elements}
+                        </AnimatePresence>
                     </div>
                 </SortableContext>
             </DndContext>
         );
-    } else if (fullLoading) {
-        // Show some skeletons while loading.
-        content = (
-            <div className="flex gap-4">
-                {[...Array(4)].map((_, i) => (
-                    <SkeletonCard key={i} />
-                ))}
-            </div>
-        );
     }
+    // Case 3: Not loading and no chords (e.g., after deleting all chords)
+    // This will render `null` for content, which is fine.
 
     return <>{content}</>;
 }
