@@ -77,7 +77,6 @@ export default function ChordGenerator({
                         onCheckedChange={onAdvancedModelChange}
                         disabled={fullLoading}
                         label="Deep Think ✨"
-                        description="Uses advanced model (slower)."
                     />
                 </div>
             </div>
