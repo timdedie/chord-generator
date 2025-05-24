@@ -284,11 +284,13 @@ export default function ClientHome() {
                                                         </ReactMarkdown>
                                                     </div>
                                                 )}
+                                                {/* REMOVED this block to prevent flashing icon during streaming
                                                 {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c=>c.chord).join('-') && currentExplanationText) && (
                                                     <div className="flex items-center justify-center pt-2">
                                                         <Sparkles className="h-3 w-3 animate-ping text-primary" />
                                                     </div>
                                                 )}
+                                                */}
                                             </div>
                                         </PopoverContent>
                                     </Popover>

@@ -53,7 +53,7 @@ For Dm7 - G7 - Cmaj7: "A classic **ii-V-I** in C Major. **Dm7** leads to the ten
             system: systemMessage,
             messages: messages,
             temperature: 0.6, // Slightly lower temperature might help with conciseness
-            maxTokens: 80, // Corrected: A tighter maxTokens for "very short" (e.g., for 2-3 sentences)
+            maxTokens: 150, // Increased maxTokens to provide more buffer
         });
 
         return result.toTextStreamResponse();
