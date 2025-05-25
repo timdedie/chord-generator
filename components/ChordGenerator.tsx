@@ -6,21 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RefreshCw } from "lucide-react";
 import NumChordsSelector from "@/components/NumChordsSelector";
-import ModelSwitch from "@/components/ModelSwitch"; // Import the new component
+import ModelSwitch from "@/components/ModelSwitch";
+// Tooltip related imports are removed
 
 interface ChordGeneratorProps {
     prompt: string;
     setPrompt: (value: string) => void;
     handleKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
-    generateChords: () => void; // This will be updated in ClientHome to pass model choice
+    generateChords: () => void;
     fullLoading: boolean;
     chordsLength: number;
     randomExamples: string[];
-    handleExampleClick: (example: string) => void; // This will be updated
+    handleExampleClick: (example: string) => void;
     numChordsToGenerate: number;
     onNumChordsChange: (value: number) => void;
-    useAdvancedModel: boolean; // New prop
-    onAdvancedModelChange: (checked: boolean) => void; // New prop
+    useHighCreativity: boolean;
+    onHighCreativityChange: (checked: boolean) => void;
 }
 
 export default function ChordGenerator({
@@ -34,15 +35,15 @@ export default function ChordGenerator({
                                            handleExampleClick,
                                            numChordsToGenerate,
                                            onNumChordsChange,
-                                           useAdvancedModel,       // New
-                                           onAdvancedModelChange,  // New
+                                           useHighCreativity,
+                                           onHighCreativityChange,
                                        }: ChordGeneratorProps) {
     return (
         <div className="w-full max-w-3xl px-4">
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
                 What chord progression do you want to generate?
             </p>
-            <div className="flex flex-col gap-4 mb-4"> {/* Changed outer flex to col for input + controls */}
+            <div className="flex flex-col gap-4 mb-4">
                 <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
                     <Input
                         id="prompt-input"
@@ -54,7 +55,6 @@ export default function ChordGenerator({
                         disabled={fullLoading}
                         aria-label="Chord progression description"
                     />
-                    {/* Generate Button moved next to input on larger screens or below on smaller */}
                     <Button
                         onClick={generateChords}
                         className="w-full sm:w-16 h-16 flex items-center justify-center transition transform hover:scale-105 flex-shrink-0"
@@ -65,22 +65,22 @@ export default function ChordGenerator({
                     </Button>
                 </div>
 
-                {/* Controls Container: NumChordsSelector and ModelSwitch */}
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center mt-1">
                     <NumChordsSelector
                         value={numChordsToGenerate}
                         onChange={onNumChordsChange}
                         disabled={fullLoading}
                     />
+                    {/* TooltipProvider and Tooltip components are removed */}
                     <ModelSwitch
-                        checked={useAdvancedModel}
-                        onCheckedChange={onAdvancedModelChange}
+                        checked={useHighCreativity}
+                        onCheckedChange={onHighCreativityChange}
                         disabled={fullLoading}
-                        label="Deep Think ✨"
+                        label="Experimental Mode" // Label updated, emoji removed for now
+                        id="creative-mode-switch"
                     />
                 </div>
             </div>
-
 
             <AnimatePresence>
                 {!fullLoading && chordsLength === 0 && (
@@ -90,7 +90,7 @@ export default function ChordGenerator({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0, height: 0, overflow: "hidden" }}
                         transition={{ duration: 0.3 }}
-                        className="flex flex-wrap gap-2 mb-6" // mb-6 was mb-8 on input group before
+                        className="flex flex-wrap gap-2 mb-6"
                     >
                         {randomExamples.map((ex, i) => (
                             <Button

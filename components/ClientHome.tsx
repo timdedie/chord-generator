@@ -37,10 +37,10 @@ export default function ClientHome() {
         chords, setChords,
         fullLoading,
         loadingChordId,
-        generateChords, // Hook's function
+        generateChords,
         addChordAt,
         handleDragEnd,
-        generateChordsFromExample, // Hook's function
+        generateChordsFromExample,
     } = useChordManagement();
 
     const { randomExamples } = useExamplePrompts();
@@ -50,7 +50,7 @@ export default function ClientHome() {
     const sensors = useSensors(useSensor(PointerSensor));
     const piano = useContext(PianoContext);
     const [numChordsToGenerate, setNumChordsToGenerate] = useState<number>(4);
-    const [useAdvancedModel, setUseAdvancedModel] = useState<boolean>(false); // New state for model choice
+    const [useHighCreativity, setUseHighCreativity] = useState<boolean>(false); // Renamed from useAdvancedModel
 
     const [isExplanationPopoverOpen, setIsExplanationPopoverOpen] = useState(false);
     const [currentExplanationText, setCurrentExplanationText] = useState("");
@@ -85,27 +85,25 @@ export default function ClientHome() {
     );
 
     const handleGenerateChordsRequest = useCallback(() => {
-        generateChords({ numChords: numChordsToGenerate, useAdvancedModel });
-    }, [generateChords, numChordsToGenerate, useAdvancedModel]);
+        generateChords({ numChords: numChordsToGenerate, useHighCreativity }); // Renamed prop
+    }, [generateChords, numChordsToGenerate, useHighCreativity]);
 
     const handleExampleClickRequest = useCallback((example: string) => {
-        generateChordsFromExample(example, numChordsToGenerate, useAdvancedModel);
-    }, [generateChordsFromExample, numChordsToGenerate, useAdvancedModel]);
+        generateChordsFromExample(example, numChordsToGenerate, useHighCreativity); // Renamed prop
+    }, [generateChordsFromExample, numChordsToGenerate, useHighCreativity]);
 
     const handleInputKeyDown = useCallback(
         (e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
                 e.preventDefault();
-                generateChords({ numChords: numChordsToGenerate, useAdvancedModel });
+                generateChords({ numChords: numChordsToGenerate, useHighCreativity }); // Renamed prop
             }
-        }, [generateChords, numChordsToGenerate, useAdvancedModel]
+        }, [generateChords, numChordsToGenerate, useHighCreativity]
     );
 
     const handleAddChordRequest = useCallback((position: number) => {
-        // For addChordAt, we can also pass the model preference if needed
-        // The addChordAt in useChordManagement now accepts an optional params object
-        addChordAt(position, { useAdvancedModel });
-    }, [addChordAt, useAdvancedModel]);
+        addChordAt(position, { useHighCreativity }); // Renamed prop
+    }, [addChordAt, useHighCreativity]);
 
 
     const fetchAndStreamExplanation = async (progressionKey: string) => {
@@ -236,8 +234,8 @@ export default function ClientHome() {
                         handleExampleClick={handleExampleClickRequest}
                         numChordsToGenerate={numChordsToGenerate}
                         onNumChordsChange={setNumChordsToGenerate}
-                        useAdvancedModel={useAdvancedModel}
-                        onAdvancedModelChange={setUseAdvancedModel}
+                        useHighCreativity={useHighCreativity} // Renamed prop
+                        onHighCreativityChange={setUseHighCreativity} // Renamed prop
                     />
 
                     {(chords.length > 0 || fullLoading) && (
@@ -254,7 +252,7 @@ export default function ClientHome() {
                                     loadingChordId={loadingChordId}
                                     sensors={sensors}
                                     handleDragEnd={handleDragEnd}
-                                    addChordAt={handleAddChordRequest} // Updated to pass model preference
+                                    addChordAt={handleAddChordRequest}
                                     playChord={playChord}
                                     setChords={setChords}
                                     numChordsToGenerate={numChordsToGenerate}

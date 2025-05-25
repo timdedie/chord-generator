@@ -19,23 +19,23 @@ interface UseChordManagementProps {
 interface GenerationParams {
     numChords: number;
     customPrompt?: string;
-    useAdvancedModel?: boolean;
+    useHighCreativity?: boolean; // Renamed from useAdvancedModel
 }
 
 interface AddChordContextParams {
     prompt?: string;
-    useAdvancedModel?: boolean;
+    useHighCreativity?: boolean; // Renamed from useAdvancedModel
 }
 
 // Added: Define types for the expected API response
 interface ApiChordProgressionResponse {
     chords: string[];
-    error?: string; // Keep error for consistency if API returns it at top level
+    error?: string;
 }
 
 interface ApiSingleChordResponse {
     chord: string;
-    error?: string; // Keep error for consistency
+    error?: string;
 }
 
 
@@ -56,10 +56,10 @@ export function useChordManagement(props?: UseChordManagementProps) {
             currentPromptInternal: string,
             currentChords: ChordItem[],
             numChordsToGen: number,
-            useAdvanced: boolean,
+            isHighCreativity: boolean, // Renamed from useAdvanced
             attempt: number = 0
         ): Promise<ChordItem[] | null> => {
-            const MAX_ATTEMPTS = 3; // Keep retry logic for semantic validation (is it a valid chord?)
+            const MAX_ATTEMPTS = 3;
             if (!currentPromptInternal.trim() && currentChords.length === 0) {
                 showErrorToast("Input Error", "Please describe your chord progression before generating.");
                 setFullLoading(false);
@@ -78,11 +78,10 @@ export function useChordManagement(props?: UseChordManagementProps) {
                         prompt: currentPromptInternal,
                         existingChords: existingChordsForApi,
                         numChords: numChordsToGen,
-                        useAdvancedModel: useAdvanced,
+                        useHighCreativity: isHighCreativity, // Renamed field for API
                     }),
                 });
 
-                // Updated: Expecting ApiChordProgressionResponse
                 const data: ApiChordProgressionResponse = await res.json();
 
                 if (!res.ok || data.error) {
@@ -92,10 +91,6 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     return null;
                 }
 
-                // Updated: data.chords is now expected to be an array of strings directly
-                // No more string splitting or complex regex cleaning needed for the structure.
-                // The AI should return an array like ["Am", "G", "C"].
-                // We still need to validate the *content* of those strings.
                 const receivedChordSymbols = data.chords;
 
                 if (!Array.isArray(receivedChordSymbols)) {
@@ -103,14 +98,13 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     setFullLoading(false); return null;
                 }
 
-                // Trim and filter empty strings just in case, though ideally AI provides clean array
                 const cleanedChordSymbols = receivedChordSymbols
-                    .map((c: string) => c.trim().replace(/△/g, "")) // Keep △ removal for now
+                    .map((c: string) => c.trim().replace(/△/g, ""))
                     .filter((c: string) => c);
 
 
                 let allCleanedChordsAreValid = true;
-                if (cleanedChordSymbols.length === 0 && numChordsToGen > 0) { // If AI returns empty array but we expected chords
+                if (cleanedChordSymbols.length === 0 && numChordsToGen > 0) {
                     allCleanedChordsAreValid = false;
                 } else {
                     for (const chordName of cleanedChordSymbols) {
@@ -126,15 +120,13 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 if (!allCleanedChordsAreValid) {
                     if (attempt < MAX_ATTEMPTS - 1) {
                         console.warn(`Invalid chord name(s) or empty array found in AI response ("${cleanedChordSymbols.join('-')}"), reattempting generation`, attempt + 1);
-                        // For re-attempt, ensure we pass the original number of chords requested for generation.
-                        return generateChordsInternal(currentPromptInternal, currentChords, numChordsToGen, useAdvanced, attempt + 1);
+                        return generateChordsInternal(currentPromptInternal, currentChords, numChordsToGen, isHighCreativity, attempt + 1);
                     } else {
                         showErrorToast("Generation Error", "AI returned invalid chord names or an empty array after several attempts.");
                         setFullLoading(false); return null;
                     }
                 }
 
-                // Length check can still be useful, though generateObject should be more reliable
                 if (cleanedChordSymbols.length !== numChordsToGen && currentChords.length === 0) {
                     console.warn(`AI returned ${cleanedChordSymbols.length} chords for initial generation, but expected ${numChordsToGen}. Proceeding with AI's response.`);
                 } else if (cleanedChordSymbols.length !== numChordsToGen && currentChords.length > 0) {
@@ -143,12 +135,10 @@ export function useChordManagement(props?: UseChordManagementProps) {
 
 
                 generatedChordsResult = cleanedChordSymbols.map((aiChordName: string, index: number) => {
-                    // If regenerating, try to reuse existing IDs for stability in UI lists.
-                    // If the number of chords changed, this might not align perfectly.
                     const originalChordInSlot = (currentChords.length === cleanedChordSymbols.length) ? currentChords[index] : undefined;
                     return {
                         id: originalChordInSlot?.id || generateUniqueId(),
-                        chord: aiChordName, // Already validated by Chord.get()
+                        chord: aiChordName,
                     };
                 });
 
@@ -161,11 +151,11 @@ export function useChordManagement(props?: UseChordManagementProps) {
             setFullLoading(false);
             return generatedChordsResult;
         },
-        [showErrorToast] // Removed setChords as it's handled by the caller `generateChords`
+        [showErrorToast]
     );
 
     const generateChords = useCallback(async (params: GenerationParams) => {
-        const { numChords, customPrompt, useAdvancedModel = false } = params;
+        const { numChords, customPrompt, useHighCreativity = false } = params; // Renamed here
         console.log("useChordManagement: generateChords called. Params:", params, "Current prompt state (hook):", prompt);
 
         let usedPrompt: string;
@@ -180,10 +170,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
             return;
         }
 
-        // When generating/regenerating the whole progression, currentChords for the API call should be the existing ones if any.
-        // If it's a regeneration, the API will get the existingChords.
-        // If it's a new generation, existingChords will be empty.
-        const result = await generateChordsInternal(usedPrompt, chords, numChords, useAdvancedModel);
+        const result = await generateChordsInternal(usedPrompt, chords, numChords, useHighCreativity); // Pass renamed var
         if (result) {
             setChords(result);
         }
@@ -197,9 +184,9 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 return;
             }
             const newChordId = generateUniqueId();
-            const placeholderChord: ChordItem = { id: newChordId, chord: "" }; // Placeholder remains useful for UI
+            const placeholderChord: ChordItem = { id: newChordId, chord: "" };
 
-            const originalChords = [...chords]; // For rollback
+            const originalChords = [...chords];
             const updatedChordsWithPlaceholder = [
                 ...originalChords.slice(0, position),
                 placeholderChord,
@@ -209,7 +196,6 @@ export function useChordManagement(props?: UseChordManagementProps) {
             setLoadingChordId(newChordId);
 
             try {
-                // For addChordAt, existingChords sent to API should be the state *before* adding the placeholder
                 const existingChordsForApi = originalChords.map(c => ({ chord: c.chord }));
 
                 const requestBody: any = {
@@ -218,8 +204,8 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     prompt: contextParams?.prompt || prompt || "add one suitable chord here",
                 };
 
-                if (contextParams?.useAdvancedModel !== undefined) {
-                    requestBody.useAdvancedModel = contextParams.useAdvancedModel;
+                if (contextParams?.useHighCreativity !== undefined) { // Renamed here
+                    requestBody.useHighCreativity = contextParams.useHighCreativity; // Renamed field for API
                 }
 
                 const res = await fetch("/api/generate", {
@@ -228,31 +214,29 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     body: JSON.stringify(requestBody),
                 });
 
-                // Updated: Expecting ApiSingleChordResponse
                 const data: ApiSingleChordResponse = await res.json();
 
                 if (!res.ok || data.error) {
                     const errorMsg = data.error || "Failed to add chord from server.";
                     showErrorToast("Add Chord Failed", errorMsg);
-                    setChords(originalChords); // Rollback
+                    setChords(originalChords);
                     setLoadingChordId(null);
                     return;
                 }
 
-                // Updated: data.chord is now expected to be a string directly
-                const receivedChordSymbol = data.chord?.trim().replace(/△/g, ""); // Keep △ removal
+                const receivedChordSymbol = data.chord?.trim().replace(/△/g, "");
                 const chordData = receivedChordSymbol ? Chord.get(receivedChordSymbol) : null;
 
                 if (!receivedChordSymbol || !chordData || !chordData.name || chordData.notes.length === 0) {
                     showErrorToast("Invalid Chord", `Received an invalid chord ("${receivedChordSymbol || 'empty'}") from the server.`);
-                    setChords(originalChords); // Rollback
+                    setChords(originalChords);
                     setLoadingChordId(null);
                     return;
                 }
 
-                const updatedChordItem: ChordItem = { // Renamed to avoid conflict with tonal.Chord
+                const updatedChordItem: ChordItem = {
                     id: newChordId,
-                    chord: chordData.name, // Use the validated/normalized name from tonal
+                    chord: chordData.name,
                 };
                 setChords((prev) =>
                     prev.map((ch) => (ch.id === newChordId ? updatedChordItem : ch))
@@ -260,11 +244,11 @@ export function useChordManagement(props?: UseChordManagementProps) {
             } catch (e: any) {
                 console.error("Error adding chord:", e);
                 showErrorToast("Network Error", e.message || "Error adding chord. Please try again.");
-                setChords(originalChords); // Rollback on general error
+                setChords(originalChords);
             }
             setLoadingChordId(null);
         },
-        [chords, prompt, showErrorToast, setChords] // Added setChords
+        [chords, prompt, showErrorToast, setChords]
     );
 
     const handleDragEnd = useCallback(
@@ -273,7 +257,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
             setChords((items) => {
                 const oldIndex = items.findIndex((i) => i.id === active.id);
                 const newIndex = items.findIndex((i) => i.id === over.id);
-                if (oldIndex === -1 || newIndex === -1) return items; // Should not happen
+                if (oldIndex === -1 || newIndex === -1) return items;
                 return arrayMove(items, oldIndex, newIndex);
             });
         },
@@ -281,33 +265,19 @@ export function useChordManagement(props?: UseChordManagementProps) {
     );
 
     const generateChordsFromExample = useCallback(
-        (examplePrompt: string, numChordsForExample: number, useAdvanced: boolean) => {
+        (examplePrompt: string, numChordsForExample: number, isHighCreativity: boolean) => { // Renamed here
             if (typeof examplePrompt === 'string') {
                 setPrompt(examplePrompt);
-                // When generating from an example, it's a new progression, so currentChords for API should be empty.
-                // The generateChords function internally uses the `chords` state, so we might want to clear it
-                // or ensure generateChordsInternal is called appropriately.
-                // For simplicity, let generateChords handle the current `chords` state.
-                // If an example implies starting fresh, the user should perhaps clear existing chords first,
-                // or we modify generateChords to have a "startFresh" option.
-                // Current implementation: generateChords will use the current `chords` array for regeneration if it's not empty.
-                // This means an "example" might regenerate based on existing chords if any.
-                // To ensure an example ALWAYS starts fresh, we could do:
-                // setChords([]); // If example should always clear
-                // generateChords({ numChords: numChordsForExample, customPrompt: examplePrompt, useAdvancedModel });
-                // However, the current `generateChords` will pass its `chords` (which might be non-empty)
-                // to `generateChordsInternal`.
-                // Let's stick to current logic: example prompt becomes main prompt, then generate.
                 generateChords({
                     numChords: numChordsForExample,
-                    customPrompt: examplePrompt, // This will be used as `usedPrompt`
-                    useAdvancedModel: useAdvanced
+                    customPrompt: examplePrompt,
+                    useHighCreativity: isHighCreativity // Pass renamed var
                 });
             } else {
                 console.error("generateChordsFromExample received a non-string prompt:", examplePrompt);
                 showErrorToast("Input Error", "Invalid example prompt type.");
             }
-        }, [generateChords, setPrompt, showErrorToast]); // Removed setChords as it's part of generateChords
+        }, [generateChords, setPrompt, showErrorToast]);
 
     return {
         prompt, setPrompt,

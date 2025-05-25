@@ -4,34 +4,40 @@ import React from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-interface ModelSwitchProps {
+export interface ModelSwitchProps {
     checked: boolean;
     onCheckedChange: (checked: boolean) => void;
     disabled?: boolean;
-    label?: string; // Keep label prop for flexibility, but we'll use a default if not provided by ChordGenerator
-    // description?: string; // REMOVED description prop
+    label?: string;
+    id?: string; // Added id as an optional prop
 }
 
 export default function ModelSwitch({
                                         checked,
                                         onCheckedChange,
                                         disabled,
-                                        label = "Deep Think", // Default label will be used by ChordGenerator
+                                        label = "Creative Mode ✨", // Default label updated
+                                        id, // Destructure the id prop
                                     }: ModelSwitchProps) {
+    // If an id is provided, use it; otherwise, create a default one for association.
+    // This ensures the Label's htmlFor always matches the Switch's id.
+    const switchId = id || `model-switch-${label.replace(/\s+/g, '-').toLowerCase()}`;
+
     return (
-        // Removed the outer div that was for label + description column
         <div className="flex items-center space-x-2">
             <Switch
-                id="model-switch" // Ensure this ID is unique if multiple switches are on a page, or pass it as a prop
+                id={switchId} // Use the determined ID
                 checked={checked}
                 onCheckedChange={onCheckedChange}
                 disabled={disabled}
-                aria-label={label} // Good for accessibility
+                aria-label={label}
             />
-            <Label htmlFor="model-switch" className="text-sm text-gray-600 dark:text-gray-300 cursor-pointer">
+            <Label
+                htmlFor={switchId} // Use the same ID for the label
+                className={`text-sm text-gray-600 dark:text-gray-300 ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+            >
                 {label}
             </Label>
-            {/* Description paragraph REMOVED */}
         </div>
     );
 }
