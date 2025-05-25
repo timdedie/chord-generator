@@ -54,6 +54,7 @@ export default function ChordGenerator({
                         className="flex-grow px-8 h-16 placeholder:text-2xl !text-2xl"
                         disabled={fullLoading}
                         aria-label="Chord progression description"
+                        maxLength={200}
                     />
                     <Button
                         onClick={generateChords}

@@ -10,9 +10,10 @@ import { toast } from "sonner";
 
 interface MidiDownloaderProps {
     chords: string[];
+    prompt: string; // Added prompt prop
 }
 
-const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords }) => {
+const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt }) => {
     const [midiUrl, setMidiUrl] = useState<string>("");
     const [hasValidChords, setHasValidChords] = useState<boolean>(false);
 
@@ -64,7 +65,7 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords }) => {
         return () => {
             URL.revokeObjectURL(newUrl);
         };
-    }, [chords]);
+    }, [chords]); // Removed prompt from dependencies as it's only used for filename
 
     const handleDownloadClick = () => {
         if (!midiUrl || !hasValidChords) {
@@ -85,6 +86,24 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords }) => {
         transition: { duration: 0.3, ease: "easeInOut" }
     };
 
+    const sanitizePromptForFilename = (text: string) => {
+        if (!text) return "prompt";
+        return text
+            .toLowerCase()
+            .replace(/\s+/g, '_') // Replace spaces with underscores
+            .replace(/[^\w-]+/g, '') // Remove non-alphanumeric characters except underscore and hyphen
+            .substring(0, 50); // Truncate to 50 characters
+    };
+
+    const generateFilename = () => {
+        const sanitizedPrompt = sanitizePromptForFilename(prompt);
+        if (!chords || chords.length === 0) {
+            return `${sanitizedPrompt}_progression.mid`; // Fallback with prompt
+        }
+        const safeChords = chords.map(chord => chord.replace(/\//g, '-').replace(/\s+/g, '_'));
+        return `${sanitizedPrompt}_${safeChords.join('_')}.mid`;
+    };
+
     return (
         <div>
             <AnimatePresence>
@@ -98,12 +117,12 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords }) => {
                     >
                         <Button
                             asChild
-                            className="transition transform gap-2 max-w-xs sm:w-auto" // Removed hover:scale-105
+                            className="transition transform gap-2 max-w-xs sm:w-auto"
                             onClick={handleDownloadClick}
                         >
                             <a
                                 href={midiUrl}
-                                download="chord_progression.mid"
+                                download={generateFilename()}
                                 className="flex items-center"
                             >
                                 <Download className="h-5 w-5" />

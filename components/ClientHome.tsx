@@ -33,7 +33,7 @@ import { Sparkles, BookOpenText } from "lucide-react";
 
 export default function ClientHome() {
     const {
-        prompt, setPrompt,
+        prompt, setPrompt, // prompt is already available here
         chords, setChords,
         fullLoading,
         loadingChordId,
@@ -50,7 +50,7 @@ export default function ClientHome() {
     const sensors = useSensors(useSensor(PointerSensor));
     const piano = useContext(PianoContext);
     const [numChordsToGenerate, setNumChordsToGenerate] = useState<number>(4);
-    const [useHighCreativity, setUseHighCreativity] = useState<boolean>(false); // Correctly using useHighCreativity
+    const [useHighCreativity, setUseHighCreativity] = useState<boolean>(false);
 
     const [isExplanationPopoverOpen, setIsExplanationPopoverOpen] = useState(false);
     const [currentExplanationText, setCurrentExplanationText] = useState("");
@@ -83,7 +83,6 @@ export default function ClientHome() {
             let finalNotes: string[];
             const notesPc = chordData.notes;
 
-            // --- New Voicing Logic: Ascending Close Voicing ---
             let startOctave = 3;
             const voicedNotes: string[] = [];
             let previousNoteMidi: number | null = null;
@@ -119,9 +118,6 @@ export default function ClientHome() {
                 currentProcessingOctave = startOctave;
             }
             finalNotes = voicedNotes;
-            // --- End New Voicing Logic ---
-
-            // console.log("Chord to play:", chordSymbol, "Voiced notes:", finalNotes); // For debugging
             setActiveNotes(finalNotes);
             piano?.triggerAttackRelease(finalNotes, "2n");
             setTimeout(() => setActiveNotes([]), 500);
@@ -278,8 +274,8 @@ export default function ClientHome() {
                         handleExampleClick={handleExampleClickRequest}
                         numChordsToGenerate={numChordsToGenerate}
                         onNumChordsChange={setNumChordsToGenerate}
-                        useHighCreativity={useHighCreativity} // Correctly using useHighCreativity
-                        onHighCreativityChange={setUseHighCreativity} // Correctly using useHighCreativity
+                        useHighCreativity={useHighCreativity}
+                        onHighCreativityChange={setUseHighCreativity}
                     />
 
                     {(chords.length > 0 || fullLoading) && (
@@ -360,7 +356,7 @@ export default function ClientHome() {
 
                                 {!isMobile && (
                                     <div>
-                                        <MidiDownloader chords={chords.map((c) => c.chord)} />
+                                        <MidiDownloader chords={chords.map((c) => c.chord)} prompt={prompt} />
                                     </div>
                                 )}
                             </motion.div>
