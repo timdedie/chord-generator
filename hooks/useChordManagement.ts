@@ -60,11 +60,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
             attempt: number = 0
         ): Promise<ChordItem[] | null> => {
             const MAX_ATTEMPTS = 3;
-            if (!currentPromptInternal.trim() && currentChords.length === 0) {
-                showErrorToast("Input Error", "Please describe your chord progression before generating.");
-                setFullLoading(false);
-                return null;
-            }
+            // This internal function assumes prompt validation has happened externally
             setFullLoading(true);
             let generatedChordsResult = null;
 
@@ -155,7 +151,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
     );
 
     const generateChords = useCallback(async (params: GenerationParams) => {
-        const { numChords, customPrompt, useHighCreativity = false } = params; // Renamed here
+        const { numChords, customPrompt, useHighCreativity = false } = params;
         console.log("useChordManagement: generateChords called. Params:", params, "Current prompt state (hook):", prompt);
 
         let usedPrompt: string;
@@ -165,12 +161,20 @@ export function useChordManagement(props?: UseChordManagementProps) {
             usedPrompt = prompt;
         }
 
-        if (!usedPrompt.trim() && chords.length === 0) {
+        // Corrected condition: Prevent generation if prompt is empty, regardless of existing chords
+        if (!usedPrompt.trim()) {
             showErrorToast("Input Error", "Please describe your chord progression before generating.");
             return;
         }
 
-        const result = await generateChordsInternal(usedPrompt, chords, numChords, useHighCreativity); // Pass renamed var
+        // The check in generateChordsInternal for empty prompt AND empty chords is now redundant
+        // because we're checking for empty prompt here.
+        // However, generateChordsInternal might be called from other places in the future,
+        // so its own initial check for prompt and currentChords can remain as a safeguard,
+        // or be removed if this generateChords function becomes the sole entry point for it.
+        // For now, the primary validation for empty prompt is handled here.
+
+        const result = await generateChordsInternal(usedPrompt, chords, numChords, useHighCreativity);
         if (result) {
             setChords(result);
         }
@@ -204,8 +208,8 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     prompt: contextParams?.prompt || prompt || "add one suitable chord here",
                 };
 
-                if (contextParams?.useHighCreativity !== undefined) { // Renamed here
-                    requestBody.useHighCreativity = contextParams.useHighCreativity; // Renamed field for API
+                if (contextParams?.useHighCreativity !== undefined) {
+                    requestBody.useHighCreativity = contextParams.useHighCreativity;
                 }
 
                 const res = await fetch("/api/generate", {
@@ -265,19 +269,22 @@ export function useChordManagement(props?: UseChordManagementProps) {
     );
 
     const generateChordsFromExample = useCallback(
-        (examplePrompt: string, numChordsForExample: number, isHighCreativity: boolean) => { // Renamed here
+        (examplePrompt: string, numChordsForExample: number, isHighCreativity: boolean) => {
             if (typeof examplePrompt === 'string') {
                 setPrompt(examplePrompt);
+                // generateChords will use the updated prompt (examplePrompt) due to setPrompt
+                // and its own internal logic for `usedPrompt` when customPrompt is not directly passed.
+                // Or, we can be explicit:
                 generateChords({
                     numChords: numChordsForExample,
-                    customPrompt: examplePrompt,
-                    useHighCreativity: isHighCreativity // Pass renamed var
+                    customPrompt: examplePrompt, // Explicitly pass it
+                    useHighCreativity: isHighCreativity
                 });
             } else {
                 console.error("generateChordsFromExample received a non-string prompt:", examplePrompt);
                 showErrorToast("Input Error", "Invalid example prompt type.");
             }
-        }, [generateChords, setPrompt, showErrorToast]);
+        }, [generateChords, setPrompt, showErrorToast]); // Added setPrompt to dependencies
 
     return {
         prompt, setPrompt,
