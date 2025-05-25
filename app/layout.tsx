@@ -106,7 +106,7 @@ export default function RootLayout({
         <html lang="en">{/* Ensure no space/newline after <html lang="en"> and before <head> or after <html> and EOF */}
         <head>{/* Ensure no space/newline after <head> and before first child or after last child and before </head> */}
             {/* Primary Title & Description */}
-            <title>ChordGen – Free AI Chord Generator & MIDI Export Tool</title>
+            <title>ChordGen – Free AI Chord Progression Generator & MIDI Export Tool</title>
             <meta
                 name="description"
                 content="Generate unique chord progressions instantly using natural language with ChordGen. Free to use! Edit chords, rearrange them, download MIDI files, and learn music theory with AI explanations."
