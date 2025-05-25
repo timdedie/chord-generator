@@ -1,5 +1,8 @@
 import { createOpenAI } from '@ai-sdk/openai';
-import { generateText, CoreMessage } from 'ai';
+// Updated: Import generateObject and CoreMessage
+import { generateObject, CoreMessage } from 'ai';
+// Added: Import Zod
+import { z } from 'zod';
 
 interface SimpleChordObject {
     chord: string;
@@ -10,7 +13,7 @@ interface RequestBody {
     existingChords?: SimpleChordObject[];
     addChordPosition?: number;
     numChords?: number;
-    useAdvancedModel?: boolean; // New field for model selection
+    useAdvancedModel?: boolean;
 }
 
 interface ApiError extends Error {
@@ -29,7 +32,7 @@ const deepseek = createOpenAI({
 
 const MODEL_SELECTION = {
     DEFAULT: 'deepseek-chat',
-    ADVANCED: 'deepseek-reasoner', // Make sure this is the correct model identifier
+    ADVANCED: 'deepseek-reasoner',
 };
 
 const CHORD_FORMATTING_RULES = `
@@ -42,7 +45,17 @@ Chord formatting rules:
 • Minor seventh = “m7”
 • Suspended = “sus2” or “sus4”
 • Extensions/alterations allowed: 9, add9, #5, b9, #11, 13, etc.
+Guideline: Provide only the chord symbols according to these rules. For example, if generating ["Am", "G", "C"], the 'chords' array should be ["Am", "G", "C"]. If generating a single chord "F#m7", the 'chord' field should be "F#m7".
 `.trim();
+
+// Added: Zod Schemas for structured output
+const ChordProgressionSchema = z.object({
+    chords: z.array(z.string().describe("A musical chord symbol, strictly adhering to the CHORD_FORMATTING_RULES. Example: 'Am', 'G7', 'Cmaj7'.")).describe("An array of chord names forming a progression.")
+});
+
+const SingleChordSchema = z.object({
+    chord: z.string().describe("A single musical chord symbol, strictly adhering to the CHORD_FORMATTING_RULES. Example: 'F#m7'.")
+});
 
 function createResponse(data: unknown, status: number = 200): Response {
     return new Response(JSON.stringify(data), {
@@ -55,42 +68,55 @@ function createSimpleProgressionString(chords: SimpleChordObject[]): string {
     return chords.map(chord => chord.chord).join(' - ');
 }
 
-async function createChatCompletion(
+// Renamed and Rewritten: Replaced createChatCompletion with createChordObjectGeneration
+async function createChordObjectGeneration<T extends z.ZodTypeAny>(
     userMessage: string,
     useAdvanced: boolean,
-    isRegeneration: boolean = false // This flag can influence temperature or minor prompt details
-): Promise<string> {
-    console.log('[API createChatCompletion] User message to AI:\n', userMessage);
+    schema: T, // Schema for the desired object
+    isRegeneration: boolean = false
+): Promise<z.infer<T>> { // Return type is inferred from the Zod schema
+    console.log('[API createChordObjectGeneration] User message to AI:\n', userMessage);
 
     const modelToUse = useAdvanced ? MODEL_SELECTION.ADVANCED : MODEL_SELECTION.DEFAULT;
-    console.log(`[API createChatCompletion] Using model: ${modelToUse} (Advanced: ${useAdvanced})`);
+    console.log(`[API createChordObjectGeneration] Using model: ${modelToUse} (Advanced: ${useAdvanced})`);
 
-    const systemMessage = `You are an expert musician and composer assisting with chord progressions. Your goal is to generate chords that are musically correct, harmonically rich, interesting, and fitting for the given context. Strive for good voice leading and avoid overly simplistic or cliché progressions unless the user's prompt explicitly asks for something very simple. Pay close attention to the user's specific requests for chord count and desired tone. **It is absolutely critical that you strictly adhere to the output format requested in the user's message. Your response MUST contain ONLY the specified chord data and NO other text, explanations, or conversational filler whatsoever.**`;
+    // Updated: System message adjusted for object generation
+    const systemMessage = `You are an expert musician and composer assisting with chord progressions.
+Your goal is to generate chords that are musically correct, harmonically rich, interesting, and fitting for the given context.
+Strive for good voice leading and avoid overly simplistic or cliché progressions unless the user's prompt explicitly asks for something very simple.
+Pay close attention to the user's specific requests for chord count and desired tone.
+You will provide your response as a structured JSON object according to the provided schema.
+Ensure all chord symbols strictly adhere to the CHORD_FORMATTING_RULES.
+${CHORD_FORMATTING_RULES}
+    `.trim();
 
     const messages: CoreMessage[] = [
         { role: 'user', content: userMessage }
     ];
 
-    // Example: Potentially slightly higher temperature for advanced model if desired
     let currentTemperature = isRegeneration ? 0.75 : 0.7;
     if (useAdvanced) {
-        currentTemperature = isRegeneration ? 0.8 : 0.75; // Slightly higher for advanced if desired
+        currentTemperature = isRegeneration ? 0.8 : 0.75;
     }
-    console.log(`[API createChatCompletion] Using temperature: ${currentTemperature}`);
+    console.log(`[API createChordObjectGeneration] Using temperature: ${currentTemperature}`);
 
-    const { text } = await generateText({
+    // Updated: Using generateObject instead of generateText
+    const { object } = await generateObject({
         model: deepseek(modelToUse),
+        schema: schema, // Pass the Zod schema
         system: systemMessage,
         messages: messages,
         temperature: currentTemperature,
+        mode: 'json', // Explicitly request JSON mode if available/needed for the model
     });
 
-    if (!text) {
-        throw new Error('No valid response from API (Vercel AI SDK)');
+    if (!object) { // Should not happen if generateObject resolves, but good for robustness
+        throw new Error('No valid object response from API (Vercel AI SDK)');
     }
-    return text.trim();
+    return object;
 }
 
+// Updated: Prompt building functions now focus on content, not string format
 function buildNewProgressionMessage(prompt: string, numChords: number): string {
     console.log(`[API buildNewProgressionMessage] Received numChords: ${numChords}`);
     const count = numChords >= 2 && numChords <= 8 ? numChords : 4;
@@ -100,19 +126,15 @@ Create a musically compelling ${count}-chord progression that evokes the feeling
 The progression should have a clear harmonic direction and sound cohesive.
 Aim for a balance of familiarity and creativity.
 Ensure smooth transitions between chords.
-
-**IMPORTANT: Your response MUST consist ONLY of the ${count} chord names, separated by hyphens.**
-For example, if the chords are C, G, Am, F, your response must be: C-G-Am-F
-Do NOT include any other text, explanations, or conversational remarks.
-
-${CHORD_FORMATTING_RULES}
+Provide the ${count} chord names as an array of strings in the 'chords' field of the JSON output.
+Each chord name must strictly adhere to the CHORD_FORMATTING_RULES.
+Do not include any other text, explanations, or conversational remarks in your response; only the JSON object.
   `.trim();
 }
 
 function buildRegenerateMessage(prompt: string, existingChords: SimpleChordObject[], requestedNumChords: number): string {
     console.log(`[API buildRegenerateMessage] Received requestedNumChords: ${requestedNumChords}`);
     const progressionContext = existingChords.length > 0 ? createSimpleProgressionString(existingChords) : "no previous progression";
-
     const targetLength = requestedNumChords >= 2 && requestedNumChords <= 8 ? requestedNumChords : (existingChords.length > 0 && existingChords.length >=2 && existingChords.length <=8 ? existingChords.length : 4);
     console.log(`[API buildRegenerateMessage] targetLength for new progression: ${targetLength}`);
 
@@ -126,18 +148,15 @@ Ensure the new progression:
 1. Strongly evokes: "${prompt}".
 2. Has exactly ${targetLength} chords.
 3. Is musically compelling and a fresh take.
-
-**IMPORTANT: Your response MUST consist ONLY of the complete, new chord progression as a hyphen-separated list of ${targetLength} chord names.**
-For example, if the new progression is Dm-G7-Cmaj7-F, your response must be: Dm-G7-Cmaj7-F
-Do NOT include any other text, explanations, or conversational remarks.
-
-${CHORD_FORMATTING_RULES}
+Provide the new, complete chord progression as an array of ${targetLength} chord names in the 'chords' field of the JSON output.
+Each chord name must strictly adhere to the CHORD_FORMATTING_RULES.
+Do not include any other text, explanations, or conversational remarks; only the JSON object.
   `.trim();
 }
 
 function buildAddChordMessage(
-    prompt: string | undefined, // This prompt is specific to the chord being added
-    existingChords: SimpleChordObject[], // Overall progression context
+    prompt: string | undefined,
+    existingChords: SimpleChordObject[],
     addChordPosition: number
 ): string {
     console.log(`[API buildAddChordMessage] Called for position ${addChordPosition}. Add-specific prompt: "${prompt}"`);
@@ -163,7 +182,7 @@ function buildAddChordMessage(
         messageParts.push('Generate an interesting single starting chord.');
     }
 
-    if (prompt && prompt.trim() !== "add one suitable chord here" && prompt.trim() !== "") { // Check if a meaningful prompt was passed for this specific chord
+    if (prompt && prompt.trim() !== "add one suitable chord here" && prompt.trim() !== "") {
         messageParts.push(`The desired tone or function for this new chord is: "${prompt}".`);
     } else if (hasExistingChords) {
         messageParts.push('The new chord should be musically interesting and create a smooth, logical, or compelling harmonic transition with the surrounding chords.');
@@ -171,11 +190,10 @@ function buildAddChordMessage(
         messageParts.push('The new chord should be musically interesting.');
     }
 
-
     messageParts.push('The new chord should add harmonic richness or serve a clear musical function (e.g., passing chord, preparing a cadence, adding color).');
-    messageParts.push(`**IMPORTANT: Your response MUST consist ONLY of the single chord name for the new chord.**`);
-    messageParts.push(`For example, if the new chord is F#m7, your response must be: F#m7`);
-    messageParts.push(CHORD_FORMATTING_RULES);
+    messageParts.push(`Provide the single new chord name as a string in the 'chord' field of the JSON output.`);
+    messageParts.push(`The chord name must strictly adhere to the CHORD_FORMATTING_RULES.`);
+    messageParts.push(`Do not include any other text, explanations, or conversational remarks; only the JSON object.`);
     return messageParts.join('\n\n');
 }
 
@@ -185,13 +203,11 @@ export async function POST(request: Request): Promise<Response> {
         console.log("[API POST] Received request body:", JSON.stringify(requestBody, null, 2));
 
         const {
-            // 'prompt' from requestBody is the *overall* prompt for the progression
-            // or a specific instruction if 'addChordPosition' is present.
             prompt: overallOrActionPrompt,
             existingChords = [],
             addChordPosition,
             numChords,
-            useAdvancedModel = false, // Default to false if not provided
+            useAdvancedModel = false,
         } = requestBody;
 
         console.log(`[API POST] overallOrActionPrompt: "${overallOrActionPrompt}"`);
@@ -204,50 +220,64 @@ export async function POST(request: Request): Promise<Response> {
         if (typeof numChords === 'number' && numChords >= 2 && numChords <= 8) {
             effectiveNumChords = numChords;
         } else {
-            // If numChords is not valid, default based on existing or to 4
             effectiveNumChords = (existingChords.length >= 2 && existingChords.length <= 8) ? existingChords.length : 4;
             if (existingChords.length === 0 && (typeof numChords !== 'number' || numChords < 2 || numChords > 8) ) {
-                effectiveNumChords = 4; // Specifically for new generation if client sent bad numChords
+                effectiveNumChords = 4;
             }
             console.log(`[API POST] numChordsFromClient ("${numChords}") was invalid/undefined. Defaulting effectiveNumChords to ${effectiveNumChords}.`);
         }
         console.log(`[API POST] Calculated effectiveNumChords: ${effectiveNumChords}`);
 
         let userMessage: string;
-        let result: unknown;
+        let result: unknown; // This will now be the structured object
         let isRegenerationCall = false;
 
+        // Updated: Logic to call createChordObjectGeneration with the appropriate schema
         if (typeof addChordPosition !== 'undefined') {
-            // For addChordMessage, the 'prompt' argument is the specific instruction for that chord.
             userMessage = buildAddChordMessage(overallOrActionPrompt, existingChords, addChordPosition);
+            const aiObject = await createChordObjectGeneration(userMessage, useAdvancedModel, SingleChordSchema, isRegenerationCall);
+            console.log('[API POST] Received new single chord object from AI:', aiObject);
+            // Validate with Zod on the server side (optional, but good practice)
+            const parsed = SingleChordSchema.safeParse(aiObject);
+            if (!parsed.success) {
+                console.error("[API POST] Zod validation failed for single chord:", parsed.error);
+                throw new Error("AI returned an invalid object structure for a single chord.");
+            }
+            result = parsed.data; // { chord: "Am" }
         } else {
-            if (!overallOrActionPrompt && existingChords.length === 0) { // Require prompt only if generating from scratch
+            if (!overallOrActionPrompt && existingChords.length === 0) {
                 throw Object.assign(new Error("Prompt is required for initial generation."), { status: 400 });
             }
-            const regenerationPrompt = overallOrActionPrompt || "Continue the progression in a similar style"; // Fallback prompt for regeneration if none provided
+            const regenerationPrompt = overallOrActionPrompt || "Continue the progression in a similar style";
 
             if (existingChords.length > 0) {
                 userMessage = buildRegenerateMessage(regenerationPrompt, existingChords, effectiveNumChords);
                 isRegenerationCall = true;
-            } else { // Initial generation
+            } else {
                 userMessage = buildNewProgressionMessage(regenerationPrompt, effectiveNumChords);
             }
-        }
-
-        const aiResponse = await createChatCompletion(userMessage, useAdvancedModel, isRegenerationCall);
-
-        if (typeof addChordPosition !== 'undefined') {
-            console.log('[API POST] Received new single chord from AI:', aiResponse);
-            result = { chord: aiResponse };
-        } else {
-            console.log("[API POST] Received new progression from AI:", aiResponse);
-            result = { chords: aiResponse };
+            const aiObject = await createChordObjectGeneration(userMessage, useAdvancedModel, ChordProgressionSchema, isRegenerationCall);
+            console.log("[API POST] Received new progression object from AI:", aiObject);
+            // Validate with Zod
+            const parsed = ChordProgressionSchema.safeParse(aiObject);
+            if (!parsed.success) {
+                console.error("[API POST] Zod validation failed for chord progression:", parsed.error);
+                throw new Error("AI returned an invalid object structure for chord progression.");
+            }
+            result = parsed.data; // { chords: ["C", "G", "Am", "F"] }
         }
 
         return createResponse(result);
     } catch (error: unknown) {
         console.error('[API POST] Error:', error);
-        const err = error as ApiError;
+        const err = error as ApiError; // Consider checking for Vercel AI SDK specific error types too
+        // If error is a ZodError, you might want to return a more specific message
+        if (error instanceof z.ZodError) {
+            return createResponse(
+                { error: 'Invalid data format received from AI.', details: error.format() },
+                500
+            );
+        }
         return createResponse(
             { error: err.message || 'Internal server error' },
             err.status || 500
