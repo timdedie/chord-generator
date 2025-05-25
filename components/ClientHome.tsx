@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
 import * as Tone from "tone";
-import { Chord } from "tonal";
+import { Chord, Note } from "tonal"; // Ensure Note is imported here
 import ReactMarkdown from 'react-markdown';
 
 import { useChordManagement } from "@/hooks/useChordManagement";
@@ -50,7 +50,7 @@ export default function ClientHome() {
     const sensors = useSensors(useSensor(PointerSensor));
     const piano = useContext(PianoContext);
     const [numChordsToGenerate, setNumChordsToGenerate] = useState<number>(4);
-    const [useHighCreativity, setUseHighCreativity] = useState<boolean>(false); // Renamed from useAdvancedModel
+    const [useHighCreativity, setUseHighCreativity] = useState<boolean>(false); // Correctly using useHighCreativity
 
     const [isExplanationPopoverOpen, setIsExplanationPopoverOpen] = useState(false);
     const [currentExplanationText, setCurrentExplanationText] = useState("");
@@ -74,35 +74,79 @@ export default function ClientHome() {
             if (!chordSymbol) return;
             await Tone.start();
             const chordData = Chord.get(chordSymbol);
+
             if (!chordData || !chordData.notes || chordData.notes.length === 0) {
-                setActiveNotes([]); return;
+                setActiveNotes([]);
+                return;
             }
-            const chordNotes = chordData.notes.map((n) => /\d/.test(n.trim()) ? n.trim() : `${n.trim()}4`);
-            setActiveNotes(chordNotes);
-            piano?.triggerAttackRelease( chordNotes, "2n");
+
+            let finalNotes: string[];
+            const notesPc = chordData.notes;
+
+            // --- New Voicing Logic: Ascending Close Voicing ---
+            let startOctave = 3;
+            const voicedNotes: string[] = [];
+            let previousNoteMidi: number | null = null;
+            let currentProcessingOctave = startOctave;
+
+            for (const pc of notesPc) {
+                let noteWithOctave = pc + currentProcessingOctave;
+                let currentNoteMidi = Note.midi(noteWithOctave);
+
+                if (currentNoteMidi === null) {
+                    console.warn(`Could not get MIDI for note: ${pc}. Using default octave 4.`);
+                    voicedNotes.push(pc + "4");
+                    previousNoteMidi = Note.midi(pc + "4");
+                    continue;
+                }
+
+                if (previousNoteMidi !== null) {
+                    while (currentNoteMidi! <= previousNoteMidi!) {
+                        currentProcessingOctave++;
+                        noteWithOctave = pc + currentProcessingOctave;
+                        currentNoteMidi = Note.midi(noteWithOctave);
+                        if (currentNoteMidi === null) {
+                            console.warn(`Error finding ascending MIDI for ${pc}. Using fallback.`);
+                            noteWithOctave = pc + (currentProcessingOctave -1);
+                            currentNoteMidi = Note.midi(noteWithOctave);
+                            break;
+                        }
+                    }
+                }
+
+                voicedNotes.push(noteWithOctave);
+                previousNoteMidi = currentNoteMidi;
+                currentProcessingOctave = startOctave;
+            }
+            finalNotes = voicedNotes;
+            // --- End New Voicing Logic ---
+
+            // console.log("Chord to play:", chordSymbol, "Voiced notes:", finalNotes); // For debugging
+            setActiveNotes(finalNotes);
+            piano?.triggerAttackRelease(finalNotes, "2n");
             setTimeout(() => setActiveNotes([]), 500);
         }, [piano]
     );
 
     const handleGenerateChordsRequest = useCallback(() => {
-        generateChords({ numChords: numChordsToGenerate, useHighCreativity }); // Renamed prop
+        generateChords({ numChords: numChordsToGenerate, useHighCreativity });
     }, [generateChords, numChordsToGenerate, useHighCreativity]);
 
     const handleExampleClickRequest = useCallback((example: string) => {
-        generateChordsFromExample(example, numChordsToGenerate, useHighCreativity); // Renamed prop
+        generateChordsFromExample(example, numChordsToGenerate, useHighCreativity);
     }, [generateChordsFromExample, numChordsToGenerate, useHighCreativity]);
 
     const handleInputKeyDown = useCallback(
         (e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
                 e.preventDefault();
-                generateChords({ numChords: numChordsToGenerate, useHighCreativity }); // Renamed prop
+                generateChords({ numChords: numChordsToGenerate, useHighCreativity });
             }
         }, [generateChords, numChordsToGenerate, useHighCreativity]
     );
 
     const handleAddChordRequest = useCallback((position: number) => {
-        addChordAt(position, { useHighCreativity }); // Renamed prop
+        addChordAt(position, { useHighCreativity });
     }, [addChordAt, useHighCreativity]);
 
 
@@ -234,8 +278,8 @@ export default function ClientHome() {
                         handleExampleClick={handleExampleClickRequest}
                         numChordsToGenerate={numChordsToGenerate}
                         onNumChordsChange={setNumChordsToGenerate}
-                        useHighCreativity={useHighCreativity} // Renamed prop
-                        onHighCreativityChange={setUseHighCreativity} // Renamed prop
+                        useHighCreativity={useHighCreativity} // Correctly using useHighCreativity
+                        onHighCreativityChange={setUseHighCreativity} // Correctly using useHighCreativity
                     />
 
                     {(chords.length > 0 || fullLoading) && (
