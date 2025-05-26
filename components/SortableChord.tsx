@@ -5,8 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
 import { X, MoveHorizontal } from "lucide-react";
-
-// Assuming ChordItem is imported from useChordManagement or defined globally without 'locked'
+import ChordSymbol from "@/components/ChordSymbol";
 import { ChordItem } from "@/hooks/useChordManagement";
 
 export interface SortableChordProps {
@@ -14,11 +13,13 @@ export interface SortableChordProps {
     item: ChordItem;
     onPlay: () => void;
     onRemove: (id: string) => void;
-    loading: boolean; // This prop now correctly dictates when to show the skeleton
+    loading: boolean;
 }
 
 function SkeletonCard() {
-    return <div className="w-48 h-48 rounded-xl bg-gray-200 dark:bg-gray-800 animate-pulse" />;
+    return (
+        <div className="w-48 h-48 rounded-xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
+    );
 }
 
 const SortableChord: React.FC<SortableChordProps> = ({
@@ -26,29 +27,15 @@ const SortableChord: React.FC<SortableChordProps> = ({
                                                          item,
                                                          onPlay,
                                                          onRemove,
-                                                         loading, // This is the key prop from ChordRow
+                                                         loading,
                                                      }) => {
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+    const { attributes, listeners, setNodeRef, transform, transition } =
+        useSortable({ id });
     const [hover, setHover] = useState(false);
 
-    // --- CORRECTED SKELETON LOGIC ---
-    // If the ChordRow says this card is loading, show the skeleton.
-    // This covers:
-    //   1. Regeneration of existing chords (fullLoading = true from ChordRow).
-    //   2. A new chord being added via addChordAt (loadingChordId matches this card's id).
-    // Also, if the item.chord itself is empty (placeholder before API response for addChordAt),
-    // and it's NOT in the loadingChordId state (which would be caught by `loading` prop),
-    // then also treat as a skeleton. This latter case is less likely if addChordAt always sets loadingChordId.
-    if (loading) {
+    if (loading || !item.chord) {
         return <SkeletonCard />;
     }
-    // If not explicitly loading, but the chord symbol is empty, it's likely a placeholder.
-    // This condition is a fallback and might be redundant if `loadingChordId` is always
-    // correctly set for placeholders by `addChordAt`.
-    if (!item.chord) {
-        return <SkeletonCard />;
-    }
-    // --- END OF CORRECTED SKELETON LOGIC ---
 
     return (
         <Card
@@ -60,15 +47,14 @@ const SortableChord: React.FC<SortableChordProps> = ({
             style={{ transform: CSS.Transform.toString(transform), transition }}
             className="relative group cursor-pointer flex items-center justify-center w-48 h-48 border border-gray-300 bg-gray-50 dark:bg-black dark:border-gray-700"
         >
-            <motion.span
+            <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
-                className="text-2xl font-bold text-gray-900 dark:text-gray-100"
             >
-                {item.chord} {/* No need for "..." fallback if !item.chord shows skeleton */}
-            </motion.span>
+                <ChordSymbol chord={item.chord} />
+            </motion.div>
 
             {/* Delete button */}
             <AnimatePresence>
