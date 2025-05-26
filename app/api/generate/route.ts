@@ -25,6 +25,8 @@ if (!GOOGLE_GENERATIVE_AI_API_KEY) {
 
 const googleAIProvider = createGoogleGenerativeAI({});
 const PRIMARY_MODEL_ID = 'gemini-2.5-flash-preview-05-20';
+// const PRIMARY_MODEL_ID = 'gemini-2.0-flash-lite';
+
 
 const CREATIVITY_SETTINGS = {
     standard: {
@@ -93,8 +95,8 @@ async function createChordObjectGeneration<T extends z.ZodTypeAny>(
 
     const systemMessage = `
 You are an expert musician and composer specializing in chord progressions.
-Your goal is to generate chords that are musically correct, harmonically rich, interesting, and fitting for the given context.
-Strive for good voice leading and musical coherence.
+Your goal is to generate chords that are musically correct, harmonically rich, **distinctive, and avoid clichés unless specifically appropriate for the request.**
+Strive for good voice leading, musical coherence, and progressions that are memorable and non-generic.
 
 Pay close attention to the user's specific musical requirements, context, and desired chord count.
 You will provide your response as a structured JSON object according to the provided schema.
@@ -124,11 +126,19 @@ ${CHORD_FORMATTING_RULES}
 function buildProgressionMessage(prompt: string, numChords: number): string {
     const count = numChords >= 2 && numChords <= 8 ? numChords : 4;
     return `
-Create a musically compelling ${count}-chord progression based on this requirement: "${prompt}".
+Create a ${count}-chord progression based on this requirement: "${prompt}".
 
-The progression should have a clear harmonic direction and sound cohesive.
+Strive for a progression that is not only musically compelling and cohesive with a clear harmonic direction, but also **memorable and distinctive.**
+**Avoid overly common or predictable harmonic clichés (e.g., I-V-vi-IV in C Major unless the prompt specifically asks for a very common pop sound). Instead, explore more nuanced and creative harmonic pathways.**
+Consider incorporating elements like:
+- **Unexpected but satisfying resolutions.**
+- **Subtle modal colors (e.g., hints of Lydian, Dorian, Mixolydian b6) or brief tonicizations to secondary chords.**
+- **Chords with interesting extensions (9ths, 11ths, 13ths) or alterations (b5, #5, b9, #9, #11) that enhance the mood without sounding out of place.**
+- **A sense of harmonic storytelling or emotional arc within the progression.**
+- **If the prompt is for a specific genre, lean into sophisticated versions of that genre's harmony rather than the most basic interpretation.**
+
 Consider the musical context, style, function, or any specific constraints mentioned in the requirement.
-Ensure smooth voice leading and transitions between chords.
+Ensure smooth voice leading (imagine melodic lines connecting the notes of successive chords) and strong melodic potential in the implied top notes of the chords.
 
 Provide the ${count} chord names as an array of strings in the 'chords' field of the JSON output.
 Each chord name must strictly adhere to the CHORD_FORMATTING_RULES.
@@ -149,22 +159,31 @@ function buildAddChordMessage(
             addChordPosition + 1
         } (0-indexed: ${addChordPosition}).`
         : 'Generate an interesting single starting chord.';
+
     const before = hasExisting && addChordPosition > 0
         ? ` The new chord will follow ${existingChords[addChordPosition - 1].chord}.`
         : '';
     const after = hasExisting && addChordPosition < existingChords.length
         ? ` The new chord will precede ${existingChords[addChordPosition].chord}.`
         : '';
-    const requirement =
-        prompt && prompt.trim()
-            ? `Musical requirement: "${prompt}"`
-            : hasExisting
-                ? 'The new chord should create smooth harmonic transitions with the surrounding chords.'
-                : 'The new chord should be musically interesting.';
+
+    let requirementInstruction: string;
+    if (prompt && prompt.trim()) {
+        requirementInstruction = `Musical requirement for the new chord: "${prompt}". The new chord should creatively fulfill this while integrating seamlessly and interestingly into the existing harmonic context.`;
+    } else if (hasExisting) {
+        requirementInstruction = `The new chord should create smooth harmonic transitions with the surrounding chords, **while also adding a unique color, an unexpected (but fitting) harmonic twist, or a richer voicing that enhances the existing progression. Avoid a purely functional or predictable choice unless it's the only way to maintain coherence. Think about what chord could elevate this progression.**`;
+    } else {
+        requirementInstruction = `The new chord should be musically interesting and serve as a **strong, non-generic starting point for a compelling progression. Think about chords that evoke a specific mood, have a rich harmonic texture, or suggest an intriguing direction.**`;
+    }
 
     return [
         context + before + after,
-        requirement,
+        requirementInstruction,
+        'When selecting the chord, consider elements like:',
+        '- **Excellent voice leading into and out of the new chord.**',
+        '- **Introducing a subtle harmonic surprise, richness, or a borrowed chord if appropriate.**',
+        '- **Using extensions or alterations that add character without clashing or sounding forced.**',
+        '- **How this single chord choice can make the overall progression less generic.**',
         'Provide the single new chord name as a string in the \'chord\' field of the JSON output.',
         'The chord name must strictly adhere to the CHORD_FORMATTING_RULES.',
         'Do not include any other text, explanations, or conversational remarks; only the JSON object.',

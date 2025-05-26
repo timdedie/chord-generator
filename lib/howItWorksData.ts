@@ -32,8 +32,8 @@ export const howItWorksItems: HowItWorksItem[] = [
         IconComponent: ListOrdered,
     },
     {
-        title: "Experimental Mode",
-        description: 'Toggle "Experimental Mode" to use a more creative AI model (potentially less musically accurate).',
+        title: "High Creativity Mode",
+        description: 'Toggle "High Creativity Mode" to use a more creative AI model (potentially less musically accurate).',
         IconComponent: Sparkles,
     },
     {

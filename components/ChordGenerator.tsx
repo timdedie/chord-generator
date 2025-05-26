@@ -77,7 +77,7 @@ export default function ChordGenerator({
                         checked={useHighCreativity}
                         onCheckedChange={onHighCreativityChange}
                         disabled={fullLoading}
-                        label="Experimental Mode" // Label updated, emoji removed for now
+                        label="High Creativity Mode" // Label updated, emoji removed for now
                         id="creative-mode-switch"
                     />
                 </div>
