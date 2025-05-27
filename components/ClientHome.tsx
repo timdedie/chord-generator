@@ -166,7 +166,7 @@ export default function ClientHome() {
             const response = await fetch('/api/explain-progression', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chords: chords.map(c => c.chord) }),
+                body: JSON.stringify({ chords: chords.map(c => c.chord), prompt: prompt }), // Added prompt here
                 signal: explanationAbortControllerRef.current.signal,
             });
 

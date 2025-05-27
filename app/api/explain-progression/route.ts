@@ -16,7 +16,7 @@ const EXPLANATION_MODEL = 'deepseek-chat';
 
 export async function POST(request: Request) {
     try {
-        const { chords } = await request.json() as { chords: string[] };
+        const { chords, prompt } = await request.json() as { chords: string[], prompt?: string };
 
         if (!chords || chords.length === 0) {
             return new Response(JSON.stringify({ error: "No chords provided for explanation." }), {
@@ -28,19 +28,27 @@ export async function POST(request: Request) {
         const progressionString = chords.join(' - ');
 
         // SYSTEM MESSAGE: Focus on educational and clear music theory explanations.
-        const systemMessage = `You are a knowledgeable and friendly music theory assistant. Your purpose is to help users understand chord progressions by explaining the underlying music theory in a clear, educational, and beginner-friendly manner. Use simple Markdown (like **bolding key terms**) where it enhances readability.`;
+        const systemMessage = `You are a knowledgeable and friendly music theory assistant. Your purpose is to help users understand chord progressions by explaining the underlying music theory in a clear, concise, and educational manner. Focus on the most important theoretical aspect or the overall feel of the progression. Keep the explanation very short, ideally 2-3 concise sentences, and start directly with the explanation.`;
 
-        // USER MESSAGE CONTENT: Simplified request for an educational explanation, emphasizing extreme brevity.
-        const userMessageContent = `
+        // USER MESSAGE CONTENT: Incorporate the original prompt if available.
+        let userMessageContent = `
 Please explain the music theory behind the chord progression: **${progressionString}**.
+`;
 
+        if (prompt && prompt.trim().length > 0) {
+            userMessageContent += `
+The user's original request for this progression was: "${prompt}". You can use this context to tailor your explanation if relevant, but prioritize explaining the given chord progression directly.
+`;
+        }
+
+        userMessageContent += `
 Make your explanation educational and relatively easy for a beginner to understand.
 Focus on the most important theoretical aspect or the overall feel.
 
 **Keep the explanation very short and to the point, ideally 2-3 concise sentences.**
 Start directly with the explanation.
 
-For example, for C - G - Am - F: "This progression in **C Major** uses **G** (dominant) to create tension towards **Am** (relative minor), with **F** (subdominant) often leading back to C. It's a common, satisfying pop sound."
+For example, for C - G - Am - F: "This progression in **C Major** uses **G** (dominant) to create tension towards **Am** (relative minor), with **F** (subdominant) often leading back to C. It's a common and effective pop progression."
 For Dm7 - G7 - Cmaj7: "A classic **ii-V-I** in C Major. **Dm7** leads to the tension of **G7** (dominant), which strongly resolves to the stable **Cmaj7** (tonic). Fundamental in jazz."
 `.trim();
 
@@ -52,8 +60,8 @@ For Dm7 - G7 - Cmaj7: "A classic **ii-V-I** in C Major. **Dm7** leads to the ten
             model: deepseek(EXPLANATION_MODEL),
             system: systemMessage,
             messages: messages,
-            temperature: 0.6, // Slightly lower temperature might help with conciseness
-            maxTokens: 200, // Increased maxTokens to provide more buffer
+            temperature: 0.6,
+            maxTokens: 200,
         });
 
         return result.toTextStreamResponse();
