@@ -118,8 +118,12 @@ export default function ClientHome() {
                 currentProcessingOctave = startOctave;
             }
             finalNotes = voicedNotes;
-            setActiveNotes(finalNotes);
-            piano?.triggerAttackRelease(finalNotes, "2n");
+
+            // Simplify note names before passing to Tone.Sampler and setting active notes
+            const simplifiedFinalNotes = finalNotes.map(note => Note.simplify(note));
+
+            setActiveNotes(simplifiedFinalNotes);
+            piano?.triggerAttackRelease(simplifiedFinalNotes, "2n");
             setTimeout(() => setActiveNotes([]), 500);
         }, [piano]
     );
