@@ -75,16 +75,19 @@ export default function ClientHome() {
             await Tone.start();
             const chordData = Chord.get(chordSymbol);
 
-            if (!chordData || !chordData.notes || chordData.notes.length === 0) {
+            if (!chordData || !chordData.notes || chordData.notes.length === 0 || !chordData.tonic) {
                 setActiveNotes([]);
                 return;
             }
 
-            let finalNotes: string[];
-            const notesPc = chordData.notes;
+            const rootPc = chordData.tonic; // Get the root pitch class (e.g., "C")
+            const notesPc = chordData.notes; // Pitch classes for the main chord body (e.g., ["C", "E", "G"])
 
-            let startOctave = 3;
-            const voicedNotes: string[] = [];
+            let startOctave = 3; // Main chord voicing starts at octave 3
+            const bassOctave = startOctave - 1; // Bass note will be in octave 2
+            const bassNote = rootPc + bassOctave.toString(); // Construct the bass note string (e.g., "C2")
+
+            const voicedNotes: string[] = []; // To store notes of the main chord body
             let previousNoteMidi: number | null = null;
             let currentProcessingOctave = startOctave;
 
@@ -100,14 +103,14 @@ export default function ClientHome() {
                 }
 
                 if (previousNoteMidi !== null) {
+                    // Ensure notes are ascending to avoid overly muddy voicings
                     while (currentNoteMidi! <= previousNoteMidi!) {
                         currentProcessingOctave++;
                         noteWithOctave = pc + currentProcessingOctave;
                         currentNoteMidi = Note.midi(noteWithOctave);
                         if (currentNoteMidi === null) {
                             console.warn(`Error finding ascending MIDI for ${pc}. Using fallback.`);
-                            noteWithOctave = pc + (currentProcessingOctave -1);
-                            currentNoteMidi = Note.midi(noteWithOctave);
+                            noteWithOctave = pc + (currentProcessingOctave - 1); // Fallback to previous octave attempt
                             break;
                         }
                     }
@@ -115,15 +118,14 @@ export default function ClientHome() {
 
                 voicedNotes.push(noteWithOctave);
                 previousNoteMidi = currentNoteMidi;
-                currentProcessingOctave = startOctave;
+                currentProcessingOctave = startOctave; // Reset for the next note in notesPc for compact voicing
             }
-            finalNotes = voicedNotes;
 
-            // Simplify note names before passing to Tone.Sampler and setting active notes
-            const simplifiedFinalNotes = finalNotes.map(note => Note.simplify(note));
+            // Combine the bass note with the main chord notes
+            const allNotesToPlay = [bassNote, ...voicedNotes];
 
-            setActiveNotes(simplifiedFinalNotes);
-            piano?.triggerAttackRelease(simplifiedFinalNotes, "2n");
+            setActiveNotes(allNotesToPlay);
+            piano?.triggerAttackRelease(allNotesToPlay, "2n");
             setTimeout(() => setActiveNotes([]), 500);
         }, [piano]
     );

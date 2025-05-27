@@ -15,10 +15,10 @@ export default function PianoProvider({ children }: PianoProviderProps) {
     useEffect(() => {
         const sampler = new Tone.Sampler({
             urls: {
-                A3: "A3.mp3", A4: "A4.mp3", A5: "A5.mp3",
-                C3: "C3.mp3", C4: "C4.mp3", C5: "C5.mp3", C6: "C6.mp3",
-                "D#3": "Dsharp3.mp3", "D#4": "Dsharp4.mp3", "D#5": "Dsharp5.mp3",
-                "F#3": "Fsharp3.mp3", "F#4": "Fsharp4.mp3", "F#5": "Fsharp5.mp3",
+                A2: "A2.mp3", A3: "A3.mp3", A4: "A4.mp3", A5: "A5.mp3",
+                C2: "C2.mp3", C3: "C3.mp3", C4: "C4.mp3", C5: "C5.mp3", C6: "C6.mp3",
+                "D#2": "Dsharp2.mp3", "D#3": "Dsharp3.mp3", "D#4": "Dsharp4.mp3", "D#5": "Dsharp5.mp3",
+                "F#2": "Fsharp2.mp3", "F#3": "Fsharp3.mp3", "F#4": "Fsharp4.mp3", "F#5": "Fsharp5.mp3",
             },
             release: 1,
             baseUrl: "/piano/",
