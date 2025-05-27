@@ -95,8 +95,10 @@ async function createChordObjectGeneration<T extends z.ZodTypeAny>(
 
     const systemMessage = `
 You are an expert musician and composer specializing in chord progressions.
-Your goal is to generate chords that are musically correct, harmonically rich, **distinctive, and avoid clichés unless specifically appropriate for the request.**
-Strive for good voice leading, musical coherence, and progressions that are memorable and non-generic.
+Your primary goal is to generate chords that are musically correct, harmonically rich, and sound genuinely good.
+While creativity and distinctiveness are valued, they should not come at the expense of fundamental musicality or by overusing complex chords.
+**Simple, well-chosen triads and basic 7th chords are often the best choice. Extensions (9ths, 11ths, 13ths) and alterations should be used thoughtfully and sparingly, only when they truly enhance the musical idea and context provided by the user.**
+Strive for good voice leading, musical coherence, and progressions that are memorable.
 
 Pay close attention to the user's specific musical requirements, context, and desired chord count.
 You will provide your response as a structured JSON object according to the provided schema.
@@ -128,17 +130,19 @@ function buildProgressionMessage(prompt: string, numChords: number): string {
     return `
 Create a ${count}-chord progression based on this requirement: "${prompt}".
 
-Strive for a progression that is not only musically compelling and cohesive with a clear harmonic direction, but also **memorable and distinctive.**
-**Avoid overly common or predictable harmonic clichés (e.g., I-V-vi-IV in C Major unless the prompt specifically asks for a very common pop sound). Instead, explore more nuanced and creative harmonic pathways.**
-Consider incorporating elements like:
-- **Unexpected but satisfying resolutions.**
-- **Subtle modal colors (e.g., hints of Lydian, Dorian, Mixolydian b6) or brief tonicizations to secondary chords.**
-- **Chords with interesting extensions (9ths, 11ths, 13ths) or alterations (b5, #5, b9, #9, #11) that enhance the mood without sounding out of place.**
-- **A sense of harmonic storytelling or emotional arc within the progression.**
-- **If the prompt is for a specific genre, lean into sophisticated versions of that genre's harmony rather than the most basic interpretation.**
+The progression should be musically compelling, cohesive, and **above all, sound good.** It should aim for a memorable and fitting character for the given prompt.
+**Avoid predictability, but do not feel obligated to make every chord a complex 7th, 9th, or altered chord. Often, a progression of simple triads (C, G, Am, F) or basic 7ths (Dm7, G7, Cmaj7) is most effective. Use more complex harmonies (extensions, alterations, modal colors) judiciously and only if they clearly serve the prompt's specific mood or style and improve the overall musicality.**
+Think about creating a clear harmonic direction.
 
-Consider the musical context, style, function, or any specific constraints mentioned in the requirement.
-Ensure smooth voice leading (imagine melodic lines connecting the notes of successive chords) and strong melodic potential in the implied top notes of the chords.
+Consider these elements as *options*, not requirements, to be used with care:
+- Satisfying resolutions, which can be simple or more nuanced.
+- Subtle modal colors or brief tonicizations, if appropriate and not forced.
+- Chords with extensions or alterations, but only if they enhance the specific mood without sounding out of place or overly dense. A common mistake is to make all chords complex; strive for balance.
+- A sense of harmonic storytelling.
+
+**If the prompt is simple or common (e.g., "a happy pop song"), lean towards simpler, more standard chord choices. If the prompt suggests a more complex or specific genre (e.g., "atonal jazz," "impressionistic film score"), then more complex harmonies might be appropriate, but still ensure they are musically coherent.**
+
+Ensure smooth voice leading and strong melodic potential.
 
 Provide the ${count} chord names as an array of strings in the 'chords' field of the JSON output.
 Each chord name must strictly adhere to the CHORD_FORMATTING_RULES.
@@ -169,21 +173,20 @@ function buildAddChordMessage(
 
     let requirementInstruction: string;
     if (prompt && prompt.trim()) {
-        requirementInstruction = `Musical requirement for the new chord: "${prompt}". The new chord should creatively fulfill this while integrating seamlessly and interestingly into the existing harmonic context.`;
+        requirementInstruction = `Musical requirement for the new chord: "${prompt}". The new chord should fulfill this while integrating seamlessly and musically. **Prioritize a chord that sounds good and fits the context; complexity is secondary.**`;
     } else if (hasExisting) {
-        requirementInstruction = `The new chord should create smooth harmonic transitions with the surrounding chords, **while also adding a unique color, an unexpected (but fitting) harmonic twist, or a richer voicing that enhances the existing progression. Avoid a purely functional or predictable choice unless it's the only way to maintain coherence. Think about what chord could elevate this progression.**`;
+        requirementInstruction = `The new chord should create smooth harmonic transitions with the surrounding chords. **Aim to enhance the existing progression. This might mean adding a unique color or a richer voicing, but often a well-voiced simple chord that connects smoothly is the best choice. Avoid unnecessary complexity; the goal is musical coherence and improvement.**`;
     } else {
-        requirementInstruction = `The new chord should be musically interesting and serve as a **strong, non-generic starting point for a compelling progression. Think about chords that evoke a specific mood, have a rich harmonic texture, or suggest an intriguing direction.**`;
+        requirementInstruction = `The new chord should be musically interesting and serve as a **solid and inviting starting point. It doesn't need to be overly complex; a strong, clear chord (triad or basic 7th) is often best to establish a direction.**`;
     }
 
     return [
         context + before + after,
         requirementInstruction,
-        'When selecting the chord, consider elements like:',
+        'When selecting the chord, consider:',
         '- **Excellent voice leading into and out of the new chord.**',
-        '- **Introducing a subtle harmonic surprise, richness, or a borrowed chord if appropriate.**',
-        '- **Using extensions or alterations that add character without clashing or sounding forced.**',
-        '- **How this single chord choice can make the overall progression less generic.**',
+        '- **Whether a simple triad, a basic 7th, or a more complex chord (with extensions/alterations) is most appropriate for the musical context. Do not default to complexity.**',
+        '- **How this chord contributes to the overall flow and musicality of the progression. The primary aim is a good-sounding result.**',
         'Provide the single new chord name as a string in the \'chord\' field of the JSON output.',
         'The chord name must strictly adhere to the CHORD_FORMATTING_RULES.',
         'Do not include any other text, explanations, or conversational remarks; only the JSON object.',
