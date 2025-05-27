@@ -11,7 +11,7 @@ interface RequestBody {
     existingChords?: SimpleChordObject[];
     addChordPosition?: number;
     numChords?: number;
-    useHighCreativity?: boolean;
+    // useHighCreativity?: boolean; // Removed
 }
 
 interface ApiError extends Error {
@@ -27,17 +27,8 @@ const googleAIProvider = createGoogleGenerativeAI({});
 // const PRIMARY_MODEL_ID = 'gemini-2.5-flash-preview-05-20';
 const PRIMARY_MODEL_ID = 'gemini-2.0-flash-lite';
 
-
-const CREATIVITY_SETTINGS = {
-    standard: {
-        temperature: 0.6,
-        providerOptions: undefined,
-    },
-    high: {
-        temperature: 0.85,
-        providerOptions: undefined,
-    },
-};
+// CREATIVITY_SETTINGS removed
+const DEFAULT_TEMPERATURE = 0.7; // Default temperature if no specific creativity settings are used
 
 const CHORD_FORMATTING_RULES = `
 Chord formatting rules:
@@ -81,17 +72,19 @@ function createSimpleProgressionString(chords: SimpleChordObject[]): string {
 
 async function createChordObjectGeneration<T extends z.ZodTypeAny>(
     userMessage: string,
-    isHighCreativityMode: boolean,
+    // isHighCreativityMode: boolean, // Removed
     schema: T
 ): Promise<z.infer<T>> {
     console.log('[API createChordObjectGeneration] User message to AI:\n', userMessage);
 
     const modelClient = googleAIProvider(PRIMARY_MODEL_ID);
-    const creativityConfig = isHighCreativityMode
-        ? CREATIVITY_SETTINGS.high
-        : CREATIVITY_SETTINGS.standard;
+    // const creativityConfig = isHighCreativityMode // Removed
+    //     ? CREATIVITY_SETTINGS.high
+    //     : CREATIVITY_SETTINGS.standard;
 
-    console.log(`[API createChordObjectGeneration] Using temperature: ${creativityConfig.temperature}`);
+    // console.log(`[API createChordObjectGeneration] Using temperature: ${creativityConfig.temperature}`); // Removed
+    console.log(`[API createChordObjectGeneration] Using temperature: ${DEFAULT_TEMPERATURE}`);
+
 
     const systemMessage = `
 You are an expert musician and composer specializing in chord progressions.
@@ -114,8 +107,8 @@ ${CHORD_FORMATTING_RULES}
         schema,
         system: systemMessage,
         messages,
-        temperature: creativityConfig.temperature,
-        providerOptions: creativityConfig.providerOptions,
+        temperature: DEFAULT_TEMPERATURE, // Updated
+        // providerOptions: creativityConfig.providerOptions, // Removed
         mode: 'json',
     });
 
@@ -201,7 +194,7 @@ export async function POST(request: Request): Promise<Response> {
             existingChords = [],
             addChordPosition,
             numChords,
-            useHighCreativity = false,
+            // useHighCreativity = false, // Removed
         } = body;
 
         let effectiveCount: number;
@@ -221,7 +214,7 @@ export async function POST(request: Request): Promise<Response> {
             userMessage = buildAddChordMessage(userPrompt, existingChords, addChordPosition);
             const aiObj = await createChordObjectGeneration(
                 userMessage,
-                useHighCreativity,
+                // useHighCreativity, // Removed
                 SingleChordSchema
             );
             const parsed = SingleChordSchema.safeParse(aiObj);
@@ -236,7 +229,7 @@ export async function POST(request: Request): Promise<Response> {
             userMessage = buildProgressionMessage(userPrompt, effectiveCount);
             const aiObj = await createChordObjectGeneration(
                 userMessage,
-                useHighCreativity,
+                // useHighCreativity, // Removed
                 ChordProgressionSchema
             );
             const parsed = ChordProgressionSchema.safeParse(aiObj);

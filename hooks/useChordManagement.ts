@@ -19,12 +19,12 @@ interface UseChordManagementProps {
 interface GenerationParams {
     numChords: number;
     customPrompt?: string;
-    useHighCreativity?: boolean; // Renamed from useAdvancedModel
+    // useHighCreativity?: boolean; // Removed
 }
 
 interface AddChordContextParams {
     prompt?: string;
-    useHighCreativity?: boolean; // Renamed from useAdvancedModel
+    // useHighCreativity?: boolean; // Removed
 }
 
 // Added: Define types for the expected API response
@@ -56,7 +56,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
             currentPromptInternal: string,
             currentChords: ChordItem[],
             numChordsToGen: number,
-            isHighCreativity: boolean, // Renamed from useAdvanced
+            // isHighCreativity: boolean, // Removed
             attempt: number = 0
         ): Promise<ChordItem[] | null> => {
             const MAX_ATTEMPTS = 3;
@@ -74,7 +74,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
                         prompt: currentPromptInternal,
                         existingChords: existingChordsForApi,
                         numChords: numChordsToGen,
-                        useHighCreativity: isHighCreativity, // Renamed field for API
+                        // useHighCreativity: isHighCreativity, // Removed
                     }),
                 });
 
@@ -116,7 +116,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 if (!allCleanedChordsAreValid) {
                     if (attempt < MAX_ATTEMPTS - 1) {
                         console.warn(`Invalid chord name(s) or empty array found in AI response ("${cleanedChordSymbols.join('-')}"), reattempting generation`, attempt + 1);
-                        return generateChordsInternal(currentPromptInternal, currentChords, numChordsToGen, isHighCreativity, attempt + 1);
+                        return generateChordsInternal(currentPromptInternal, currentChords, numChordsToGen, /* isHighCreativity, */ attempt + 1); // Removed isHighCreativity
                     } else {
                         showErrorToast("Generation Error", "AI returned invalid chord names or an empty array after several attempts.");
                         setFullLoading(false); return null;
@@ -151,7 +151,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
     );
 
     const generateChords = useCallback(async (params: GenerationParams) => {
-        const { numChords, customPrompt, useHighCreativity = false } = params;
+        const { numChords, customPrompt /*, useHighCreativity = false */ } = params; // Removed useHighCreativity
         console.log("useChordManagement: generateChords called. Params:", params, "Current prompt state (hook):", prompt);
 
         let usedPrompt: string;
@@ -161,20 +161,12 @@ export function useChordManagement(props?: UseChordManagementProps) {
             usedPrompt = prompt;
         }
 
-        // Corrected condition: Prevent generation if prompt is empty, regardless of existing chords
         if (!usedPrompt.trim()) {
             showErrorToast("Input Error", "Please describe your chord progression before generating.");
             return;
         }
 
-        // The check in generateChordsInternal for empty prompt AND empty chords is now redundant
-        // because we're checking for empty prompt here.
-        // However, generateChordsInternal might be called from other places in the future,
-        // so its own initial check for prompt and currentChords can remain as a safeguard,
-        // or be removed if this generateChords function becomes the sole entry point for it.
-        // For now, the primary validation for empty prompt is handled here.
-
-        const result = await generateChordsInternal(usedPrompt, chords, numChords, useHighCreativity);
+        const result = await generateChordsInternal(usedPrompt, chords, numChords /*, useHighCreativity */); // Removed useHighCreativity
         if (result) {
             setChords(result);
         }
@@ -208,9 +200,9 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     prompt: contextParams?.prompt || prompt || "add one suitable chord here",
                 };
 
-                if (contextParams?.useHighCreativity !== undefined) {
-                    requestBody.useHighCreativity = contextParams.useHighCreativity;
-                }
+                // if (contextParams?.useHighCreativity !== undefined) { // Removed
+                //     requestBody.useHighCreativity = contextParams.useHighCreativity;
+                // }
 
                 const res = await fetch("/api/generate", {
                     method: "POST",
@@ -269,22 +261,19 @@ export function useChordManagement(props?: UseChordManagementProps) {
     );
 
     const generateChordsFromExample = useCallback(
-        (examplePrompt: string, numChordsForExample: number, isHighCreativity: boolean) => {
+        (examplePrompt: string, numChordsForExample: number /*, isHighCreativity: boolean */) => { // Removed isHighCreativity
             if (typeof examplePrompt === 'string') {
                 setPrompt(examplePrompt);
-                // generateChords will use the updated prompt (examplePrompt) due to setPrompt
-                // and its own internal logic for `usedPrompt` when customPrompt is not directly passed.
-                // Or, we can be explicit:
                 generateChords({
                     numChords: numChordsForExample,
-                    customPrompt: examplePrompt, // Explicitly pass it
-                    useHighCreativity: isHighCreativity
+                    customPrompt: examplePrompt,
+                    // useHighCreativity: isHighCreativity // Removed
                 });
             } else {
                 console.error("generateChordsFromExample received a non-string prompt:", examplePrompt);
                 showErrorToast("Input Error", "Invalid example prompt type.");
             }
-        }, [generateChords, setPrompt, showErrorToast]); // Added setPrompt to dependencies
+        }, [generateChords, setPrompt, showErrorToast]);
 
     return {
         prompt, setPrompt,

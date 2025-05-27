@@ -33,7 +33,7 @@ import { Sparkles, BookOpenText } from "lucide-react";
 
 export default function ClientHome() {
     const {
-        prompt, setPrompt, // prompt is already available here
+        prompt, setPrompt,
         chords, setChords,
         fullLoading,
         loadingChordId,
@@ -50,7 +50,7 @@ export default function ClientHome() {
     const sensors = useSensors(useSensor(PointerSensor));
     const piano = useContext(PianoContext);
     const [numChordsToGenerate, setNumChordsToGenerate] = useState<number>(4);
-    const [useHighCreativity, setUseHighCreativity] = useState<boolean>(false);
+    // const [useHighCreativity, setUseHighCreativity] = useState<boolean>(false); // Removed
 
     const [isExplanationPopoverOpen, setIsExplanationPopoverOpen] = useState(false);
     const [currentExplanationText, setCurrentExplanationText] = useState("");
@@ -80,14 +80,14 @@ export default function ClientHome() {
                 return;
             }
 
-            const rootPc = chordData.tonic; // Get the root pitch class (e.g., "C")
-            const notesPc = chordData.notes; // Pitch classes for the main chord body (e.g., ["C", "E", "G"])
+            const rootPc = chordData.tonic;
+            const notesPc = chordData.notes;
 
-            let startOctave = 3; // Main chord voicing starts at octave 3
-            const bassOctave = startOctave - 1; // Bass note will be in octave 2
-            const bassNote = rootPc + bassOctave.toString(); // Construct the bass note string (e.g., "C2")
+            let startOctave = 3;
+            const bassOctave = startOctave - 1;
+            const bassNote = rootPc + bassOctave.toString();
 
-            const voicedNotes: string[] = []; // To store notes of the main chord body
+            const voicedNotes: string[] = [];
             let previousNoteMidi: number | null = null;
             let currentProcessingOctave = startOctave;
 
@@ -103,14 +103,13 @@ export default function ClientHome() {
                 }
 
                 if (previousNoteMidi !== null) {
-                    // Ensure notes are ascending to avoid overly muddy voicings
                     while (currentNoteMidi! <= previousNoteMidi!) {
                         currentProcessingOctave++;
                         noteWithOctave = pc + currentProcessingOctave;
                         currentNoteMidi = Note.midi(noteWithOctave);
                         if (currentNoteMidi === null) {
                             console.warn(`Error finding ascending MIDI for ${pc}. Using fallback.`);
-                            noteWithOctave = pc + (currentProcessingOctave - 1); // Fallback to previous octave attempt
+                            noteWithOctave = pc + (currentProcessingOctave - 1);
                             break;
                         }
                     }
@@ -118,10 +117,9 @@ export default function ClientHome() {
 
                 voicedNotes.push(noteWithOctave);
                 previousNoteMidi = currentNoteMidi;
-                currentProcessingOctave = startOctave; // Reset for the next note in notesPc for compact voicing
+                currentProcessingOctave = startOctave;
             }
 
-            // Combine the bass note with the main chord notes
             const allNotesToPlay = [bassNote, ...voicedNotes];
 
             setActiveNotes(allNotesToPlay);
@@ -131,25 +129,25 @@ export default function ClientHome() {
     );
 
     const handleGenerateChordsRequest = useCallback(() => {
-        generateChords({ numChords: numChordsToGenerate, useHighCreativity });
-    }, [generateChords, numChordsToGenerate, useHighCreativity]);
+        generateChords({ numChords: numChordsToGenerate /*, useHighCreativity */ }); // Removed useHighCreativity
+    }, [generateChords, numChordsToGenerate /*, useHighCreativity */]); // Removed useHighCreativity
 
     const handleExampleClickRequest = useCallback((example: string) => {
-        generateChordsFromExample(example, numChordsToGenerate, useHighCreativity);
-    }, [generateChordsFromExample, numChordsToGenerate, useHighCreativity]);
+        generateChordsFromExample(example, numChordsToGenerate /*, useHighCreativity */); // Removed useHighCreativity
+    }, [generateChordsFromExample, numChordsToGenerate /*, useHighCreativity */]); // Removed useHighCreativity
 
     const handleInputKeyDown = useCallback(
         (e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
                 e.preventDefault();
-                generateChords({ numChords: numChordsToGenerate, useHighCreativity });
+                generateChords({ numChords: numChordsToGenerate /*, useHighCreativity */ }); // Removed useHighCreativity
             }
-        }, [generateChords, numChordsToGenerate, useHighCreativity]
+        }, [generateChords, numChordsToGenerate /*, useHighCreativity */] // Removed useHighCreativity
     );
 
     const handleAddChordRequest = useCallback((position: number) => {
-        addChordAt(position, { useHighCreativity });
-    }, [addChordAt, useHighCreativity]);
+        addChordAt(position /*, { useHighCreativity } */); // Removed useHighCreativity
+    }, [addChordAt /*, useHighCreativity */]); // Removed useHighCreativity
 
 
     const fetchAndStreamExplanation = async (progressionKey: string) => {
@@ -166,7 +164,7 @@ export default function ClientHome() {
             const response = await fetch('/api/explain-progression', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chords: chords.map(c => c.chord), prompt: prompt }), // Added prompt here
+                body: JSON.stringify({ chords: chords.map(c => c.chord), prompt: prompt }),
                 signal: explanationAbortControllerRef.current.signal,
             });
 
@@ -280,8 +278,8 @@ export default function ClientHome() {
                         handleExampleClick={handleExampleClickRequest}
                         numChordsToGenerate={numChordsToGenerate}
                         onNumChordsChange={setNumChordsToGenerate}
-                        useHighCreativity={useHighCreativity}
-                        onHighCreativityChange={setUseHighCreativity}
+                        // useHighCreativity={useHighCreativity} // Removed
+                        // onHighCreativityChange={setUseHighCreativity} // Removed
                     />
 
                     {(chords.length > 0 || fullLoading) && (

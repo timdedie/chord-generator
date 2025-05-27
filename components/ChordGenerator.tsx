@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RefreshCw } from "lucide-react";
 import NumChordsSelector from "@/components/NumChordsSelector";
-import ModelSwitch from "@/components/ModelSwitch";
+// import ModelSwitch from "@/components/ModelSwitch"; // Removed
 // Tooltip related imports are removed
 
 interface ChordGeneratorProps {
@@ -20,8 +20,8 @@ interface ChordGeneratorProps {
     handleExampleClick: (example: string) => void;
     numChordsToGenerate: number;
     onNumChordsChange: (value: number) => void;
-    useHighCreativity: boolean;
-    onHighCreativityChange: (checked: boolean) => void;
+    // useHighCreativity: boolean; // Removed
+    // onHighCreativityChange: (checked: boolean) => void; // Removed
 }
 
 export default function ChordGenerator({
@@ -35,8 +35,8 @@ export default function ChordGenerator({
                                            handleExampleClick,
                                            numChordsToGenerate,
                                            onNumChordsChange,
-                                           useHighCreativity,
-                                           onHighCreativityChange,
+                                           // useHighCreativity, // Removed
+                                           // onHighCreativityChange, // Removed
                                        }: ChordGeneratorProps) {
     return (
         <div className="w-full max-w-3xl px-4">
@@ -73,13 +73,14 @@ export default function ChordGenerator({
                         disabled={fullLoading}
                     />
                     {/* TooltipProvider and Tooltip components are removed */}
-                    <ModelSwitch
+                    {/* ModelSwitch component and related props removed */}
+                    {/* <ModelSwitch
                         checked={useHighCreativity}
                         onCheckedChange={onHighCreativityChange}
                         disabled={fullLoading}
-                        label="High Creativity Mode" // Label updated, emoji removed for now
+                        label="High Creativity Mode"
                         id="creative-mode-switch"
-                    />
+                    /> */}
                 </div>
             </div>
 
