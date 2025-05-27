@@ -50,7 +50,6 @@ export default function ClientHome() {
     const sensors = useSensors(useSensor(PointerSensor));
     const piano = useContext(PianoContext);
     const [numChordsToGenerate, setNumChordsToGenerate] = useState<number>(4);
-    // const [useHighCreativity, setUseHighCreativity] = useState<boolean>(false); // Removed
 
     const [isExplanationPopoverOpen, setIsExplanationPopoverOpen] = useState(false);
     const [currentExplanationText, setCurrentExplanationText] = useState("");
@@ -129,25 +128,25 @@ export default function ClientHome() {
     );
 
     const handleGenerateChordsRequest = useCallback(() => {
-        generateChords({ numChords: numChordsToGenerate /*, useHighCreativity */ }); // Removed useHighCreativity
-    }, [generateChords, numChordsToGenerate /*, useHighCreativity */]); // Removed useHighCreativity
+        generateChords({ numChords: numChordsToGenerate });
+    }, [generateChords, numChordsToGenerate]);
 
     const handleExampleClickRequest = useCallback((example: string) => {
-        generateChordsFromExample(example, numChordsToGenerate /*, useHighCreativity */); // Removed useHighCreativity
-    }, [generateChordsFromExample, numChordsToGenerate /*, useHighCreativity */]); // Removed useHighCreativity
+        generateChordsFromExample(example, numChordsToGenerate);
+    }, [generateChordsFromExample, numChordsToGenerate]);
 
     const handleInputKeyDown = useCallback(
         (e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
                 e.preventDefault();
-                generateChords({ numChords: numChordsToGenerate /*, useHighCreativity */ }); // Removed useHighCreativity
+                generateChords({ numChords: numChordsToGenerate });
             }
-        }, [generateChords, numChordsToGenerate /*, useHighCreativity */] // Removed useHighCreativity
+        }, [generateChords, numChordsToGenerate]
     );
 
     const handleAddChordRequest = useCallback((position: number) => {
-        addChordAt(position /*, { useHighCreativity } */); // Removed useHighCreativity
-    }, [addChordAt /*, useHighCreativity */]); // Removed useHighCreativity
+        addChordAt(position);
+    }, [addChordAt]);
 
 
     const fetchAndStreamExplanation = async (progressionKey: string) => {
@@ -278,8 +277,6 @@ export default function ClientHome() {
                         handleExampleClick={handleExampleClickRequest}
                         numChordsToGenerate={numChordsToGenerate}
                         onNumChordsChange={setNumChordsToGenerate}
-                        // useHighCreativity={useHighCreativity} // Removed
-                        // onHighCreativityChange={setUseHighCreativity} // Removed
                     />
 
                     {(chords.length > 0 || fullLoading) && (

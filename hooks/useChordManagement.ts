@@ -19,12 +19,10 @@ interface UseChordManagementProps {
 interface GenerationParams {
     numChords: number;
     customPrompt?: string;
-    // useHighCreativity?: boolean; // Removed
 }
 
 interface AddChordContextParams {
     prompt?: string;
-    // useHighCreativity?: boolean; // Removed
 }
 
 // Added: Define types for the expected API response
@@ -56,7 +54,6 @@ export function useChordManagement(props?: UseChordManagementProps) {
             currentPromptInternal: string,
             currentChords: ChordItem[],
             numChordsToGen: number,
-            // isHighCreativity: boolean, // Removed
             attempt: number = 0
         ): Promise<ChordItem[] | null> => {
             const MAX_ATTEMPTS = 3;
@@ -74,7 +71,6 @@ export function useChordManagement(props?: UseChordManagementProps) {
                         prompt: currentPromptInternal,
                         existingChords: existingChordsForApi,
                         numChords: numChordsToGen,
-                        // useHighCreativity: isHighCreativity, // Removed
                     }),
                 });
 
@@ -116,7 +112,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 if (!allCleanedChordsAreValid) {
                     if (attempt < MAX_ATTEMPTS - 1) {
                         console.warn(`Invalid chord name(s) or empty array found in AI response ("${cleanedChordSymbols.join('-')}"), reattempting generation`, attempt + 1);
-                        return generateChordsInternal(currentPromptInternal, currentChords, numChordsToGen, /* isHighCreativity, */ attempt + 1); // Removed isHighCreativity
+                        return generateChordsInternal(currentPromptInternal, currentChords, numChordsToGen, attempt + 1);
                     } else {
                         showErrorToast("Generation Error", "AI returned invalid chord names or an empty array after several attempts.");
                         setFullLoading(false); return null;
@@ -151,7 +147,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
     );
 
     const generateChords = useCallback(async (params: GenerationParams) => {
-        const { numChords, customPrompt /*, useHighCreativity = false */ } = params; // Removed useHighCreativity
+        const { numChords, customPrompt } = params;
         console.log("useChordManagement: generateChords called. Params:", params, "Current prompt state (hook):", prompt);
 
         let usedPrompt: string;
@@ -166,7 +162,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
             return;
         }
 
-        const result = await generateChordsInternal(usedPrompt, chords, numChords /*, useHighCreativity */); // Removed useHighCreativity
+        const result = await generateChordsInternal(usedPrompt, chords, numChords);
         if (result) {
             setChords(result);
         }
@@ -199,10 +195,6 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     addChordPosition: position,
                     prompt: contextParams?.prompt || prompt || "add one suitable chord here",
                 };
-
-                // if (contextParams?.useHighCreativity !== undefined) { // Removed
-                //     requestBody.useHighCreativity = contextParams.useHighCreativity;
-                // }
 
                 const res = await fetch("/api/generate", {
                     method: "POST",
@@ -261,13 +253,12 @@ export function useChordManagement(props?: UseChordManagementProps) {
     );
 
     const generateChordsFromExample = useCallback(
-        (examplePrompt: string, numChordsForExample: number /*, isHighCreativity: boolean */) => { // Removed isHighCreativity
+        (examplePrompt: string, numChordsForExample: number) => {
             if (typeof examplePrompt === 'string') {
                 setPrompt(examplePrompt);
                 generateChords({
                     numChords: numChordsForExample,
                     customPrompt: examplePrompt,
-                    // useHighCreativity: isHighCreativity // Removed
                 });
             } else {
                 console.error("generateChordsFromExample received a non-string prompt:", examplePrompt);
