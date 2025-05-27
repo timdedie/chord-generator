@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
 import * as Tone from "tone";
-import { Chord, Note } from "tonal"; // Ensure Note is imported here
+import { Chord, Note } from "tonal"; 
 import ReactMarkdown from 'react-markdown';
 
 import { useChordManagement } from "@/hooks/useChordManagement";
@@ -373,3 +373,4 @@ export default function ClientHome() {
         </PianoProvider>
     );
 }
+

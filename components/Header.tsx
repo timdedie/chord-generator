@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Info } from "lucide-react"; // Only Info is needed directly here now
+import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -12,7 +12,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import DarkModeToggle from "@/components/DarkModeToggle";
-import { howItWorksItems } from "@/lib/howItWorksData"; // Import the shared data
+import { howItWorksItems } from "@/lib/howItWorksData";
 
 const Header: React.FC = () => {
     return (

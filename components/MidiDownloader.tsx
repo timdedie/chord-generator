@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 interface MidiDownloaderProps {
     chords: string[];
-    prompt: string; // Added prompt prop
+    prompt: string;
 }
 
 const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt }) => {
@@ -65,7 +65,7 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt }) => {
         return () => {
             URL.revokeObjectURL(newUrl);
         };
-    }, [chords]); // Removed prompt from dependencies as it's only used for filename
+    }, [chords]);
 
     const handleDownloadClick = () => {
         if (!midiUrl || !hasValidChords) {
@@ -90,15 +90,15 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt }) => {
         if (!text) return "prompt";
         return text
             .toLowerCase()
-            .replace(/\s+/g, '_') // Replace spaces with underscores
-            .replace(/[^\w-]+/g, '') // Remove non-alphanumeric characters except underscore and hyphen
-            .substring(0, 50); // Truncate to 50 characters
+            .replace(/\s+/g, '_')
+            .replace(/[^\w-]+/g, '')
+            .substring(0, 50);
     };
 
     const generateFilename = () => {
         const sanitizedPrompt = sanitizePromptForFilename(prompt);
         if (!chords || chords.length === 0) {
-            return `${sanitizedPrompt}_progression.mid`; // Fallback with prompt
+            return `${sanitizedPrompt}_progression.mid`;
         }
         const safeChords = chords.map(chord => chord.replace(/\//g, '-').replace(/\s+/g, '_'));
         return `${sanitizedPrompt}_${safeChords.join('_')}.mid`;

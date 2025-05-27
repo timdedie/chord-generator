@@ -67,7 +67,6 @@ export default function ChordRow({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
-                // No 'layout' prop here for smoother DND reordering as per previous fix
             >
                 <SortableChord
                     id={chord.id}
@@ -76,14 +75,9 @@ export default function ChordRow({
                     onRemove={() =>
                         setChords((prev) => prev.filter((c) => c.id !== chord.id))
                     }
-                    // Updated loading logic:
-                    // A chord is loading if:
-                    // 1. It's the specific chord being added (loadingChordId matches).
-                    // 2. OR, a full regeneration is happening (fullLoading is true).
-                    //    This will make existing chords show as skeletons during regeneration.
                     loading={
-                        loadingChordId === chord.id || // True if this specific chord is being added
-                        fullLoading                     // True if a general regeneration is in progress
+                        loadingChordId === chord.id || 
+                        fullLoading                     
                     }
                 />
             </motion.div>,
@@ -117,8 +111,7 @@ export default function ChordRow({
             </DndContext>
         );
     }
-    // Case 3: Not loading and no chords (e.g., after deleting all chords)
-    // This will render `null` for content, which is fine.
+    // Case 3: Not loading and no chords
 
     return <>{content}</>;
 }

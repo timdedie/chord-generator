@@ -10,11 +10,10 @@ interface ChordSymbolProps {
  * Splits a chord string like "F#m7b5" into root "F#" and suffix "m7b5",
  * replaces 'b' with '♭' and '#' with '♯', then renders:
  *  - root as large bold text
- *  - numbers in the suffix as superscript (now slightly smaller)
+ *  - numbers in the suffix as superscript
  *  - suffix letters inline small
  */
 const ChordSymbol: React.FC<ChordSymbolProps> = ({ chord, className = "" }) => {
-    // Function to replace 'b' with '♭' and '#' with '♯'
     const replaceAccidentals = (str: string) =>
         str.replace(/b/g, "♭").replace(/#/g, "♯");
 
@@ -24,26 +23,25 @@ const ChordSymbol: React.FC<ChordSymbolProps> = ({ chord, className = "" }) => {
     let suffix = match?.[2] ?? "";
 
     root = replaceAccidentals(root);
-    // Suffix parts will be processed individually
 
     const parts = suffix.split(/(\d+)/).filter(Boolean);
 
     return (
         <span
             className={`inline-flex items-baseline select-none ${className}`}
-            aria-label={`Chord ${replaceAccidentals(chord)}`} // Also update aria-label
+            aria-label={`Chord ${replaceAccidentals(chord)}`}
         >
       <span className="text-3xl font-semibold leading-none">{root}</span>
             {parts.length > 0 && (
                 <span className="ml-1 flex items-baseline leading-none">
           {parts.map((part, i) =>
               /^\d+$/.test(part) ? (
-                  <sup key={i} className="text-lg font-light"> {/* Changed from text-xl to text-lg */}
-                      {part} {/* Numbers don't need accidental replacement */}
+                  <sup key={i} className="text-lg font-light"> 
+                      {part} 
                   </sup>
               ) : (
                   <span key={i} className="text-xl font-light">
-                {replaceAccidentals(part)} {/* Replace accidentals in suffix text parts */}
+                {replaceAccidentals(part)} 
               </span>
               )
           )}
