@@ -340,7 +340,7 @@ export default function ClientHome() {
                                                 {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c=>c.chord).join('-') && !currentExplanationText) && (
                                                     <div className="flex items-center justify-center h-full">
                                                         <Sparkles className="h-6 w-6 animate-pulse text-primary" />
-                                                        <p className="ml-2 text-sm text-muted-foreground">Generating...</p>
+                                                        <p className="ml-2 text-sm text-muted-foreground"></p>
                                                     </div>
                                                 )}
                                                 {currentExplanationText && (
