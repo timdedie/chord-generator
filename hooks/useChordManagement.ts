@@ -57,7 +57,6 @@ export function useChordManagement(props?: UseChordManagementProps) {
             attempt: number = 0
         ): Promise<ChordItem[] | null> => {
             const MAX_ATTEMPTS = 3;
-            // This internal function assumes prompt validation has happened externally
             setFullLoading(true);
             let generatedChordsResult = null;
 
@@ -101,7 +100,8 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 } else {
                     for (const chordName of cleanedChordSymbols) {
                         const chordData = Chord.get(chordName);
-                        if (!chordData || !chordData.notes || chordData.notes.length === 0) {
+                        // Updated validation: ensure symbol, name, and notes are present
+                        if (!chordData || !chordData.symbol || !chordData.name || !chordData.notes || chordData.notes.length === 0) {
                             allCleanedChordsAreValid = false;
                             break;
                         }
@@ -126,11 +126,13 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 }
 
 
-                generatedChordsResult = cleanedChordSymbols.map((aiChordName: string, index: number) => {
+                generatedChordsResult = cleanedChordSymbols.map((cleanedAiChordName: string, index: number) => {
                     const originalChordInSlot = (currentChords.length === cleanedChordSymbols.length) ? currentChords[index] : undefined;
+                    // Use tonal's canonical symbol. Validation loop ensures chordData.symbol is non-null.
+                    const chordSymbol = Chord.get(cleanedAiChordName).symbol;
                     return {
                         id: originalChordInSlot?.id || generateUniqueId(),
-                        chord: aiChordName,
+                        chord: chordSymbol!,
                     };
                 });
 
@@ -212,11 +214,12 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     return;
                 }
 
-                const receivedChordSymbol = data.chord?.trim().replace(/△/g, "");
-                const chordData = receivedChordSymbol ? Chord.get(receivedChordSymbol) : null;
+                const cleanedReceivedChordSymbol = data.chord?.trim().replace(/△/g, "");
+                const chordData = cleanedReceivedChordSymbol ? Chord.get(cleanedReceivedChordSymbol) : null;
 
-                if (!receivedChordSymbol || !chordData || !chordData.name || chordData.notes.length === 0) {
-                    showErrorToast("Invalid Chord", `Received an invalid chord ("${receivedChordSymbol || 'empty'}") from the server.`);
+                // Updated validation: ensure symbol, name, and notes are present
+                if (!cleanedReceivedChordSymbol || !chordData || !chordData.symbol || !chordData.name || !chordData.notes || chordData.notes.length === 0) {
+                    showErrorToast("Invalid Chord", `Received an invalid chord ("${cleanedReceivedChordSymbol || 'empty'}") from the server.`);
                     setChords(originalChords);
                     setLoadingChordId(null);
                     return;
@@ -224,7 +227,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
 
                 const updatedChordItem: ChordItem = {
                     id: newChordId,
-                    chord: chordData.name,
+                    chord: chordData.symbol, // Use .symbol instead of .name
                 };
                 setChords((prev) =>
                     prev.map((ch) => (ch.id === newChordId ? updatedChordItem : ch))
