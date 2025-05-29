@@ -1,6 +1,7 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateObject, CoreMessage } from 'ai';
 import { z } from 'zod';
+import { Chord } from 'tonal'; // Added for backend validation
 
 interface SimpleChordObject {
     chord: string;
@@ -13,8 +14,10 @@ interface RequestBody {
     numChords?: number;
 }
 
+// Modified ApiError interface
 interface ApiError extends Error {
     status?: number;
+    details?: any; // Added to include error details, e.g., from Zod
 }
 
 const { GOOGLE_GENERATIVE_AI_API_KEY } = process.env;
@@ -28,6 +31,8 @@ const PRIMARY_MODEL_ID = 'gemini-2.5-flash-preview-05-20';
 
 const DEFAULT_TEMPERATURE = 0.7;
 
+// IMPORTANT: Review this string. The "[...]" likely indicates truncated text
+// and should be replaced with the full intended rules or removed.
 const CHORD_FORMATTING_RULES = `
 Chord formatting rules:
 • Root = uppercase A–G (use # or b for accidentals)
@@ -38,22 +43,29 @@ Chord formatting rules:
 • Minor seventh = "m7"
 • Suspended = "sus2" or "sus4"
 • Extensions/alterations allowed: 9, add9, #5, b9, #11, 13, etc.
-Guideline: Provide only the chord symbols according to these rules. For example, if generating ["Am", "G", "C"], the 'chords' array should be ["Am", "G", "C"]. If generating a single chord "F#m7", the 'chord' field should be "F#m7".
+Guideline: Provide only the chord symbols according to these rules. For example, if generating ["Am", "G", "C"], the 'chords' array should be ["Am", "G", "C"]. If generating a single chord "F#m7", the[...]
 `.trim();
 
+// Refined Zod type for a single chord string
+const ValidChordStringSchema = z.string()
+    .describe("A musical chord symbol, strictly adhering to the CHORD_FORMATTING_RULES.")
+    .transform(chordSymbol => chordSymbol.trim().replace(/△/g, "")) // Basic cleaning
+    .refine(chordSymbol => {
+        if (!chordSymbol) return false; // Reject empty string after transform
+        const chordData = Chord.get(chordSymbol); // Validate with tonal
+        // Ensure it's a valid chord and tonal could parse its name and notes
+        return !!(chordData && chordData.name && chordData.notes && chordData.notes.length > 0);
+    }, {
+        message: "Invalid chord symbol or format. Ensure it matches CHORD_FORMATTING_RULES and is a recognized chord.",
+    });
+
 const ChordProgressionSchema = z.object({
-    chords: z
-        .array(
-            z
-                .string()
-                .describe("A musical chord symbol, strictly adhering to the CHORD_FORMATTING_RULES. Example: 'Am', 'G7', 'Cmaj7'.")
-        )
+    chords: z.array(ValidChordStringSchema)
         .describe('An array of chord names forming a progression.'),
 });
 
 const SingleChordSchema = z.object({
-    chord: z
-        .string()
+    chord: ValidChordStringSchema
         .describe("A single musical chord symbol, strictly adhering to the CHORD_FORMATTING_RULES. Example: 'F#m7'."),
 });
 
@@ -77,11 +89,13 @@ async function createChordObjectGeneration<T extends z.ZodTypeAny>(
     const modelClient = googleAIProvider(PRIMARY_MODEL_ID);
     console.log(`[API createChordObjectGeneration] Using temperature: ${DEFAULT_TEMPERATURE}`);
 
+    // IMPORTANT: Review this system message. The "[...]" likely indicates truncated text
+    // and should be replaced with the full intended message or removed.
     const systemMessage = `
 You are an expert musician and composer specializing in chord progressions.
 Your primary goal is to generate chords that are musically correct, harmonically rich, and sound genuinely good.
 While creativity and distinctiveness are valued, they should not come at the expense of fundamental musicality or by overusing complex chords.
-**Simple, well-chosen triads and basic 7th chords are often the best choice. Extensions (9ths, 11ths, 13ths) and alterations should be used thoughtfully and sparingly, only when they truly enhance the musical idea and context provided by the user.**
+**Simple, well-chosen triads and basic 7th chords are often the best choice. Extensions (9ths, 11ths, 13ths) and alterations should be used thoughtfully and sparingly, only when they truly enhance the[...]
 Strive for good voice leading, musical coherence, and progressions that are memorable.
 
 Pay close attention to the user's specific musical requirements, context, and desired chord count.
@@ -103,18 +117,24 @@ ${CHORD_FORMATTING_RULES}
     });
 
     if (!object) {
-        throw new Error('No valid object response from API (Vercel AI SDK)');
+        // Throw an error consistent with ApiError
+        const error = new Error('No valid object response from AI (Vercel AI SDK)') as ApiError;
+        error.status = 500; // Or 502 Bad Gateway, if more appropriate
+        error.details = "The AI model did not return the expected structured object.";
+        throw error;
     }
     return object;
 }
 
 function buildProgressionMessage(prompt: string, numChords: number): string {
     const count = numChords >= 2 && numChords <= 8 ? numChords : 4;
+    // IMPORTANT: Review this message. The "[...]" likely indicates truncated text
+    // and should be replaced with the full intended message or removed.
     return `
 Create a ${count}-chord progression based on this requirement: "${prompt}".
 
 The progression should be musically compelling, cohesive, and **above all, sound good.** It should aim for a memorable and fitting character for the given prompt.
-**Avoid predictability, but do not feel obligated to make every chord a complex 7th, 9th, or altered chord. Often, a progression of simple triads (C, G, Am, F) or basic 7ths (Dm7, G7, Cmaj7) is most effective. Use more complex harmonies (extensions, alterations, modal colors) judiciously and only if they clearly serve the prompt's specific mood or style and improve the overall musicality.**
+**Avoid predictability, but do not feel obligated to make every chord a complex 7th, 9th, or altered chord. Often, a progression of simple triads (C, G, Am, F) or basic 7ths (Dm7, G7, Cmaj7) is most e[...]
 Think about creating a clear harmonic direction.
 
 Consider these elements as *options*, not requirements, to be used with care:
@@ -123,7 +143,7 @@ Consider these elements as *options*, not requirements, to be used with care:
 - Chords with extensions or alterations, but only if they enhance the specific mood without sounding out of place or overly dense. A common mistake is to make all chords complex; strive for balance.
 - A sense of harmonic storytelling.
 
-**If the prompt is simple or common (e.g., "a happy pop song"), lean towards simpler, more standard chord choices. If the prompt suggests a more complex or specific genre (e.g., "atonal jazz," "impressionistic film score"), then more complex harmonies might be appropriate, but still ensure they are musically coherent.**
+**If the prompt is simple or common (e.g., "a happy pop song"), lean towards simpler, more standard chord choices. If the prompt suggests a more complex or specific genre (e.g., "atonal jazz," "impres[...]
 
 Ensure smooth voice leading and strong melodic potential.
 
@@ -155,12 +175,14 @@ function buildAddChordMessage(
         : '';
 
     let requirementInstruction: string;
+    // IMPORTANT: Review these messages. The "[...]" likely indicates truncated text
+    // and should be replaced with the full intended message or removed.
     if (prompt && prompt.trim()) {
-        requirementInstruction = `Musical requirement for the new chord: "${prompt}". The new chord should fulfill this while integrating seamlessly and musically. **Prioritize a chord that sounds good and fits the context; complexity is secondary.**`;
+        requirementInstruction = `Musical requirement for the new chord: "${prompt}". The new chord should fulfill this while integrating seamlessly and musically. **Prioritize a chord that sounds goo[...]`;
     } else if (hasExisting) {
-        requirementInstruction = `The new chord should create smooth harmonic transitions with the surrounding chords. **Aim to enhance the existing progression. This might mean adding a unique color or a richer voicing, but often a well-voiced simple chord that connects smoothly is the best choice. Avoid unnecessary complexity; the goal is musical coherence and improvement.**`;
+        requirementInstruction = `The new chord should create smooth harmonic transitions with the surrounding chords. **Aim to enhance the existing progression. This might mean adding a unique color [...]`;
     } else {
-        requirementInstruction = `The new chord should be musically interesting and serve as a **solid and inviting starting point. It doesn't need to be overly complex; a strong, clear chord (triad or basic 7th) is often best to establish a direction.**`;
+        requirementInstruction = `The new chord should be musically interesting and serve as a **solid and inviting starting point. It doesn't need to be overly complex; a strong, clear chord (triad o[...]`;
     }
 
     return [
@@ -205,8 +227,15 @@ export async function POST(request: Request): Promise<Response> {
                 userMessage,
                 SingleChordSchema
             );
+            console.log('[API Raw AI Response for Single Chord] aiObj:', JSON.stringify(aiObj, null, 2));
             const parsed = SingleChordSchema.safeParse(aiObj);
-            if (!parsed.success) throw new Error('Invalid single-chord response.');
+            if (!parsed.success) {
+                console.error("[API Single Chord Zod Error]", parsed.error.format());
+                throw Object.assign(new Error('Invalid single-chord response from AI after refinement.'), {
+                    status: 500,
+                    details: parsed.error.format()
+                });
+            }
             aiResult = parsed.data;
         } else {
             if (!userPrompt) {
@@ -219,8 +248,15 @@ export async function POST(request: Request): Promise<Response> {
                 userMessage,
                 ChordProgressionSchema
             );
+            console.log('[API Raw AI Response for Progression] aiObj:', JSON.stringify(aiObj, null, 2));
             const parsed = ChordProgressionSchema.safeParse(aiObj);
-            if (!parsed.success) throw new Error('Invalid progression response.');
+            if (!parsed.success) {
+                console.error("[API Progression Zod Error]", parsed.error.format());
+                throw Object.assign(new Error('Invalid progression response from AI after refinement.'), {
+                    status: 500,
+                    details: parsed.error.format()
+                });
+            }
             aiResult = parsed.data;
         }
 
@@ -228,8 +264,13 @@ export async function POST(request: Request): Promise<Response> {
     } catch (err: unknown) {
         console.error('[API POST] Error:', err);
         const e = err as ApiError;
+
         if (err instanceof z.ZodError) {
-            return createResponse({ error: 'Invalid AI response format.', details: err.format() }, 500);
+            return createResponse({ error: 'Invalid AI response format after validation.', details: err.format() }, 500);
+        }
+        // Use e.details safely now that it's part of ApiError
+        if (e.status && e.details) {
+            return createResponse({ error: e.message || 'AI response validation failed.', details: e.details }, e.status);
         }
         return createResponse({ error: e.message || 'Internal server error' }, e.status || 500);
     }
