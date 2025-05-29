@@ -7,6 +7,7 @@ import "react-piano/dist/styles.css";
 import * as Tone from "tone";
 import { Chord, Note } from "tonal";
 import ReactMarkdown from 'react-markdown';
+import dynamic from 'next/dynamic'; // Import next/dynamic
 
 import { useChordManagement } from "@/hooks/useChordManagement";
 import { useExamplePrompts } from "@/hooks/useExamplePrompts";
@@ -16,7 +17,7 @@ import Header from "@/components/Header";
 import PianoKeyboard from "@/components/PianoKeyboard";
 import ChordRow from "@/components/ChordRow";
 import ChordGenerator from "@/components/ChordGenerator";
-import MidiDownloader from "@/components/MidiDownloader";
+// import MidiDownloader from "@/components/MidiDownloader"; // Original import
 import { usePiano } from "@/components/PianoProvider";
 import MobileChordGrid from "@/components/MobileChordRow";
 import MobileHeader from "@/components/MobileHeader";
@@ -30,6 +31,21 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Sparkles } from "lucide-react";
+
+// Dynamically import MidiDownloader
+const MidiDownloader = dynamic(() => import('@/components/MidiDownloader'), {
+    loading: () => <Button variant="outline" size="lg" disabled>Loading Downloader...</Button>, // Optional loading state
+    ssr: false // Assuming it's client-side only
+});
+
+// Consider dynamically importing ReactMarkdown or a component that uses it if it's heavy
+// and only used in the Popover. For example:
+// const MarkdownRenderer = dynamic(() => import('react-markdown'), {
+// loading: () => <p>Loading content...</p>,
+// });
+// Then in the PopoverContent:
+// {currentExplanationText && <MarkdownRenderer>{currentExplanationText}</MarkdownRenderer>}
+// Or, create a wrapper component for your explanation content and dynamically import that.
 
 export default function ClientHome() {
     const {
@@ -73,10 +89,6 @@ export default function ClientHome() {
             if (!piano || !areSamplesLoaded) {
                 console.warn("Piano samples not yet loaded. Click 'Generate' or an example to load samples.");
                 setActiveNotes([]);
-                // Optionally, trigger sample loading here if desired, though it's already in generate handlers
-                // if (!isLoadingSamples) {
-                //     loadSamples();
-                // }
                 return;
             }
             if (!chordSymbol) return;
@@ -128,13 +140,12 @@ export default function ClientHome() {
             }
 
             const allNotesToPlay = [bassNote, ...voicedNotes];
-            const noteDuration = 0.5; // Play notes for 0.8 seconds
+            const noteDuration = 0.5;
 
             setActiveNotes(allNotesToPlay);
             piano.triggerAttackRelease(allNotesToPlay, noteDuration, Tone.now());
-            // Clear active notes after the duration. The actual sound will last duration + release time.
             setTimeout(() => setActiveNotes([]), noteDuration * 1000);
-        }, [piano, areSamplesLoaded, isLoadingSamples, loadSamples] // Added isLoadingSamples and loadSamples if you want to trigger loading here
+        }, [piano, areSamplesLoaded]
     );
 
     const handleGenerateChordsRequest = useCallback(() => {
@@ -359,6 +370,8 @@ export default function ClientHome() {
                                             )}
                                             {currentExplanationText && (
                                                 <div className="prose prose-sm dark:prose-invert max-w-none text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                                    {/* If you dynamically import ReactMarkdown as MarkdownRenderer: */}
+                                                    {/* <MarkdownRenderer>{currentExplanationText}</MarkdownRenderer> */}
                                                     <ReactMarkdown>
                                                         {currentExplanationText}
                                                     </ReactMarkdown>
@@ -371,6 +384,7 @@ export default function ClientHome() {
 
                             {!isMobile && (
                                 <div>
+                                    {/* Use the dynamically imported MidiDownloader */}
                                     <MidiDownloader chords={chords.map((c) => c.chord)} prompt={prompt} />
                                 </div>
                             )}
