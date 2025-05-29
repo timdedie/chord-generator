@@ -1,11 +1,14 @@
 // app/page.tsx
 
 import ClientHome from "@/components/ClientHome";
+import PianoProvider from "@/components/PianoProvider"; // Import the provider
 
 export default function HomePage() {
     return (
-        <main>
-            <ClientHome />
-        </main>
+        <PianoProvider> {/* Provider wraps ClientHome */}
+            <main>
+                <ClientHome />
+            </main>
+        </PianoProvider>
     );
 }

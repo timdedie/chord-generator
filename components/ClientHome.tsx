@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, KeyboardEvent, useContext, useRef } from "react";
+import React, { useEffect, useState, useCallback, KeyboardEvent, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
 import * as Tone from "tone";
-import { Chord, Note } from "tonal"; 
+import { Chord, Note } from "tonal";
 import ReactMarkdown from 'react-markdown';
 
 import { useChordManagement } from "@/hooks/useChordManagement";
@@ -17,7 +17,7 @@ import PianoKeyboard from "@/components/PianoKeyboard";
 import ChordRow from "@/components/ChordRow";
 import ChordGenerator from "@/components/ChordGenerator";
 import MidiDownloader from "@/components/MidiDownloader";
-import PianoProvider, { PianoContext } from "@/components/PianoProvider";
+import { usePiano } from "@/components/PianoProvider";
 import MobileChordGrid from "@/components/MobileChordRow";
 import MobileHeader from "@/components/MobileHeader";
 import { PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -29,7 +29,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Sparkles, BookOpenText } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export default function ClientHome() {
     const {
@@ -44,11 +44,11 @@ export default function ClientHome() {
     } = useChordManagement();
 
     const { randomExamples } = useExamplePrompts();
+    const { piano, loadSamples, areSamplesLoaded, isLoadingSamples } = usePiano();
 
     const [activeNotes, setActiveNotes] = useState<string[]>([]);
     const isMobile = useMediaQuery({ maxWidth: 768 });
     const sensors = useSensors(useSensor(PointerSensor));
-    const piano = useContext(PianoContext);
     const [numChordsToGenerate, setNumChordsToGenerate] = useState<number>(4);
 
     const [isExplanationPopoverOpen, setIsExplanationPopoverOpen] = useState(false);
@@ -61,7 +61,7 @@ export default function ClientHome() {
     useEffect(() => {
         if (isMobile) {
             const resumeAudio = async () => {
-                try { await Tone.start(); } catch (err) { console.error("Error resuming audio", err); }
+                try { await Tone.start(); console.log("Audio context started on touch (mobile)."); } catch (err) { console.error("Error resuming audio", err); }
             };
             window.addEventListener("touchstart", resumeAudio, { once: true });
             return () => window.removeEventListener("touchstart", resumeAudio);
@@ -70,8 +70,17 @@ export default function ClientHome() {
 
     const playChord = useCallback(
         async (chordSymbol: string) => {
+            if (!piano || !areSamplesLoaded) {
+                console.warn("Piano samples not yet loaded. Click 'Generate' or an example to load samples.");
+                setActiveNotes([]);
+                // Optionally, trigger sample loading here if desired, though it's already in generate handlers
+                // if (!isLoadingSamples) {
+                //     loadSamples();
+                // }
+                return;
+            }
             if (!chordSymbol) return;
-            await Tone.start();
+
             const chordData = Chord.get(chordSymbol);
 
             if (!chordData || !chordData.notes || chordData.notes.length === 0 || !chordData.tonic) {
@@ -113,41 +122,50 @@ export default function ClientHome() {
                         }
                     }
                 }
-
                 voicedNotes.push(noteWithOctave);
                 previousNoteMidi = currentNoteMidi;
                 currentProcessingOctave = startOctave;
             }
 
             const allNotesToPlay = [bassNote, ...voicedNotes];
+            const noteDuration = 0.5; // Play notes for 0.8 seconds
 
             setActiveNotes(allNotesToPlay);
-            piano?.triggerAttackRelease(allNotesToPlay, "2n");
-            setTimeout(() => setActiveNotes([]), 500);
-        }, [piano]
+            piano.triggerAttackRelease(allNotesToPlay, noteDuration, Tone.now());
+            // Clear active notes after the duration. The actual sound will last duration + release time.
+            setTimeout(() => setActiveNotes([]), noteDuration * 1000);
+        }, [piano, areSamplesLoaded, isLoadingSamples, loadSamples] // Added isLoadingSamples and loadSamples if you want to trigger loading here
     );
 
     const handleGenerateChordsRequest = useCallback(() => {
+        if (!areSamplesLoaded && !isLoadingSamples) {
+            loadSamples();
+        }
         generateChords({ numChords: numChordsToGenerate });
-    }, [generateChords, numChordsToGenerate]);
+    }, [generateChords, numChordsToGenerate, loadSamples, areSamplesLoaded, isLoadingSamples]);
 
     const handleExampleClickRequest = useCallback((example: string) => {
+        if (!areSamplesLoaded && !isLoadingSamples) {
+            loadSamples();
+        }
         generateChordsFromExample(example, numChordsToGenerate);
-    }, [generateChordsFromExample, numChordsToGenerate]);
+    }, [generateChordsFromExample, numChordsToGenerate, loadSamples, areSamplesLoaded, isLoadingSamples]);
 
     const handleInputKeyDown = useCallback(
         (e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
                 e.preventDefault();
+                if (!areSamplesLoaded && !isLoadingSamples) {
+                    loadSamples();
+                }
                 generateChords({ numChords: numChordsToGenerate });
             }
-        }, [generateChords, numChordsToGenerate]
+        }, [generateChords, numChordsToGenerate, loadSamples, areSamplesLoaded, isLoadingSamples]
     );
 
     const handleAddChordRequest = useCallback((position: number) => {
         addChordAt(position);
     }, [addChordAt]);
-
 
     const fetchAndStreamExplanation = async (progressionKey: string) => {
         if (explanationAbortControllerRef.current) {
@@ -256,121 +274,115 @@ export default function ClientHome() {
     };
 
     return (
-        <PianoProvider>
-            <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
-                {isMobile ? <MobileHeader /> : <Header />}
+        <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
+            {isMobile ? <MobileHeader /> : <Header />}
 
-                <motion.main
-                    className="flex flex-col items-center w-full px-4"
-                    initial={false}
-                    animate={{ paddingTop: hasChordsProp ? (isMobile ? "10vh" : "20vh") : (isMobile ? "12vh" : "35vh") }}
-                    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                >
-                    <ChordGenerator
-                        prompt={prompt}
-                        setPrompt={setPrompt}
-                        handleKeyDown={handleInputKeyDown}
-                        generateChords={handleGenerateChordsRequest}
-                        fullLoading={fullLoading}
-                        chordsLength={chords.length}
-                        randomExamples={randomExamples}
-                        handleExampleClick={handleExampleClickRequest}
-                        numChordsToGenerate={numChordsToGenerate}
-                        onNumChordsChange={setNumChordsToGenerate}
-                    />
+            <motion.main
+                className="flex flex-col items-center w-full px-4"
+                initial={false}
+                animate={{ paddingTop: hasChordsProp ? (isMobile ? "10vh" : "20vh") : (isMobile ? "12vh" : "35vh") }}
+                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            >
+                <ChordGenerator
+                    prompt={prompt}
+                    setPrompt={setPrompt}
+                    handleKeyDown={handleInputKeyDown}
+                    generateChords={handleGenerateChordsRequest}
+                    fullLoading={fullLoading}
+                    chordsLength={chords.length}
+                    randomExamples={randomExamples}
+                    handleExampleClick={handleExampleClickRequest}
+                    numChordsToGenerate={numChordsToGenerate}
+                    onNumChordsChange={setNumChordsToGenerate}
+                />
 
-                    {(chords.length > 0 || fullLoading) && (
-                        <div className="w-full max-w-fit mt-4">
-                            {isMobile ? (
-                                <MobileChordGrid
-                                    chords={chords}
-                                    playChord={playChord}
-                                />
-                            ) : (
-                                <ChordRow
-                                    chords={chords}
-                                    fullLoading={fullLoading}
-                                    loadingChordId={loadingChordId}
-                                    sensors={sensors}
-                                    handleDragEnd={handleDragEnd}
-                                    addChordAt={handleAddChordRequest}
-                                    playChord={playChord}
-                                    setChords={setChords}
-                                    numChordsToGenerate={numChordsToGenerate}
-                                />
-                            )}
-                            <div className="h-8 flex items-center justify-center mt-2">
-                                {fullLoading && <ThinkingMessages />}
-                            </div>
-                        </div>
-                    )}
-
-                    <AnimatePresence>
-                        {chords.length > 0 && !fullLoading && (
-                            <motion.div
-                                key="buttonsRow"
-                                className="mt-6 w-full flex flex-row justify-center items-center space-x-4"
-                                initial={buttonAppearAnimation.initial}
-                                animate={buttonAppearAnimation.animate}
-                                exit={buttonAppearAnimation.exit}
-                                transition={buttonAppearAnimation.transition}
-                            >
-                                <div>
-                                    <Popover open={isExplanationPopoverOpen} onOpenChange={onPopoverOpenChange}>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                type="button"
-                                                onClick={handleExplainButtonClick}
-                                                variant="outline"
-                                                size="lg"
-                                                disabled={isExplanationLoading && currentProgressionKeyRef.current === chords.map(c=>c.chord).join('-')}
-                                                className="w-full max-w-xs sm:w-auto transition transform"
-                                            >
-                                                {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c=>c.chord).join('-')) ? <Sparkles className="mr-2 h-5 w-5 animate-pulse" /> : <BookOpenText className="mr-2 h-5 w-5" />}
-                                                {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c=>c.chord).join('-')) ? "Getting Explanation..." : "Explain Progression"}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                            className="w-[300px] sm:w-[380px] p-4 flex flex-col"
-                                            sideOffset={5}
-                                            align="center"
-                                        >
-                                            <h4 className="font-medium leading-none text-sm mb-2 flex-shrink-0">Explanation</h4>
-                                            <div className="min-h-[50px] w-full">
-                                                {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c=>c.chord).join('-') && !currentExplanationText) && (
-                                                    <div className="flex items-center justify-center h-full">
-                                                        <Sparkles className="h-6 w-6 animate-pulse text-primary" />
-                                                        <p className="ml-2 text-sm text-muted-foreground"></p>
-                                                    </div>
-                                                )}
-                                                {currentExplanationText && (
-                                                    <div className="prose prose-sm dark:prose-invert max-w-none text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                                                        <ReactMarkdown>
-                                                            {currentExplanationText}
-                                                        </ReactMarkdown>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-
-                                {!isMobile && (
-                                    <div>
-                                        <MidiDownloader chords={chords.map((c) => c.chord)} prompt={prompt} />
-                                    </div>
-                                )}
-                            </motion.div>
+                {(chords.length > 0 || fullLoading) && (
+                    <div className="w-full max-w-fit mt-4">
+                        {isMobile ? (
+                            <MobileChordGrid
+                                chords={chords}
+                                playChord={playChord}
+                            />
+                        ) : (
+                            <ChordRow
+                                chords={chords}
+                                fullLoading={fullLoading}
+                                loadingChordId={loadingChordId}
+                                sensors={sensors}
+                                handleDragEnd={handleDragEnd}
+                                addChordAt={handleAddChordRequest}
+                                playChord={playChord}
+                                setChords={setChords}
+                                numChordsToGenerate={numChordsToGenerate}
+                            />
                         )}
-                    </AnimatePresence>
-                </motion.main>
+                        <div className="h-8 flex items-center justify-center mt-2">
+                            {fullLoading && <ThinkingMessages />}
+                        </div>
+                    </div>
+                )}
 
-                <PianoKeyboard firstNote={firstNote} lastNote={lastNote} activeNotes={activeNotes} />
+                <AnimatePresence>
+                    {chords.length > 0 && !fullLoading && (
+                        <motion.div
+                            key="buttonsRow"
+                            className="mt-6 w-full flex flex-row justify-center items-center space-x-4"
+                            {...buttonAppearAnimation}
+                        >
+                            <div>
+                                <Popover open={isExplanationPopoverOpen} onOpenChange={onPopoverOpenChange}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            onClick={handleExplainButtonClick}
+                                            variant="outline"
+                                            size="lg"
+                                            disabled={isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-')}
+                                            className="w-full max-w-xs sm:w-auto transition transform"
+                                        >
+                                            {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-')) ? <Sparkles className="mr-2 h-5 w-5 animate-pulse" /> : <Sparkles className="mr-2 h-5 w-5" />}
+                                            {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-')) ? "Getting Explanation..." : "Explain Progression"}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                        className="w-[300px] sm:w-[380px] p-4 flex flex-col"
+                                        sideOffset={5}
+                                        align="center"
+                                    >
+                                        <h4 className="font-medium leading-none text-sm mb-2 flex-shrink-0">Explanation</h4>
+                                        <div className="min-h-[50px] w-full">
+                                            {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-') && !currentExplanationText) && (
+                                                <div className="flex items-center justify-center h-full">
+                                                    <Sparkles className="h-6 w-6 animate-pulse text-primary" />
+                                                    <p className="ml-2 text-sm text-muted-foreground"></p>
+                                                </div>
+                                            )}
+                                            {currentExplanationText && (
+                                                <div className="prose prose-sm dark:prose-invert max-w-none text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                                    <ReactMarkdown>
+                                                        {currentExplanationText}
+                                                    </ReactMarkdown>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
 
-                <footer className="text-center text-xs text-gray-500 dark:text-gray-400 py-4 mt-8 h-10">
-                </footer>
-            </div>
-        </PianoProvider>
+                            {!isMobile && (
+                                <div>
+                                    <MidiDownloader chords={chords.map((c) => c.chord)} prompt={prompt} />
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.main>
+
+            <PianoKeyboard firstNote={firstNote} lastNote={lastNote} activeNotes={activeNotes} />
+
+            <footer className="text-center text-xs text-gray-500 dark:text-gray-400 py-4 mt-8 h-10">
+            </footer>
+        </div>
     );
 }
-
