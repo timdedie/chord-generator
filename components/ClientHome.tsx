@@ -4,9 +4,9 @@ import React, { useEffect, useState, useCallback, KeyboardEvent, useRef } from "
 import { motion, AnimatePresence } from "framer-motion";
 import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
-import * as Tone from "tone"; // Keep as is for now, will reassess Tone.js imports later if needed
+// Changed from: import * as Tone from "tone";
+import { start as toneStart, now as toneNow } from "tone"; // Use named imports
 import { Chord, Note } from "tonal";
-// import ReactMarkdown from 'react-markdown'; // No longer directly imported here
 import dynamic from 'next/dynamic';
 
 import { useChordManagement } from "@/hooks/useChordManagement";
@@ -78,7 +78,8 @@ export default function ClientHome() {
     useEffect(() => {
         if (isMobile) {
             const resumeAudio = async () => {
-                try { await Tone.start(); console.log("Audio context started on touch (mobile)."); } catch (err) { console.error("Error resuming audio", err); }
+                // Changed from: try { await Tone.start();
+                try { await toneStart(); console.log("Audio context started on touch (mobile)."); } catch (err) { console.error("Error resuming audio", err); }
             };
             window.addEventListener("touchstart", resumeAudio, { once: true });
             return () => window.removeEventListener("touchstart", resumeAudio);
@@ -144,7 +145,8 @@ export default function ClientHome() {
             const noteDuration = 0.5;
 
             setActiveNotes(allNotesToPlay);
-            piano.triggerAttackRelease(allNotesToPlay, noteDuration, Tone.now());
+            // Changed from: piano.triggerAttackRelease(allNotesToPlay, noteDuration, Tone.now());
+            piano.triggerAttackRelease(allNotesToPlay, noteDuration, toneNow());
             setTimeout(() => setActiveNotes([]), noteDuration * 1000);
         }, [piano, areSamplesLoaded]
     );
@@ -274,8 +276,6 @@ export default function ClientHome() {
         setIsExplanationPopoverOpen(open);
         if (!open && explanationAbortControllerRef.current) {
             explanationAbortControllerRef.current.abort();
-            // Potentially clear text or set loading to false if popover is closed mid-stream
-            // For now, we let the abort handler in fetchAndStreamExplanation manage text state
         }
     };
 
@@ -368,7 +368,6 @@ export default function ClientHome() {
                                     >
                                         <h4 className="font-medium leading-none text-sm mb-2 flex-shrink-0">Explanation</h4>
                                         <div className="min-h-[50px] w-full">
-                                            {/* Conditionally render DynamicMarkdownDisplay or loading/error states */}
                                             {isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-') && !currentExplanationText && (
                                                 <div className="flex items-center justify-center h-full">
                                                     <Sparkles className="h-6 w-6 animate-pulse text-primary" />
@@ -378,7 +377,6 @@ export default function ClientHome() {
                                             {currentExplanationText && (
                                                 <DynamicMarkdownDisplay markdownText={currentExplanationText} />
                                             )}
-                                            {/* Handle case where explanation might be an error message not suitable for Markdown */}
                                             {!isExplanationLoading && !currentExplanationText && !explanationCache.has(currentProgressionKeyRef.current) && (
                                                 <p className="text-sm text-muted-foreground">Click "Explain Progression" to get an analysis.</p>
                                             )}

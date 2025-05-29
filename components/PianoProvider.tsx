@@ -1,10 +1,11 @@
 "use client";
 
 import React, { createContext, useState, useCallback, useContext, ReactNode } from "react";
-import * as Tone from "tone";
+// Import only the specific components/functions needed from Tone.js
+import { Sampler, start as toneStart } from "tone"; // Renamed 'start' to 'toneStart' to avoid conflict if any local 'start' variable exists
 
 export interface PianoContextState {
-    piano: Tone.Sampler | null;
+    piano: Sampler | null; // Use the imported Sampler type
     loadSamples: () => Promise<void>;
     areSamplesLoaded: boolean;
     isLoadingSamples: boolean;
@@ -17,7 +18,7 @@ interface PianoProviderProps {
 }
 
 export default function PianoProvider({ children }: PianoProviderProps) {
-    const [pianoInstance, setPianoInstance] = useState<Tone.Sampler | null>(null);
+    const [pianoInstance, setPianoInstance] = useState<Sampler | null>(null); // Use Sampler type
     const [areSamplesLoaded, setAreSamplesLoaded] = useState<boolean>(false);
     const [isLoadingSamples, setIsLoadingSamples] = useState<boolean>(false);
     const [loadAttempted, setLoadAttempted] = useState<boolean>(false);
@@ -35,10 +36,10 @@ export default function PianoProvider({ children }: PianoProviderProps) {
         setLoadAttempted(true);
 
         try {
-            await Tone.start(); // Ensure AudioContext is running
+            await toneStart(); // Ensure AudioContext is running, using the imported and potentially renamed function
 
-            const samplerPromise = new Promise<Tone.Sampler>((resolve) => {
-                const sampler = new Tone.Sampler({
+            const samplerPromise = new Promise<Sampler>((resolve) => { // Use Sampler type
+                const sampler = new Sampler({ // Use the imported Sampler class
                     urls: {
                         A2: "A2.mp3", A3: "A3.mp3", A4: "A4.mp3", A5: "A5.mp3",
                         C2: "C2.mp3", C3: "C3.mp3", C4: "C4.mp3", C5: "C5.mp3", C6: "C6.mp3",
@@ -51,7 +52,7 @@ export default function PianoProvider({ children }: PianoProviderProps) {
                         console.log("Piano samples loaded via Sampler onload.");
                         resolve(sampler);
                     },
-                }).toDestination();
+                }).toDestination(); // .toDestination() is a method on the Sampler instance
             });
 
             const timeoutPromise = new Promise<never>((_, reject) => {
