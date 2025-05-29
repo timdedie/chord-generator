@@ -4,10 +4,10 @@ import React, { useEffect, useState, useCallback, KeyboardEvent, useRef } from "
 import { motion, AnimatePresence } from "framer-motion";
 import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
-import * as Tone from "tone";
+import * as Tone from "tone"; // Keep as is for now, will reassess Tone.js imports later if needed
 import { Chord, Note } from "tonal";
-import ReactMarkdown from 'react-markdown';
-import dynamic from 'next/dynamic'; // Import next/dynamic
+// import ReactMarkdown from 'react-markdown'; // No longer directly imported here
+import dynamic from 'next/dynamic';
 
 import { useChordManagement } from "@/hooks/useChordManagement";
 import { useExamplePrompts } from "@/hooks/useExamplePrompts";
@@ -17,7 +17,6 @@ import Header from "@/components/Header";
 import PianoKeyboard from "@/components/PianoKeyboard";
 import ChordRow from "@/components/ChordRow";
 import ChordGenerator from "@/components/ChordGenerator";
-// import MidiDownloader from "@/components/MidiDownloader"; // Original import
 import { usePiano } from "@/components/PianoProvider";
 import MobileChordGrid from "@/components/MobileChordRow";
 import MobileHeader from "@/components/MobileHeader";
@@ -32,20 +31,22 @@ import {
 } from "@/components/ui/popover";
 import { Sparkles } from "lucide-react";
 
-// Dynamically import MidiDownloader
 const MidiDownloader = dynamic(() => import('@/components/MidiDownloader'), {
-    loading: () => <Button variant="outline" size="lg" disabled>Loading Downloader...</Button>, // Optional loading state
-    ssr: false // Assuming it's client-side only
+    loading: () => <Button variant="outline" size="lg" disabled>Loading Downloader...</Button>,
+    ssr: false
 });
 
-// Consider dynamically importing ReactMarkdown or a component that uses it if it's heavy
-// and only used in the Popover. For example:
-// const MarkdownRenderer = dynamic(() => import('react-markdown'), {
-// loading: () => <p>Loading content...</p>,
-// });
-// Then in the PopoverContent:
-// {currentExplanationText && <MarkdownRenderer>{currentExplanationText}</MarkdownRenderer>}
-// Or, create a wrapper component for your explanation content and dynamically import that.
+// Dynamically import the new MarkdownDisplay component
+const DynamicMarkdownDisplay = dynamic(() => import('@/components/MarkdownDisplay'), {
+    loading: () => (
+        <div className="flex items-center justify-center h-full">
+            <Sparkles className="h-6 w-6 animate-pulse text-primary" />
+            <p className="ml-2 text-sm text-muted-foreground">Loading content...</p>
+        </div>
+    ),
+    ssr: false // Markdown is client-side for this use case
+});
+
 
 export default function ClientHome() {
     const {
@@ -186,7 +187,7 @@ export default function ClientHome() {
 
         setIsExplanationLoading(true);
         let accumulatedText = "";
-        setCurrentExplanationText("");
+        setCurrentExplanationText(""); // Clear previous text before fetching new one
 
         try {
             const response = await fetch('/api/explain-progression', {
@@ -223,6 +224,7 @@ export default function ClientHome() {
             if (err.name === 'AbortError') {
                 console.log(`Explanation fetch for ${progressionKey} aborted`);
                 if (isExplanationPopoverOpen && currentProgressionKeyRef.current === progressionKey && !accumulatedText) {
+                    // If aborted before any text, show cancellation, otherwise keep streamed text
                     setCurrentExplanationText("Explanation loading was cancelled.");
                 }
             } else {
@@ -235,6 +237,7 @@ export default function ClientHome() {
             if (currentProgressionKeyRef.current === progressionKey) {
                 setIsExplanationLoading(false);
             }
+            // Ensure loading is false if aborted, regardless of text
             if (explanationAbortControllerRef.current && explanationAbortControllerRef.current.signal.aborted) {
                 if (currentProgressionKeyRef.current === progressionKey) setIsExplanationLoading(false);
             }
@@ -259,7 +262,8 @@ export default function ClientHome() {
             setCurrentExplanationText(explanationCache.get(progressionKey) || "Could not load cached explanation.");
             setIsExplanationLoading(false);
         } else {
-            if (previousKey !== progressionKey) {
+            // Clear text only if switching to a new progression's explanation
+            if (previousKey !== progressionKey || !currentExplanationText) {
                 setCurrentExplanationText("");
             }
             fetchAndStreamExplanation(progressionKey);
@@ -270,6 +274,8 @@ export default function ClientHome() {
         setIsExplanationPopoverOpen(open);
         if (!open && explanationAbortControllerRef.current) {
             explanationAbortControllerRef.current.abort();
+            // Potentially clear text or set loading to false if popover is closed mid-stream
+            // For now, we let the abort handler in fetchAndStreamExplanation manage text state
         }
     };
 
@@ -362,20 +368,19 @@ export default function ClientHome() {
                                     >
                                         <h4 className="font-medium leading-none text-sm mb-2 flex-shrink-0">Explanation</h4>
                                         <div className="min-h-[50px] w-full">
-                                            {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-') && !currentExplanationText) && (
+                                            {/* Conditionally render DynamicMarkdownDisplay or loading/error states */}
+                                            {isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-') && !currentExplanationText && (
                                                 <div className="flex items-center justify-center h-full">
                                                     <Sparkles className="h-6 w-6 animate-pulse text-primary" />
                                                     <p className="ml-2 text-sm text-muted-foreground"></p>
                                                 </div>
                                             )}
                                             {currentExplanationText && (
-                                                <div className="prose prose-sm dark:prose-invert max-w-none text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                                                    {/* If you dynamically import ReactMarkdown as MarkdownRenderer: */}
-                                                    {/* <MarkdownRenderer>{currentExplanationText}</MarkdownRenderer> */}
-                                                    <ReactMarkdown>
-                                                        {currentExplanationText}
-                                                    </ReactMarkdown>
-                                                </div>
+                                                <DynamicMarkdownDisplay markdownText={currentExplanationText} />
+                                            )}
+                                            {/* Handle case where explanation might be an error message not suitable for Markdown */}
+                                            {!isExplanationLoading && !currentExplanationText && !explanationCache.has(currentProgressionKeyRef.current) && (
+                                                <p className="text-sm text-muted-foreground">Click "Explain Progression" to get an analysis.</p>
                                             )}
                                         </div>
                                     </PopoverContent>
@@ -384,7 +389,6 @@ export default function ClientHome() {
 
                             {!isMobile && (
                                 <div>
-                                    {/* Use the dynamically imported MidiDownloader */}
                                     <MidiDownloader chords={chords.map((c) => c.chord)} prompt={prompt} />
                                 </div>
                             )}
