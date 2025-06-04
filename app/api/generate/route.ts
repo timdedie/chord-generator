@@ -1,4 +1,5 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+// import { createGoogleGenerativeAI } from '@ai-sdk/google'; // Commented out Google AI
+import { createOpenAI } from '@ai-sdk/openai'; // Added for DeepSeek
 import { generateObject, CoreMessage } from 'ai';
 import { z } from 'zod';
 import { Chord } from 'tonal'; // For backend validation
@@ -19,14 +20,30 @@ interface ApiError extends Error {
     details?: any; // To include error details, e.g., from Zod
 }
 
-const { GOOGLE_GENERATIVE_AI_API_KEY } = process.env;
-if (!GOOGLE_GENERATIVE_AI_API_KEY) {
-    throw new Error('GOOGLE_GENERATIVE_AI_API_KEY environment variable is not set.');
+// Commented out Google AI API Key check
+// const { GOOGLE_GENERATIVE_AI_API_KEY } = process.env;
+// if (!GOOGLE_GENERATIVE_AI_API_KEY) {
+//     throw new Error('GOOGLE_GENERATIVE_AI_API_KEY environment variable is not set.');
+// }
+
+// Added DeepSeek API Key check
+const { DEEPSEEK_API_KEY } = process.env;
+if (!DEEPSEEK_API_KEY) {
+    throw new Error('DEEPSEEK_API_KEY environment variable is not set.');
 }
 
-const googleAIProvider = createGoogleGenerativeAI({});
-const PRIMARY_MODEL_ID = 'gemini-2.5-flash-preview-05-20';
+// Commented out Google AI Provider
+// const googleAIProvider = createGoogleGenerativeAI({});
+// const PRIMARY_MODEL_ID = 'gemini-2.5-flash-preview-05-20';
 // const PRIMARY_MODEL_ID = 'gemini-2.0-flash-lite';
+
+
+// Added DeepSeek Provider
+const deepseek = createOpenAI({
+    baseURL: 'https://api.deepseek.com',
+    apiKey: DEEPSEEK_API_KEY,
+});
+const PRIMARY_MODEL_ID = 'deepseek-chat'; // Using deepseek-chat, adjust if a specific generation model is preferred/available
 
 const DEFAULT_TEMPERATURE = 0.7;
 
@@ -41,7 +58,7 @@ Chord formatting rules:
 • Suspended = "sus2" or "sus4"
 • Extensions/alterations allowed: 9, add9, #5, b9, #11, 13, etc.
 Guideline: Provide only the chord symbols according to these rules. For example, if generating ["Am", "G", "C"], the 'chords' array should be ["Am", "G", "C"]. If generating a single chord "F#m7", the 'chord' field should be "F#m7".
-`.trim(); // Assuming the guideline was complete and the [...] was a display artifact.
+`.trim();
 
 // Refined Zod type for a single chord string with tonal validation
 const ValidChordStringSchema = z.string()
@@ -83,7 +100,11 @@ async function createChordObjectGeneration<T extends z.ZodTypeAny>(
 ): Promise<z.infer<T>> {
     console.log('[API createChordObjectGeneration] User message to AI:\n', userMessage);
 
-    const modelClient = googleAIProvider(PRIMARY_MODEL_ID);
+    // Commented out Google AI model client
+    // const modelClient = googleAIProvider(PRIMARY_MODEL_ID);
+
+    // Added DeepSeek model client
+    const modelClient = deepseek(PRIMARY_MODEL_ID);
     console.log(`[API createChordObjectGeneration] Using temperature: ${DEFAULT_TEMPERATURE}`);
 
     const systemMessage = `
@@ -98,7 +119,7 @@ You will provide your response as a structured JSON object according to the prov
 Ensure all chord symbols strictly adhere to the CHORD_FORMATTING_RULES.
 
 ${CHORD_FORMATTING_RULES}
-  `.trim(); // Assuming the [...] in the prompt was a display artifact.
+  `.trim();
 
     const messages: CoreMessage[] = [{ role: 'user', content: userMessage }];
 
@@ -111,9 +132,6 @@ ${CHORD_FORMATTING_RULES}
         mode: 'json',
     });
 
-    // The generateObject function will throw an error if it fails to produce an object matching the schema.
-    // So, an explicit check for !object might be redundant if the error is caught by the caller.
-    // However, keeping it doesn't harm.
     if (!object) {
         const error = new Error('No valid object response from AI (Vercel AI SDK)') as ApiError;
         error.status = 500;
@@ -138,14 +156,14 @@ Consider these elements as *options*, not requirements, to be used with care:
 - Chords with extensions or alterations, but only if they enhance the specific mood without sounding out of place or overly dense. A common mistake is to make all chords complex; strive for balance.
 - A sense of harmonic storytelling.
 
-**If the prompt is simple or common (e.g., "a happy pop song"), lean towards simpler, more standard chord choices. If the prompt suggests a more complex or specific genre (e.g., "atonal jazz," "impressionistic harmony"), then more adventurous choices might be warranted, but always with musical justification.**
+**If the prompt is simple or common (e.g., "a happy pop song"), lean towards simpler, more standard chord choices. If the prompt suggests a more complex or specific genre (e.g., "atonal jazz," "impressionistic piece"), you can explore more adventurous harmonies, but always prioritize musicality.**
 
 Ensure smooth voice leading and strong melodic potential.
 
 Provide the ${count} chord names as an array of strings in the 'chords' field of the JSON output.
 Each chord name must strictly adhere to the CHORD_FORMATTING_RULES.
 Do not include any other text, explanations, or conversational remarks in your response; only the JSON object.
-  `.trim(); // Assuming the [...] in the prompt was a display artifact.
+  `.trim();
 }
 
 function buildAddChordMessage(
@@ -173,10 +191,10 @@ function buildAddChordMessage(
     if (prompt && prompt.trim()) {
         requirementInstruction = `Musical requirement for the new chord: "${prompt}". The new chord should fulfill this while integrating seamlessly and musically. **Prioritize a chord that sounds good and fits the context.**`;
     } else if (hasExisting) {
-        requirementInstruction = `The new chord should create smooth harmonic transitions with the surrounding chords. **Aim to enhance the existing progression. This might mean adding a unique color or a chord that provides better voice leading.**`;
+        requirementInstruction = `The new chord should create smooth harmonic transitions with the surrounding chords. **Aim to enhance the existing progression. This might mean adding a unique color, a passing chord, or a chord that sets up the next one effectively.**`;
     } else {
-        requirementInstruction = `The new chord should be musically interesting and serve as a **solid and inviting starting point. It doesn't need to be overly complex; a strong, clear chord (triad or basic 7th) is often best.**`;
-    } // Assuming the [...] in the prompt was a display artifact.
+        requirementInstruction = `The new chord should be musically interesting and serve as a **solid and inviting starting point. It doesn't need to be overly complex; a strong, clear chord (triad or simple 7th) is often best.**`;
+    }
 
     return [
         context + before + after,
