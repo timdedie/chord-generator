@@ -28,7 +28,7 @@ const googleAIProvider = createGoogleGenerativeAI({});
 const PRIMARY_MODEL_ID = 'gemini-2.5-flash-preview-05-20';
 // const PRIMARY_MODEL_ID = 'gemini-2.0-flash-lite';
 
-const DEFAULT_TEMPERATURE = 0.7;
+const DEFAULT_TEMPERATURE = 1.0;
 
 const CHORD_FORMATTING_RULES = `
 Chord formatting rules:
