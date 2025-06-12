@@ -4,19 +4,6 @@ import { Outfit } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import React from "react";
-// Icons needed for other parts of the layout are kept, others are implicitly imported via howItWorksData
-import {
-    MoveHorizontal,
-    Plus,
-    RefreshCw,
-    X,
-    PlayCircle,
-    Download,
-    Piano as PianoIcon,
-    BookOpenText,
-    ListOrdered,
-    BrainCircuit,
-} from "lucide-react";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { howItWorksItems } from "@/lib/howItWorksData";
 import { CSPostHogProvider } from "./providers"; // Or your chosen path e.g. ./posthog-provider
