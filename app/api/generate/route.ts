@@ -41,12 +41,32 @@ Chord formatting rules:
 • Suspended = "sus2" or "sus4"
 • Extensions/alterations allowed: 9, add9, #5, b9, #11, 13, etc.
 Guideline: Provide only the chord symbols according to these rules. For example, if generating ["Am", "G", "C"], the 'chords' array should be ["Am", "G", "C"]. If generating a single chord "F#m7", the 'chord' field should be "F#m7".
-`.trim(); // Assuming the guideline was complete and the [...] was a display artifact.
+`.trim();
 
 // Refined Zod type for a single chord string with tonal validation
 const ValidChordStringSchema = z.string()
     .describe("A musical chord symbol, strictly adhering to the CHORD_FORMATTING_RULES.")
-    .transform(chordSymbol => chordSymbol.trim().replace(/△/g, "")) // Basic cleaning
+    .transform(chordSymbol => {
+        let cleaned = chordSymbol.trim();
+
+        // Step 1: Unwrap if the string value itself is quoted (e.g., "'Am'" or "\"Cmaj7\"")
+        if ((cleaned.startsWith("'") && cleaned.endsWith("'")) || (cleaned.startsWith('"') && cleaned.endsWith('"'))) {
+            cleaned = cleaned.substring(1, cleaned.length - 1).trim();
+        }
+
+        // Step 2: Remove common trailing punctuation that AI might add.
+        // Example: "Am." -> "Am", "Cmaj7," -> "Cmaj7"
+        cleaned = cleaned.replace(/[.,;:!?]$/, "").trim();
+
+        // Step 3: The original .replace(/△/g, "") is removed.
+        // Tonal.js handles '△' correctly as an alias for 'maj7'.
+        // For example, Chord.get("C△7").symbol is "Cmaj7".
+        // The previous replacement of '△' to "" would turn "C△7" into "C7" (dominant 7th),
+        // incorrectly changing the chord quality. The CHORD_FORMATTING_RULES asks the AI
+        // for "maj7" and "no △", but if △ is provided, Tonal.js can parse it correctly.
+
+        return cleaned;
+    })
     .refine(chordSymbol => {
         if (!chordSymbol) return false; // Reject empty string after transform
         const chordData = Chord.get(chordSymbol); // Validate with tonal
@@ -98,7 +118,7 @@ You will provide your response as a structured JSON object according to the prov
 Ensure all chord symbols strictly adhere to the CHORD_FORMATTING_RULES.
 
 ${CHORD_FORMATTING_RULES}
-  `.trim(); // Assuming the [...] in the prompt was a display artifact.
+  `.trim();
 
     const messages: CoreMessage[] = [{ role: 'user', content: userMessage }];
 
@@ -138,14 +158,14 @@ Consider these elements as *options*, not requirements, to be used with care:
 - Chords with extensions or alterations, but only if they enhance the specific mood without sounding out of place or overly dense. A common mistake is to make all chords complex; strive for balance.
 - A sense of harmonic storytelling.
 
-**If the prompt is simple or common (e.g., "a happy pop song"), lean towards simpler, more standard chord choices. If the prompt suggests a more complex or specific genre (e.g., "atonal jazz," "impressionistic harmony"), then more adventurous choices might be warranted, but always with musical justification.**
+**If the prompt is simple or common (e.g., "a happy pop song"), lean towards simpler, more standard chord choices. If the prompt suggests a more complex or specific genre (e.g., "atonal jazz," "impressionistic piece"), you can explore more sophisticated options, but always prioritize musicality.**
 
 Ensure smooth voice leading and strong melodic potential.
 
 Provide the ${count} chord names as an array of strings in the 'chords' field of the JSON output.
 Each chord name must strictly adhere to the CHORD_FORMATTING_RULES.
 Do not include any other text, explanations, or conversational remarks in your response; only the JSON object.
-  `.trim(); // Assuming the [...] in the prompt was a display artifact.
+  `.trim();
 }
 
 function buildAddChordMessage(
@@ -173,10 +193,10 @@ function buildAddChordMessage(
     if (prompt && prompt.trim()) {
         requirementInstruction = `Musical requirement for the new chord: "${prompt}". The new chord should fulfill this while integrating seamlessly and musically. **Prioritize a chord that sounds good and fits the context.**`;
     } else if (hasExisting) {
-        requirementInstruction = `The new chord should create smooth harmonic transitions with the surrounding chords. **Aim to enhance the existing progression. This might mean adding a unique color or a chord that provides better voice leading.**`;
+        requirementInstruction = `The new chord should create smooth harmonic transitions with the surrounding chords. **Aim to enhance the existing progression. This might mean adding a unique color or a passing chord that improves flow.**`;
     } else {
-        requirementInstruction = `The new chord should be musically interesting and serve as a **solid and inviting starting point. It doesn't need to be overly complex; a strong, clear chord (triad or basic 7th) is often best.**`;
-    } // Assuming the [...] in the prompt was a display artifact.
+        requirementInstruction = `The new chord should be musically interesting and serve as a **solid and inviting starting point. It doesn't need to be overly complex; a strong, clear chord (triad or simple 7th) is often best.**`;
+    }
 
     return [
         context + before + after,
@@ -262,7 +282,7 @@ export async function POST(request: Request): Promise<Response> {
             return createResponse({ error: e.message || 'AI response validation failed.', details: e.details }, e.status);
         }
         // Check if the error comes from the AI SDK's generateObject itself due to schema mismatch
-        if (e.message && e.message.includes("response did not match schema") || e.message.includes("No object generated")) {
+        if (e.message && (e.message.includes("response did not match schema") || e.message.includes("No object generated"))) {
             return createResponse({ error: "AI failed to generate a response matching the required format. Please try rephrasing your request or try again.", details: e.message }, 500);
         }
         return createResponse({ error: e.message || 'Internal server error' }, e.status || 500);

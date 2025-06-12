@@ -29,11 +29,13 @@ interface AddChordContextParams {
 interface ApiChordProgressionResponse {
     chords: string[];
     error?: string;
+    details?: any; // To capture potential error details from API
 }
 
 interface ApiSingleChordResponse {
     chord: string;
     error?: string;
+    details?: any; // To capture potential error details from API
 }
 
 
@@ -77,7 +79,13 @@ export function useChordManagement(props?: UseChordManagementProps) {
 
                 if (!res.ok || data.error) {
                     const errorMsg = data.error || "Failed to generate chords from server.";
-                    showErrorToast("Generation Failed", errorMsg);
+                    let errorDetails = "";
+                    if (data.details) {
+                        // Attempt to stringify details if they are an object, otherwise use as is
+                        errorDetails = typeof data.details === 'object' ? JSON.stringify(data.details) : String(data.details);
+                    }
+                    console.error("Generation API Error:", errorMsg, data.details);
+                    showErrorToast("Generation Failed", `${errorMsg}${errorDetails ? ` Details: ${errorDetails}` : ''}`);
                     setFullLoading(false);
                     return null;
                 }
@@ -89,8 +97,10 @@ export function useChordManagement(props?: UseChordManagementProps) {
                     setFullLoading(false); return null;
                 }
 
+                // Data from API is already transformed by Zod, so direct trim is sufficient here.
+                // The .replace(/△/g, "") is removed as Tonal handles △ correctly.
                 const cleanedChordSymbols = receivedChordSymbols
-                    .map((c: string) => c.trim().replace(/△/g, ""))
+                    .map((c: string) => c.trim()) // API should provide cleaned strings via Zod
                     .filter((c: string) => c);
 
 
@@ -114,7 +124,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
                         console.warn(`Invalid chord name(s) or empty array found in AI response ("${cleanedChordSymbols.join('-')}"), reattempting generation`, attempt + 1);
                         return generateChordsInternal(currentPromptInternal, currentChords, numChordsToGen, attempt + 1);
                     } else {
-                        showErrorToast("Generation Error", "AI returned invalid chord names or an empty array after several attempts.");
+                        showErrorToast("Generation Error", `AI returned invalid chord names ("${cleanedChordSymbols.join(', ')}") or an empty array after several attempts.`);
                         setFullLoading(false); return null;
                     }
                 }
@@ -137,7 +147,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 });
 
             } catch (e: any) {
-                console.error("Generation error:", e);
+                console.error("Generation error (catch block):", e);
                 showErrorToast("Network Error", e.message || "Error generating chords. Please try again.");
                 setFullLoading(false);
                 return null;
@@ -208,13 +218,20 @@ export function useChordManagement(props?: UseChordManagementProps) {
 
                 if (!res.ok || data.error) {
                     const errorMsg = data.error || "Failed to add chord from server.";
-                    showErrorToast("Add Chord Failed", errorMsg);
+                    let errorDetails = "";
+                    if (data.details) {
+                        errorDetails = typeof data.details === 'object' ? JSON.stringify(data.details) : String(data.details);
+                    }
+                    console.error("Add Chord API Error:", errorMsg, data.details);
+                    showErrorToast("Add Chord Failed", `${errorMsg}${errorDetails ? ` Details: ${errorDetails}` : ''}`);
                     setChords(originalChords);
                     setLoadingChordId(null);
                     return;
                 }
 
-                const cleanedReceivedChordSymbol = data.chord?.trim().replace(/△/g, "");
+                // Data from API is already transformed by Zod, so direct trim is sufficient here.
+                // The .replace(/△/g, "") is removed.
+                const cleanedReceivedChordSymbol = data.chord?.trim(); // API should provide cleaned string via Zod
                 const chordData = cleanedReceivedChordSymbol ? Chord.get(cleanedReceivedChordSymbol) : null;
 
                 // Updated validation: ensure symbol, name, and notes are present
@@ -227,13 +244,13 @@ export function useChordManagement(props?: UseChordManagementProps) {
 
                 const updatedChordItem: ChordItem = {
                     id: newChordId,
-                    chord: chordData.symbol, // Use .symbol instead of .name
+                    chord: chordData.symbol!, // Use .symbol instead of .name, ! is safe due to validation
                 };
                 setChords((prev) =>
                     prev.map((ch) => (ch.id === newChordId ? updatedChordItem : ch))
                 );
             } catch (e: any) {
-                console.error("Error adding chord:", e);
+                console.error("Error adding chord (catch block):", e);
                 showErrorToast("Network Error", e.message || "Error adding chord. Please try again.");
                 setChords(originalChords);
             }
