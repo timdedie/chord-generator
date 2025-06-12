@@ -1,13 +1,14 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState, useCallback, KeyboardEvent, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
-// Changed from: import * as Tone from "tone";
-import { start as toneStart, now as toneNow } from "tone"; // Use named imports
+import { start as toneStart, now as toneNow } from "tone";
 import { Chord, Note } from "tonal";
 import dynamic from 'next/dynamic';
+import posthog from 'posthog-js'; // Ensure PostHog is imported
+import type { DragEndEvent } from "@dnd-kit/core";
 
 import { useChordManagement } from "@/hooks/useChordManagement";
 import { useExamplePrompts } from "@/hooks/useExamplePrompts";
@@ -15,8 +16,8 @@ import { useExamplePrompts } from "@/hooks/useExamplePrompts";
 import ThinkingMessages from "@/components/ThinkingMessages";
 import Header from "@/components/Header";
 import PianoKeyboard from "@/components/PianoKeyboard";
-import ChordRow from "@/components/ChordRow";
-import ChordGenerator from "@/components/ChordGenerator";
+import ChordRow from "@/components/ChordRow"; // This will use the updated ChordRow.tsx
+import ChordGenerator from "@/components/ChordGenerator"; // This will use the updated ChordGenerator.tsx
 import { usePiano } from "@/components/PianoProvider";
 import MobileChordGrid from "@/components/MobileChordRow";
 import MobileHeader from "@/components/MobileHeader";
@@ -36,7 +37,6 @@ const MidiDownloader = dynamic(() => import('@/components/MidiDownloader'), {
     ssr: false
 });
 
-// Dynamically import the new MarkdownDisplay component
 const DynamicMarkdownDisplay = dynamic(() => import('@/components/MarkdownDisplay'), {
     loading: () => (
         <div className="flex items-center justify-center h-full">
@@ -44,7 +44,7 @@ const DynamicMarkdownDisplay = dynamic(() => import('@/components/MarkdownDispla
             <p className="ml-2 text-sm text-muted-foreground">Loading content...</p>
         </div>
     ),
-    ssr: false // Markdown is client-side for this use case
+    ssr: false
 });
 
 
@@ -56,7 +56,7 @@ export default function ClientHome() {
         loadingChordId,
         generateChords,
         addChordAt,
-        handleDragEnd,
+        handleDragEnd: originalHandleDragEnd, // Original from hook
         generateChordsFromExample,
     } = useChordManagement();
 
@@ -66,7 +66,7 @@ export default function ClientHome() {
     const [activeNotes, setActiveNotes] = useState<string[]>([]);
     const isMobile = useMediaQuery({ maxWidth: 768 });
     const sensors = useSensors(useSensor(PointerSensor));
-    const [numChordsToGenerate, setNumChordsToGenerate] = useState<number>(4);
+    const [numChordsToGenerate, setNumChordsToGenerateState] = useState<number>(4);
 
     const [isExplanationPopoverOpen, setIsExplanationPopoverOpen] = useState(false);
     const [currentExplanationText, setCurrentExplanationText] = useState("");
@@ -75,10 +75,19 @@ export default function ClientHome() {
     const explanationAbortControllerRef = useRef<AbortController | null>(null);
     const currentProgressionKeyRef = useRef<string>("");
 
+    const checkPosthogConfigured = () => {
+        return typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY && process.env.NEXT_PUBLIC_POSTHOG_HOST;
+    }
+
+    useEffect(() => {
+        if (areSamplesLoaded && checkPosthogConfigured()) {
+            posthog.capture('piano_samples_loaded');
+        }
+    }, [areSamplesLoaded]);
+
     useEffect(() => {
         if (isMobile) {
             const resumeAudio = async () => {
-                // Changed from: try { await Tone.start();
                 try { await toneStart(); console.log("Audio context started on touch (mobile)."); } catch (err) { console.error("Error resuming audio", err); }
             };
             window.addEventListener("touchstart", resumeAudio, { once: true });
@@ -86,214 +95,202 @@ export default function ClientHome() {
         }
     }, [isMobile]);
 
-    const playChord = useCallback(
+    // --- Tracking Enhanced Callbacks ---
+
+    const playChordAndTrack = useCallback(
         async (chordSymbol: string) => {
             if (!piano || !areSamplesLoaded) {
-                console.warn("Piano samples not yet loaded. Click 'Generate' or an example to load samples.");
-                setActiveNotes([]);
-                return;
+                console.warn("Piano samples not yet loaded.");
+                if (checkPosthogConfigured()) {
+                    posthog.capture('chord_play_attempt_failed', { chord_symbol: chordSymbol, reason: 'samples_not_loaded' });
+                }
+                setActiveNotes([]); return;
             }
             if (!chordSymbol) return;
 
-            const chordData = Chord.get(chordSymbol);
-
-            if (!chordData || !chordData.notes || chordData.notes.length === 0 || !chordData.tonic) {
-                setActiveNotes([]);
-                return;
+            if (checkPosthogConfigured()) {
+                posthog.capture('chord_played', { chord_symbol: chordSymbol, source: 'chord_card' });
             }
 
-            const rootPc = chordData.tonic;
-            const notesPc = chordData.notes;
-
-            let startOctave = 3;
-            const bassOctave = startOctave - 1;
-            const bassNote = rootPc + bassOctave.toString();
-
-            const voicedNotes: string[] = [];
-            let previousNoteMidi: number | null = null;
-            let currentProcessingOctave = startOctave;
-
+            const chordData = Chord.get(chordSymbol);
+            if (!chordData || !chordData.notes || chordData.notes.length === 0 || !chordData.tonic) {
+                setActiveNotes([]); return;
+            }
+            const rootPc = chordData.tonic; const notesPc = chordData.notes;
+            let startOctave = 3; const bassOctave = startOctave - 1; const bassNote = rootPc + bassOctave.toString();
+            const voicedNotes: string[] = []; let previousNoteMidi: number | null = null; let currentProcessingOctave = startOctave;
             for (const pc of notesPc) {
-                let noteWithOctave = pc + currentProcessingOctave;
-                let currentNoteMidi = Note.midi(noteWithOctave);
-
-                if (currentNoteMidi === null) {
-                    console.warn(`Could not get MIDI for note: ${pc}. Using default octave 4.`);
-                    voicedNotes.push(pc + "4");
-                    previousNoteMidi = Note.midi(pc + "4");
-                    continue;
-                }
-
+                let noteWithOctave = pc + currentProcessingOctave; let currentNoteMidi = Note.midi(noteWithOctave);
+                if (currentNoteMidi === null) { voicedNotes.push(pc + "4"); previousNoteMidi = Note.midi(pc + "4"); continue; }
                 if (previousNoteMidi !== null) {
                     while (currentNoteMidi! <= previousNoteMidi!) {
-                        currentProcessingOctave++;
-                        noteWithOctave = pc + currentProcessingOctave;
-                        currentNoteMidi = Note.midi(noteWithOctave);
-                        if (currentNoteMidi === null) {
-                            console.warn(`Error finding ascending MIDI for ${pc}. Using fallback.`);
-                            noteWithOctave = pc + (currentProcessingOctave - 1);
-                            break;
-                        }
+                        currentProcessingOctave++; noteWithOctave = pc + currentProcessingOctave; currentNoteMidi = Note.midi(noteWithOctave);
+                        if (currentNoteMidi === null) { noteWithOctave = pc + (currentProcessingOctave - 1); break; }
                     }
                 }
-                voicedNotes.push(noteWithOctave);
-                previousNoteMidi = currentNoteMidi;
-                currentProcessingOctave = startOctave;
+                voicedNotes.push(noteWithOctave); previousNoteMidi = currentNoteMidi; currentProcessingOctave = startOctave;
             }
-
-            const allNotesToPlay = [bassNote, ...voicedNotes];
-            const noteDuration = 0.5;
-
-            setActiveNotes(allNotesToPlay);
-            // Changed from: piano.triggerAttackRelease(allNotesToPlay, noteDuration, Tone.now());
-            piano.triggerAttackRelease(allNotesToPlay, noteDuration, toneNow());
+            const allNotesToPlay = [bassNote, ...voicedNotes]; const noteDuration = 0.5;
+            setActiveNotes(allNotesToPlay); piano.triggerAttackRelease(allNotesToPlay, noteDuration, toneNow());
             setTimeout(() => setActiveNotes([]), noteDuration * 1000);
         }, [piano, areSamplesLoaded]
     );
 
-    const handleGenerateChordsRequest = useCallback(() => {
-        if (!areSamplesLoaded && !isLoadingSamples) {
-            loadSamples();
+    const handleNumChordsChangeAndTrack = useCallback((value: number) => {
+        setNumChordsToGenerateState(value);
+        if (checkPosthogConfigured()) {
+            posthog.capture('num_chords_setting_changed', { num_chords_selected: value });
         }
+    }, [setNumChordsToGenerateState]);
+
+    const handleGenerateChordsRequestAndTrack = useCallback(() => {
+        if (!areSamplesLoaded && !isLoadingSamples) { loadSamples(); }
         generateChords({ numChords: numChordsToGenerate });
-    }, [generateChords, numChordsToGenerate, loadSamples, areSamplesLoaded, isLoadingSamples]);
-
-    const handleExampleClickRequest = useCallback((example: string) => {
-        if (!areSamplesLoaded && !isLoadingSamples) {
-            loadSamples();
+        if (checkPosthogConfigured()) {
+            posthog.capture('chords_generated', {
+                prompt_text: prompt,
+                prompt_length: prompt.length,
+                num_chords_requested: numChordsToGenerate,
+                // deep_think_enabled: isDeepThinkEnabled, // Add if you track this state
+            });
         }
-        generateChordsFromExample(example, numChordsToGenerate);
-    }, [generateChordsFromExample, numChordsToGenerate, loadSamples, areSamplesLoaded, isLoadingSamples]);
+    }, [generateChords, numChordsToGenerate, loadSamples, areSamplesLoaded, isLoadingSamples, prompt]);
 
-    const handleInputKeyDown = useCallback(
+    const handleExampleClickAndTrack = useCallback((example: string) => {
+        if (!areSamplesLoaded && !isLoadingSamples) { loadSamples(); }
+        setPrompt(example); // Set prompt for UI consistency and if generateChords uses it
+        generateChordsFromExample(example, numChordsToGenerate);
+        if (checkPosthogConfigured()) {
+            posthog.capture('example_prompt_clicked', {
+                example_prompt_text: example,
+                num_chords_requested: numChordsToGenerate,
+            });
+        }
+    }, [generateChordsFromExample, numChordsToGenerate, loadSamples, areSamplesLoaded, isLoadingSamples, setPrompt]);
+
+    const handleInputKeyDownAndTrack = useCallback(
         (e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
                 e.preventDefault();
-                if (!areSamplesLoaded && !isLoadingSamples) {
-                    loadSamples();
-                }
-                generateChords({ numChords: numChordsToGenerate });
+                handleGenerateChordsRequestAndTrack(); // Calls the tracked version
             }
-        }, [generateChords, numChordsToGenerate, loadSamples, areSamplesLoaded, isLoadingSamples]
+        }, [handleGenerateChordsRequestAndTrack]
     );
 
-    const handleAddChordRequest = useCallback((position: number) => {
-        addChordAt(position);
-    }, [addChordAt]);
-
-    const fetchAndStreamExplanation = async (progressionKey: string) => {
-        if (explanationAbortControllerRef.current) {
-            explanationAbortControllerRef.current.abort();
+    const handleAddChordRequestAndTrack = useCallback((position: number) => {
+        addChordAt(position); // Original logic
+        if (checkPosthogConfigured()) {
+            posthog.capture('manual_chord_add_initiated', {
+                insert_position: position,
+                current_chord_count: chords.length
+            });
         }
-        explanationAbortControllerRef.current = new AbortController();
+    }, [addChordAt, chords.length]);
 
-        setIsExplanationLoading(true);
-        let accumulatedText = "";
-        setCurrentExplanationText(""); // Clear previous text before fetching new one
+    const handleDragEndAndTrack = useCallback((event: DragEndEvent) => {
+        const { active, over } = event;
+        if (active && over && active.id !== over.id) {
+            const oldIndex = chords.findIndex(c => String(c.id) === String(active.id)); // Ensure IDs are compared as strings if they are numbers
+            const newIndex = chords.findIndex(c => String(c.id) === String(over.id));
+
+            if (oldIndex !== -1 && newIndex !== -1 && checkPosthogConfigured()) {
+                posthog.capture('chord_rearranged', {
+                    moved_chord_symbol: chords[oldIndex]?.chord || 'unknown',
+                    original_index: oldIndex,
+                    new_index: newIndex,
+                    total_chords_in_progression: chords.length
+                });
+            }
+        }
+        originalHandleDragEnd(event); // Call the original handler from the hook
+    }, [originalHandleDragEnd, chords]);
+
+    const handleRemoveChordAndTrack = useCallback((chordIdToRemove: string, removedChordSymbol: string) => {
+        setChords(prevChords => prevChords.filter(c => c.id !== chordIdToRemove));
+        if (checkPosthogConfigured()) {
+            posthog.capture('chord_removed', {
+                removed_chord_symbol: removedChordSymbol,
+                remaining_chords_count: chords.length > 0 ? chords.length - 1 : 0
+            });
+        }
+    }, [chords, setChords]);
+
+
+    const fetchAndStreamExplanationAndTrack = async (progressionKey: string) => {
+        if (explanationAbortControllerRef.current) { explanationAbortControllerRef.current.abort(); }
+        explanationAbortControllerRef.current = new AbortController();
+        setIsExplanationLoading(true); let accumulatedText = ""; setCurrentExplanationText("");
 
         try {
             const response = await fetch('/api/explain-progression', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chords: chords.map(c => c.chord), prompt: prompt }),
                 signal: explanationAbortControllerRef.current.signal,
             });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.error || `HTTP error! status: ${response.status}`); }
             if (!response.body) throw new Error("Response body is null");
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-
+            const reader = response.body.getReader(); const decoder = new TextDecoder();
             while (true) {
-                const { value, done: readerDone } = await reader.read();
-                if (readerDone) break;
+                const { value, done: readerDone } = await reader.read(); if (readerDone) break;
                 if (value) {
-                    const chunk = decoder.decode(value, { stream: true });
-                    accumulatedText += chunk;
-                    if (currentProgressionKeyRef.current === progressionKey) {
-                        setCurrentExplanationText(prev => prev + chunk);
-                    }
+                    const chunk = decoder.decode(value, { stream: true }); accumulatedText += chunk;
+                    if (currentProgressionKeyRef.current === progressionKey) { setCurrentExplanationText(prev => prev + chunk); }
                 }
             }
             if (currentProgressionKeyRef.current === progressionKey && !explanationAbortControllerRef.current?.signal.aborted) {
                 setExplanationCache(prevCache => new Map(prevCache).set(progressionKey, accumulatedText));
+                if (checkPosthogConfigured()) {
+                    posthog.capture('explanation_generated_successfully', { progression_key: progressionKey, prompt_used_for_explanation: prompt, explanation_length: accumulatedText.length });
+                }
             }
         } catch (err: any) {
             if (err.name === 'AbortError') {
-                console.log(`Explanation fetch for ${progressionKey} aborted`);
-                if (isExplanationPopoverOpen && currentProgressionKeyRef.current === progressionKey && !accumulatedText) {
-                    // If aborted before any text, show cancellation, otherwise keep streamed text
-                    setCurrentExplanationText("Explanation loading was cancelled.");
-                }
+                if (isExplanationPopoverOpen && currentProgressionKeyRef.current === progressionKey && !accumulatedText) { setCurrentExplanationText("Explanation loading was cancelled."); }
+                if (checkPosthogConfigured()) { posthog.capture('explanation_generation_aborted', { progression_key: progressionKey }); }
             } else {
-                console.error("Error fetching explanation:", err);
-                if (currentProgressionKeyRef.current === progressionKey) {
-                    setCurrentExplanationText(`Error fetching explanation: ${err.message}`);
-                }
+                if (currentProgressionKeyRef.current === progressionKey) { setCurrentExplanationText(`Error fetching explanation: ${err.message}`); }
+                if (checkPosthogConfigured()) { posthog.capture('explanation_generation_failed', { progression_key: progressionKey, error_message: err.message }); }
             }
         } finally {
-            if (currentProgressionKeyRef.current === progressionKey) {
-                setIsExplanationLoading(false);
-            }
-            // Ensure loading is false if aborted, regardless of text
-            if (explanationAbortControllerRef.current && explanationAbortControllerRef.current.signal.aborted) {
-                if (currentProgressionKeyRef.current === progressionKey) setIsExplanationLoading(false);
-            }
+            if (currentProgressionKeyRef.current === progressionKey) setIsExplanationLoading(false);
+            if (explanationAbortControllerRef.current?.signal.aborted && currentProgressionKeyRef.current === progressionKey) { setIsExplanationLoading(false); }
             explanationAbortControllerRef.current = null;
         }
     };
 
-    const handleExplainButtonClick = () => {
+    const handleExplainButtonClickAndTrack = () => {
         if (chords.length === 0) return;
         const progressionKey = chords.map(c => c.chord).join('-');
-
-        if (isExplanationPopoverOpen && currentProgressionKeyRef.current === progressionKey && !isExplanationLoading) {
-            setIsExplanationPopoverOpen(false);
-            return;
-        }
-
-        const previousKey = currentProgressionKeyRef.current;
-        currentProgressionKeyRef.current = progressionKey;
+        if (isExplanationPopoverOpen && currentProgressionKeyRef.current === progressionKey && !isExplanationLoading) { setIsExplanationPopoverOpen(false); return; }
+        const previousKey = currentProgressionKeyRef.current; currentProgressionKeyRef.current = progressionKey;
         setIsExplanationPopoverOpen(true);
-
+        if (checkPosthogConfigured()) {
+            posthog.capture('explain_progression_button_clicked', { progression_key: progressionKey, is_cached_explanation: explanationCache.has(progressionKey), current_prompt: prompt });
+        }
         if (explanationCache.has(progressionKey)) {
-            setCurrentExplanationText(explanationCache.get(progressionKey) || "Could not load cached explanation.");
-            setIsExplanationLoading(false);
+            setCurrentExplanationText(explanationCache.get(progressionKey) || "Could not load cached explanation."); setIsExplanationLoading(false);
         } else {
-            // Clear text only if switching to a new progression's explanation
-            if (previousKey !== progressionKey || !currentExplanationText) {
-                setCurrentExplanationText("");
-            }
-            fetchAndStreamExplanation(progressionKey);
+            if (previousKey !== progressionKey || !currentExplanationText) setCurrentExplanationText("");
+            fetchAndStreamExplanationAndTrack(progressionKey);
         }
     };
 
-    const onPopoverOpenChange = (open: boolean) => {
+    const onPopoverOpenChangeAndTrack = (open: boolean) => {
         setIsExplanationPopoverOpen(open);
-        if (!open && explanationAbortControllerRef.current) {
-            explanationAbortControllerRef.current.abort();
+        if (checkPosthogConfigured()) {
+            posthog.capture('explanation_popover_toggled', { opened: open, progression_key: currentProgressionKeyRef.current });
         }
+        if (!open && explanationAbortControllerRef.current) { explanationAbortControllerRef.current.abort(); }
     };
+
 
     const hasChordsProp = chords.length > 0 || fullLoading;
-    const firstNote = MidiNumbers.fromNote("C3");
-    const lastNote = MidiNumbers.fromNote("C5");
-
-    const buttonAppearAnimation = {
-        initial: { opacity: 0, y: 10 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: 10 },
-        transition: { duration: 0.3, ease: "easeInOut" }
-    };
+    const firstNote = MidiNumbers.fromNote("C3"); const lastNote = MidiNumbers.fromNote("C5");
+    const buttonAppearAnimation = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: 10 }, transition: { duration: 0.3, ease: "easeInOut" } };
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
             {isMobile ? <MobileHeader /> : <Header />}
-
             <motion.main
                 className="flex flex-col items-center w-full px-4"
                 initial={false}
@@ -303,14 +300,14 @@ export default function ClientHome() {
                 <ChordGenerator
                     prompt={prompt}
                     setPrompt={setPrompt}
-                    handleKeyDown={handleInputKeyDown}
-                    generateChords={handleGenerateChordsRequest}
+                    handleKeyDown={handleInputKeyDownAndTrack}
+                    generateChords={handleGenerateChordsRequestAndTrack}
                     fullLoading={fullLoading}
                     chordsLength={chords.length}
                     randomExamples={randomExamples}
-                    handleExampleClick={handleExampleClickRequest}
+                    handleExampleClick={handleExampleClickAndTrack}
                     numChordsToGenerate={numChordsToGenerate}
-                    onNumChordsChange={setNumChordsToGenerate}
+                    onNumChordsChange={handleNumChordsChangeAndTrack}
                 />
 
                 {(chords.length > 0 || fullLoading) && (
@@ -318,7 +315,7 @@ export default function ClientHome() {
                         {isMobile ? (
                             <MobileChordGrid
                                 chords={chords}
-                                playChord={playChord}
+                                playChord={playChordAndTrack}
                             />
                         ) : (
                             <ChordRow
@@ -326,10 +323,11 @@ export default function ClientHome() {
                                 fullLoading={fullLoading}
                                 loadingChordId={loadingChordId}
                                 sensors={sensors}
-                                handleDragEnd={handleDragEnd}
-                                addChordAt={handleAddChordRequest}
-                                playChord={playChord}
-                                setChords={setChords}
+                                handleDragEnd={handleDragEndAndTrack}
+                                addChordAt={handleAddChordRequestAndTrack}
+                                playChord={playChordAndTrack}
+                                onRemoveChord={handleRemoveChordAndTrack} // Pass the new handler here
+                                setChords={setChords} // Retained for other potential direct manipulations if any
                                 numChordsToGenerate={numChordsToGenerate}
                             />
                         )}
@@ -341,64 +339,47 @@ export default function ClientHome() {
 
                 <AnimatePresence>
                     {chords.length > 0 && !fullLoading && (
-                        <motion.div
-                            key="buttonsRow"
-                            className="mt-6 w-full flex flex-row justify-center items-center space-x-4"
-                            {...buttonAppearAnimation}
-                        >
+                        <motion.div key="buttonsRow" className="mt-6 w-full flex flex-row justify-center items-center space-x-4" {...buttonAppearAnimation}>
                             <div>
-                                <Popover open={isExplanationPopoverOpen} onOpenChange={onPopoverOpenChange}>
+                                <Popover open={isExplanationPopoverOpen} onOpenChange={onPopoverOpenChangeAndTrack}>
                                     <PopoverTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            onClick={handleExplainButtonClick}
-                                            variant="outline"
-                                            size="lg"
-                                            disabled={isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-')}
-                                            className="w-full max-w-xs sm:w-auto transition transform"
-                                        >
+                                        <Button type="button" onClick={handleExplainButtonClickAndTrack} variant="outline" size="lg" disabled={isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-')} className="w-full max-w-xs sm:w-auto transition transform">
                                             {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-')) ? <Sparkles className="mr-2 h-5 w-5 animate-pulse" /> : <Sparkles className="mr-2 h-5 w-5" />}
                                             {(isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-')) ? "Getting Explanation..." : "Explain Progression"}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent
-                                        className="w-[300px] sm:w-[380px] p-4 flex flex-col"
-                                        sideOffset={5}
-                                        align="center"
-                                    >
+                                    <PopoverContent className="w-[300px] sm:w-[380px] p-4 flex flex-col" sideOffset={5} align="center">
                                         <h4 className="font-medium leading-none text-sm mb-2 flex-shrink-0">Explanation</h4>
                                         <div className="min-h-[50px] w-full">
-                                            {isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-') && !currentExplanationText && (
-                                                <div className="flex items-center justify-center h-full">
-                                                    <Sparkles className="h-6 w-6 animate-pulse text-primary" />
-                                                    <p className="ml-2 text-sm text-muted-foreground"></p>
-                                                </div>
-                                            )}
-                                            {currentExplanationText && (
-                                                <DynamicMarkdownDisplay markdownText={currentExplanationText} />
-                                            )}
-                                            {!isExplanationLoading && !currentExplanationText && !explanationCache.has(currentProgressionKeyRef.current) && (
-                                                <p className="text-sm text-muted-foreground">Click "Explain Progression" to get an analysis.</p>
-                                            )}
+                                            {isExplanationLoading && currentProgressionKeyRef.current === chords.map(c => c.chord).join('-') && !currentExplanationText && (<div className="flex items-center justify-center h-full"><Sparkles className="h-6 w-6 animate-pulse text-primary" /><p className="ml-2 text-sm text-muted-foreground"></p></div>)}
+                                            {currentExplanationText && (<DynamicMarkdownDisplay markdownText={currentExplanationText} />)}
+                                            {!isExplanationLoading && !currentExplanationText && !explanationCache.has(currentProgressionKeyRef.current) && (<p className="text-sm text-muted-foreground">Click "Explain Progression" to get an analysis.</p>)}
                                         </div>
                                     </PopoverContent>
                                 </Popover>
                             </div>
-
                             {!isMobile && (
                                 <div>
-                                    <MidiDownloader chords={chords.map((c) => c.chord)} prompt={prompt} />
+                                    <MidiDownloader
+                                        chords={chords.map((c) => c.chord)}
+                                        prompt={prompt}
+                                        // onDownloadInitiated={() => { // Ideal way to track MIDI download
+                                        //     if (checkPosthogConfigured()) {
+                                        //         posthog.capture('midi_download_initiated', {
+                                        //             chord_count: chords.length,
+                                        //             prompt_for_midi: prompt
+                                        //         });
+                                        //     }
+                                        // }}
+                                    />
                                 </div>
                             )}
                         </motion.div>
                     )}
                 </AnimatePresence>
             </motion.main>
-
             <PianoKeyboard firstNote={firstNote} lastNote={lastNote} activeNotes={activeNotes} />
-
-            <footer className="text-center text-xs text-gray-500 dark:text-gray-400 py-4 mt-8 h-10">
-            </footer>
+            <footer className="text-center text-xs text-gray-500 dark:text-gray-400 py-4 mt-8 h-10"></footer>
         </div>
     );
 }

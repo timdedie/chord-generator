@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { howItWorksItems } from "@/lib/howItWorksData";
+import { CSPostHogProvider } from "./providers"; // Or your chosen path e.g. ./posthog-provider
 
 const outfit = Outfit({
     subsets: ["latin"],
@@ -66,7 +67,7 @@ const faqSchema = {
             name: "How does ChordGen work?",
             acceptedAnswer: {
                 "@type": "Answer",
-                text: "ChordGen uses advanced AI models (like Deepseek Chat and Deepseek Reasoner) to interpret your natural language input and create musically coherent chord progressions. You can ch[...]",
+                text: "ChordGen uses advanced AI models (like Deepseek Chat and Deepseek Reasoner) to interpret your natural language input and create musically coherent chord progressions. You can ch[...]"
             },
         },
         {
@@ -74,7 +75,7 @@ const faqSchema = {
             name: "Do I need musical knowledge to use ChordGen?",
             acceptedAnswer: {
                 "@type": "Answer",
-                text: "No prior music theory knowledge is required. Simply describe the mood or style you want. You can also use the 'Explain Progression' feature to learn about the music theory behin[...]",
+                text: "No prior music theory knowledge is required. Simply describe the mood or style you want. You can also use the 'Explain Progression' feature to learn about the music theory behin[...]"
             },
         },
     ],
@@ -157,71 +158,73 @@ export default function RootLayout({
             />
         </head>
         <body className={`${outfit.className} flex flex-col min-h-screen`}>
-        <main className="flex-grow">{children}</main>
-        <Analytics />
-        <footer className="w-full text-center text-sm text-gray-500 dark:text-gray-400 p-8 space-y-8 relative z-20 bg-white dark:bg-black">
-            <div>
-                <p>
-                    <strong>ChordGen</strong> is a free AI-powered chord progression
-                    generator. Describe the mood, style, or vibe you want, and ChordGen
-                    will instantly generate unique chord progressions tailored to your input.
-                    Edit, rearrange, and download your chords as MIDI files for seamless
-                    integration into your music production workflow. Plus, you can learn about the music theory behind your progressions with our AI-powered explanations.
-                </p>
-                <p className="mt-2">
-                    Whether you're a producer, songwriter, or composer, ChordGen helps
-                    spark creativity, speed up your songwriting process, and deepen your understanding of music.
-                </p>
-            </div>
-            <div>
-                <a
-                    href="https://www.chordgen.org"
-                    className="underline"
-                    aria-label="ChordGen Free AI Chord Progression Generator"
-                >
-                    Try ChordGen – Free AI Chord Progression Generator
-                </a>
-            </div>
-            {/* How it works Section - UPDATED main heading color */}
-            <div className="max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
-                <h2 className="text-xl sm:text-2xl font-semibold mb-6 text-center"> {/* Removed text-black dark:text-white, changed font-bold to font-semibold */}
-                    How It Works
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 text-left">
-                    {howItWorksItems.map((item, index) => (
-                        <div key={index}>
-                            <h3 className="text-md sm:text-lg font-semibold flex items-center gap-2 mb-1 text-gray-700 dark:text-gray-300">
-                                <item.IconComponent className="h-5 w-5 flex-shrink-0 opacity-75" />
-                                {item.title}
-                            </h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 ml-7">
-                                {item.description}
-                            </p>
-                        </div>
-                    ))}
+        <CSPostHogProvider> {/* MOVED PROVIDER TO WRAP CONTENT INSIDE BODY */}
+            <main className="flex-grow">{children}</main>
+            <Analytics /> {/* Vercel Analytics */}
+            <footer className="w-full text-center text-sm text-gray-500 dark:text-gray-400 p-8 space-y-8 relative z-20 bg-white dark:bg-black">
+                <div>
+                    <p>
+                        <strong>ChordGen</strong> is a free AI-powered chord progression
+                        generator. Describe the mood, style, or vibe you want, and ChordGen
+                        will instantly generate unique chord progressions tailored to your input.
+                        Edit, rearrange, and download your chords as MIDI files for seamless
+                        integration into your music production workflow. Plus, you can learn about the music theory behind your progressions with our AI-powered explanations.
+                    </p>
+                    <p className="mt-2">
+                        Whether you're a producer, songwriter, or composer, ChordGen helps
+                        spark creativity, speed up your songwriting process, and deepen your understanding of music.
+                    </p>
                 </div>
-            </div>
-            <div className="text-left max-w-xl mx-auto space-y-4">
-                <h3 className="font-semibold mb-4 text-base">Frequently Asked Questions</h3>
-                <div className="space-y-4">
-                    {faqSchema.mainEntity.map((faqItem, index) => (
-                        <div key={index}>
-                            <strong>{faqItem.name}</strong>
-                            <p>{faqItem.acceptedAnswer.text}</p>
-                        </div>
-                    ))}
+                <div>
+                    <a
+                        href="https://www.chordgen.org"
+                        className="underline"
+                        aria-label="ChordGen Free AI Chord Progression Generator"
+                    >
+                        Try ChordGen – Free AI Chord Progression Generator
+                    </a>
                 </div>
-            </div>
-            <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
-                <p>© {new Date().getFullYear()} ChordGen. All Rights Reserved.</p>
-                <nav className="mt-2 space-x-4">
-                    <a href="/privacy" className="underline hover:text-primary">Privacy Policy</a>
-                    <a href="/terms" className="underline hover:text-primary">Terms of Service</a>
-                    <a href="/contact" className="underline hover:text-primary">Contact Us</a>
-                </nav>
-            </div>
-        </footer>
-        <SonnerToaster richColors position="bottom-right" />
+                {/* How it works Section */}
+                <div className="max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
+                    <h2 className="text-xl sm:text-2xl font-semibold mb-6 text-center">
+                        How It Works
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 text-left">
+                        {howItWorksItems.map((item, index) => (
+                            <div key={index}>
+                                <h3 className="text-md sm:text-lg font-semibold flex items-center gap-2 mb-1 text-gray-700 dark:text-gray-300">
+                                    <item.IconComponent className="h-5 w-5 flex-shrink-0 opacity-75" />
+                                    {item.title}
+                                </h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 ml-7">
+                                    {item.description}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="text-left max-w-xl mx-auto space-y-4">
+                    <h3 className="font-semibold mb-4 text-base">Frequently Asked Questions</h3>
+                    <div className="space-y-4">
+                        {faqSchema.mainEntity.map((faqItem, index) => (
+                            <div key={index}>
+                                <strong>{faqItem.name}</strong>
+                                <p>{faqItem.acceptedAnswer.text}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <p>© {new Date().getFullYear()} ChordGen. All Rights Reserved.</p>
+                    <nav className="mt-2 space-x-4">
+                        <a href="/privacy" className="underline hover:text-primary">Privacy Policy</a>
+                        <a href="/terms" className="underline hover:text-primary">Terms of Service</a>
+                        <a href="/contact" className="underline hover:text-primary">Contact Us</a>
+                    </nav>
+                </div>
+            </footer>
+            <SonnerToaster richColors position="bottom-right" />
+        </CSPostHogProvider>
         </body>
         </html>
     );

@@ -17,10 +17,11 @@ interface ChordRowProps {
     fullLoading: boolean;
     loadingChordId: string | null;
     sensors: any;
-    handleDragEnd: (event: DragEndEvent) => void;
-    addChordAt: (position: number) => void;
-    playChord: (chord: string) => void;
-    setChords: React.Dispatch<React.SetStateAction<ChordItem[]>>;
+    handleDragEnd: (event: DragEndEvent) => void; // This should be handleDragEndAndTrack from ClientHome
+    addChordAt: (position: number) => void; // This should be handleAddChordRequestAndTrack from ClientHome
+    playChord: (chord: string) => void; // This should be playChordAndTrack from ClientHome
+    onRemoveChord: (chordId: string, chordSymbol: string) => void; // New prop for handling removal with tracking
+    setChords: React.Dispatch<React.SetStateAction<ChordItem[]>>; // Keep for other potential direct manipulations if any, or remove if all state changes are through callbacks
     numChordsToGenerate?: number;
 }
 
@@ -36,12 +37,12 @@ export default function ChordRow({
                                      handleDragEnd,
                                      addChordAt,
                                      playChord,
-                                     setChords,
+                                     onRemoveChord, // Use the new prop
+                                     setChords, // Keep or remove based on usage
                                      numChordsToGenerate = 4,
                                  }: ChordRowProps) {
     let content: React.ReactNode = null;
 
-    // Case 1: Initial loading (no chords yet, but fullLoading is true)
     if (chords.length === 0 && fullLoading) {
         const numberOfSkeletons = numChordsToGenerate > 0 ? numChordsToGenerate : 4;
         content = (
@@ -52,14 +53,13 @@ export default function ChordRow({
             </div>
         );
     }
-    // Case 2: Chords are present
     else if (chords.length > 0) {
         const elements = chords.flatMap((chord, index) => [
             <Spacer
                 key={`spacer-${index}-${chords.length}`}
                 position={index}
                 chordsCount={chords.length}
-                addChordAt={addChordAt}
+                addChordAt={addChordAt} // Propagates the tracking-enabled handler
             />,
             <motion.div
                 key={chord.id}
@@ -71,13 +71,11 @@ export default function ChordRow({
                 <SortableChord
                     id={chord.id}
                     item={chord}
-                    onPlay={() => playChord(chord.chord)}
-                    onRemove={() =>
-                        setChords((prev) => prev.filter((c) => c.id !== chord.id))
-                    }
+                    onPlay={() => playChord(chord.chord)} // Propagates the tracking-enabled handler
+                    onRemove={() => onRemoveChord(chord.id, chord.chord)} // Use the new onRemoveChord prop
                     loading={
-                        loadingChordId === chord.id || 
-                        fullLoading                     
+                        loadingChordId === chord.id ||
+                        fullLoading
                     }
                 />
             </motion.div>,
@@ -88,7 +86,7 @@ export default function ChordRow({
                 key={`spacer-${chords.length}-${chords.length}`}
                 position={chords.length}
                 chordsCount={chords.length}
-                addChordAt={addChordAt}
+                addChordAt={addChordAt} // Propagates the tracking-enabled handler
             />
         );
 
@@ -96,7 +94,7 @@ export default function ChordRow({
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
+                onDragEnd={handleDragEnd} // Propagates the tracking-enabled handler
             >
                 <SortableContext
                     items={chords.map((c) => c.id)}
@@ -111,7 +109,6 @@ export default function ChordRow({
             </DndContext>
         );
     }
-    // Case 3: Not loading and no chords
 
     return <>{content}</>;
 }

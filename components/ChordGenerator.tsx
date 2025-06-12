@@ -10,14 +10,14 @@ import NumChordsSelector from "@/components/NumChordsSelector";
 interface ChordGeneratorProps {
     prompt: string;
     setPrompt: (value: string) => void;
-    handleKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
-    generateChords: () => void;
+    handleKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void; // Should be handleInputKeyDown from ClientHome (which calls the tracked generation)
+    generateChords: () => void; // Should be handleGenerateChordsRequest from ClientHome
     fullLoading: boolean;
     chordsLength: number;
     randomExamples: string[];
-    handleExampleClick: (example: string) => void;
+    handleExampleClick: (example: string) => void; // Should be handleExampleClickRequest from ClientHome
     numChordsToGenerate: number;
-    onNumChordsChange: (value: number) => void;
+    onNumChordsChange: (value: number) => void; // Should be handleNumChordsChangeAndTrack from ClientHome
 }
 
 export default function ChordGenerator({
@@ -32,6 +32,9 @@ export default function ChordGenerator({
                                            numChordsToGenerate,
                                            onNumChordsChange,
                                        }: ChordGeneratorProps) {
+    // No changes needed here; tracking is handled by the props passed from ClientHome.
+    // Ensure that the functions passed to generateChords, handleExampleClick, onNumChordsChange,
+    // and handleKeyDown are the versions from ClientHome.tsx that include PostHog tracking.
     return (
         <div className="w-full max-w-3xl px-4">
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
@@ -84,7 +87,7 @@ export default function ChordGenerator({
                                 key={i}
                                 variant="secondary"
                                 disabled={fullLoading}
-                                onClick={() => handleExampleClick(ex)}
+                                onClick={() => handleExampleClick(ex)} // This correctly uses the prop
                                 className="hover:scale-101"
                             >
                                 {ex}
