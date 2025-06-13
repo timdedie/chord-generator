@@ -7,6 +7,7 @@ import React from "react";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { howItWorksItems } from "@/lib/howItWorksData";
 import { CSPostHogProvider } from "./providers"; // Or your chosen path e.g. ./posthog-provider
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const outfit = Outfit({
     subsets: ["latin"],
@@ -148,6 +149,7 @@ export default function RootLayout({
         <CSPostHogProvider> {/* MOVED PROVIDER TO WRAP CONTENT INSIDE BODY */}
             <main className="flex-grow">{children}</main>
             <Analytics /> {/* Vercel Analytics */}
+            <SpeedInsights/>
             <footer className="w-full text-center text-sm text-gray-500 dark:text-gray-400 p-8 space-y-8 relative z-20 bg-white dark:bg-black">
                 <div>
                     <p>
