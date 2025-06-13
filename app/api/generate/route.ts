@@ -32,21 +32,16 @@ const DEFAULT_TEMPERATURE = 1.0;
 
 const CHORD_FORMATTING_RULES = `
 Chord formatting rules:
-• Root = uppercase A–G (use # or b for accidentals).
-• Chord symbols must ONLY contain standard alphanumeric characters (A-G, a-g, 0-9), standard accidentals (#, b), the degree symbol (°), and common suffixes (m, maj, dim, aug, sus, etc.). No other special characters, slashes (except for polychords if explicitly requested and formatted like C/G), or escape sequences (like \\b) are allowed within a single chord symbol.
+• Root = uppercase A–G (use # or b for accidentals)
 • Major triad = just the root (C, F)
 • Minor triad = "m" (Am, Dm)
 • Dominant seventh = "7" (G7)
-• Major seventh = "maj7" (no △) (e.g., Cmaj7).
-• Major Seventh with Altered Fifth: For a major seventh chord with an altered fifth (e.g., C E Gb B for Cmaj7(b5) or C E G# B for Cmaj7(#5)), use parentheses for the alteration: "Xmaj7(b5)" or "Xmaj7(#5)". Example: "Cmaj7(b5)", "Fmaj7(#5)". Do NOT append the alteration directly like "Cmaj7b5".
+• Major seventh = "maj7" (no △)
 • Minor seventh = "m7"
-• Minor-Major Seventh Chords: For a minor chord with an added major seventh (e.g., notes C-Eb-G-B), YOU MUST use the format "mM7". Example: "CmM7". The formats "Cm(maj7)" or "Cmmaj7" are INCORRECT for our system and will be rejected.
-• Diminished Chords: Use "dim" (e.g., Cdim) for a diminished triad. For a diminished seventh chord, use "dim7" or "°7" or "o7" (e.g., Cdim7, C°7, Co7). Ensure the root note is clear (e.g., F#dim7, Bb°7).
-• Suspended = "sus2" or "sus4" (e.g., Csus4, Gsus2). These are for basic suspended chords without dominant 7ths.
-• Suspended Dominant Chords (e.g., A D E G): Use "7sus4" (e.g., A7sus4).
-• Suspended Dominant Chords with Alterations: For suspended dominant 7th chords that also include alterations (like b9, #9, #11, b13), use formats such as "X7susb9" or "X7(sus4,b9)". Example: "A7susb9" for A7sus4 with a b9, or "G7(sus4,#11)" for G7sus4 with a #11. Avoid directly appending alterations after "X7sus4" like "A7sus4b9".
+• Minor-major seventh = "mM7" (e.g., AmM7). Do NOT use "mmaj7" (e.g., Ammaj7) or "m(maj7)".
+• Suspended = "sus2" or "sus4"
 • For chords with a major 7th and an added 9th, use the 'maj9' suffix (e.g., 'Cmaj9') instead of 'maj7add9'.
-• Extensions/alterations allowed (general): 9, add9, #5, b9, #11, 13, etc., applied to standard chord types (Ensure these are standard and parsable, prefer 'Cmaj9' over 'Cmaj7add9' if applicable). Use parentheses for alterations on complex chords if it aids clarity and standard notation, e.g., C7(#9b13).
+• Extensions/alterations allowed: 9, add9, #5, b9, #11, 13, etc. (Ensure these are standard and parsable, prefer 'Cmaj9' over 'Cmaj7add9' if applicable).
 Guideline: Provide only the chord symbols according to these rules. For example, if generating ["Am", "G", "C"], the 'chords' array should be ["Am", "G", "C"]. If generating a single chord "F#m7", the chord name should be "F#m7".
 `.trim();
 
