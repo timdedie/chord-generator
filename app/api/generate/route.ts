@@ -25,10 +25,10 @@ if (!GOOGLE_GENERATIVE_AI_API_KEY) {
 }
 
 const googleAIProvider = createGoogleGenerativeAI({});
-// const PRIMARY_MODEL_ID = 'gemini-2.5-flash-preview-05-20';
-const PRIMARY_MODEL_ID = 'gemini-2.0-flash-lite';
-
+// const PRIMARY_MODEL_ID = 'gemini-1.5-flash-latest';
+const PRIMARY_MODEL_ID = 'gemini-1.5-pro-latest';
 const DEFAULT_TEMPERATURE = 1.0;
+const MAX_RETRIES = 2; // Initial attempt + 2 retries = 3 total attempts
 
 const CHORD_FORMATTING_RULES = `
 Chord formatting rules:
@@ -102,19 +102,20 @@ function createSimpleProgressionString(chords: SimpleChordObject[]): string {
     return chords.map((c) => c.chord).join(' - ');
 }
 
+/**
+ * Generates a structured object from an AI model with a built-in retry mechanism.
+ * If the initial response from the AI fails validation, it will retry up to MAX_RETRIES times,
+ * feeding the validation error back to the model to guide it towards a correct response.
+ */
 async function createChordObjectGeneration<T extends z.ZodTypeAny>(
     userMessage: string,
     schema: T
 ): Promise<z.infer<T>> {
-    console.log('[API createChordObjectGeneration] User message to AI:\n', userMessage);
-
     const modelClient = googleAIProvider(PRIMARY_MODEL_ID);
-    console.log(`[API createChordObjectGeneration] Using temperature: ${DEFAULT_TEMPERATURE}`);
-
     const systemMessage = `
 You are an expert musician and composer specializing in chord progressions.
 Your primary goal is to generate chords that are musically correct, harmonically rich, and sound genuinely good.
-While creativity is valued, it should not come at the expense of fundamental musicality.
+While creativity is valued, it should not come at theexpense of fundamental musicality.
 Simple, well-chosen triads and basic 7th chords are often the best choice. Extensions and alterations should be used thoughtfully, only when they truly enhance the musical context.
 **Remember to use slash chords (e.g., C/E, Am/G) to specify inversions, which is essential for creating smooth, melodic bass lines and better voice leading.**
 
@@ -126,23 +127,70 @@ ${CHORD_FORMATTING_RULES}
   `.trim();
 
     const messages: CoreMessage[] = [{ role: 'user', content: userMessage }];
+    const allErrors: { attempt: number; error: string; response?: any }[] = [];
 
-    const { object } = await generateObject({
-        model: modelClient,
-        schema,
-        system: systemMessage,
-        messages,
-        temperature: DEFAULT_TEMPERATURE,
-        mode: 'json',
-    });
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        console.log(`[API createChordObjectGeneration] Attempt ${attempt + 1} of ${MAX_RETRIES + 1}...`);
 
-    if (!object) {
-        const error = new Error('No valid object response from AI (Vercel AI SDK)') as ApiError;
-        error.status = 500;
-        error.details = "The AI model did not return the expected structured object.";
-        throw error;
+        try {
+            const { object } = await generateObject({
+                model: modelClient,
+                schema,
+                system: systemMessage,
+                messages,
+                temperature: DEFAULT_TEMPERATURE,
+                mode: 'json',
+            });
+
+            // Run our own stricter validation which includes `refine` checks
+            const parsed = schema.safeParse(object);
+
+            if (parsed.success) {
+                console.log(`[API createChordObjectGeneration] Successfully validated object on attempt ${attempt + 1}.`);
+                return parsed.data; // Success!
+            }
+
+            // Validation failed, prepare for retry
+            const validationError = parsed.error;
+            const errorMessage = `The generated object failed validation. Errors: ${JSON.stringify(validationError.format())}`;
+            console.error(`[API createChordObjectGeneration] Attempt ${attempt + 1} failed Zod validation:`, validationError.format());
+            allErrors.push({ attempt: attempt + 1, error: errorMessage, response: object });
+
+            // Add the assistant's failed response and a correction message for the next attempt.
+            messages.push(
+                { role: 'assistant', content: JSON.stringify(object) },
+                {
+                    role: 'user',
+                    content: `Your previous response was invalid. Please fix the following errors and provide a new, valid response.
+Errors:
+${JSON.stringify(validationError.format(), null, 2)}
+
+Ensure your response strictly adheres to all CHORD_FORMATTING_RULES and the requested JSON schema. Every chord symbol must be musically valid.`
+                }
+            );
+
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error(`[API createChordObjectGeneration] Attempt ${attempt + 1} threw an error:`, errorMessage);
+            allErrors.push({ attempt: attempt + 1, error: errorMessage });
+
+            if (attempt < MAX_RETRIES) {
+                messages.push({
+                    role: 'user',
+                    content: `Your previous attempt failed with an error: "${errorMessage}". This likely means the JSON structure was invalid. Please generate a valid JSON object that strictly adheres to the schema and all formatting rules.`
+                });
+            }
+        }
     }
-    return object;
+
+    // If the loop finishes, all retries have failed.
+    const finalError = new Error(`AI failed to generate a valid response after ${MAX_RETRIES + 1} attempts.`) as ApiError;
+    finalError.status = 500;
+    finalError.details = {
+        message: "The model could not produce a response that passes validation, even after retrying.",
+        errors: allErrors
+    };
+    throw finalError;
 }
 
 function buildProgressionMessage(prompt: string, numChords: number): string {
@@ -171,7 +219,7 @@ Do not include any other text or explanations; only the JSON object.
 function buildAddChordMessage(
     prompt: string | undefined,
     existingChords: SimpleChordObject[],
-    addChordPosition: number // Requires a number, not undefined
+    addChordPosition: number
 ): string {
     const hasExisting = existingChords.length > 0;
     const context = hasExisting
@@ -227,15 +275,10 @@ export async function POST(request: Request): Promise<Response> {
         let userMessage: string;
         let schema: z.ZodTypeAny;
 
-        // --- FIX IS HERE ---
-        // By using 'typeof addChordPosition === 'number'', TypeScript can infer
-        // that inside this block, 'addChordPosition' is not undefined.
         if (typeof addChordPosition === 'number') {
             schema = SingleChordSchema;
-            // This call is now safe, as 'addChordPosition' is guaranteed to be a number.
             userMessage = buildAddChordMessage(prompt, existingChords, addChordPosition);
         } else {
-            // This is the progression generation case.
             if (!prompt) {
                 throw Object.assign(new Error('Prompt is required for progression generation.'), {
                     status: 400,
@@ -246,30 +289,34 @@ export async function POST(request: Request): Promise<Response> {
             userMessage = buildProgressionMessage(prompt, effectiveCount);
         }
 
-        const aiObj = await createChordObjectGeneration(userMessage, schema);
-        console.log(`[API Raw AI Response] aiObj:`, JSON.stringify(aiObj, null, 2));
+        // This function now handles retries and validation internally.
+        // It either returns a valid, parsed object or throws a detailed error.
+        const validatedAiObject = await createChordObjectGeneration(userMessage, schema);
 
-        const parsed = schema.safeParse(aiObj);
-        if (!parsed.success) {
-            console.error(`[API Zod Error]`, parsed.error.format());
-            throw Object.assign(new Error('Invalid response from AI after refinement and validation.'), {
-                status: 500,
-                details: parsed.error.format()
-            });
-        }
+        console.log(`[API] Successfully generated and validated AI Response:`, JSON.stringify(validatedAiObject, null, 2));
 
-        return createResponse(parsed.data);
+        // The object is already parsed and validated, so we can return it directly.
+        return createResponse(validatedAiObject);
 
     } catch (err: unknown) {
-        console.error('[API POST] Error:', err);
+        console.error('[API POST] Final Error after all retries:', err);
         const e = err as ApiError;
 
+        // The error from our retry function will have status and details.
         if (e.status && e.details) {
-            return createResponse({ error: e.message || 'AI response validation failed.', details: e.details }, e.status);
+            return createResponse(
+                {
+                    error: e.message || 'AI response validation failed after multiple attempts.',
+                    details: e.details
+                },
+                e.status
+            );
         }
-        if (e.message && (e.message.includes("response did not match schema") || e.message.includes("No object generated"))) {
-            return createResponse({ error: "AI failed to generate a response matching the required format. Please try rephrasing your request or try again.", details: e.message }, 500);
-        }
-        return createResponse({ error: e.message || 'Internal server error' }, e.status || 500);
+
+        // Handle other potential errors (e.g., the 400 from missing prompt).
+        return createResponse(
+            { error: e.message || 'An unexpected internal server error occurred.' },
+            e.status || 500
+        );
     }
 }
