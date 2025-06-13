@@ -61,7 +61,7 @@ For Dm7 - G7 - Cmaj7: "A classic **ii-V-I** in C Major. **Dm7** leads to the ten
             system: systemMessage,
             messages: messages,
             temperature: 0.6,
-            maxTokens: 200,
+            maxTokens: 300,
         });
 
         return result.toTextStreamResponse();
