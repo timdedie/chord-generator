@@ -7,7 +7,7 @@ import "react-piano/dist/styles.css";
 import { start as toneStart, now as toneNow } from "tone";
 import { Chord, Note } from "tonal";
 import dynamic from 'next/dynamic';
-import posthog from 'posthog-js'; // Ensure PostHog is imported
+import posthog from 'posthog-js';
 import type { DragEndEvent } from "@dnd-kit/core";
 
 import { useChordManagement } from "@/hooks/useChordManagement";
@@ -16,10 +16,11 @@ import { useExamplePrompts } from "@/hooks/useExamplePrompts";
 import ThinkingMessages from "@/components/ThinkingMessages";
 import Header from "@/components/Header";
 import PianoKeyboard from "@/components/PianoKeyboard";
-import ChordRow from "@/components/ChordRow"; // This will use the updated ChordRow.tsx
-import ChordGenerator from "@/components/ChordGenerator"; // This will use the updated ChordGenerator.tsx
+import ChordRow from "@/components/ChordRow";
+import ChordGenerator from "@/components/ChordGenerator";
 import { usePiano } from "@/components/PianoProvider";
 import MobileChordGrid from "@/components/MobileChordRow";
+import ChordRowSkeleton from "@/components/ChordRowSkeleton";
 import MobileHeader from "@/components/MobileHeader";
 import { PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useMediaQuery } from "react-responsive";
@@ -56,7 +57,7 @@ export default function ClientHome() {
         loadingChordId,
         generateChords,
         addChordAt,
-        handleDragEnd: originalHandleDragEnd, // Original from hook
+        handleDragEnd: originalHandleDragEnd,
         generateChordsFromExample,
     } = useChordManagement();
 
@@ -88,30 +89,21 @@ export default function ClientHome() {
     useEffect(() => {
         if (isMobile) {
             const resumeAudio = async () => {
-                try { await toneStart(); console.log("Audio context started on touch (mobile)."); } catch (err) { console.error("Error resuming audio", err); }
+                try { await toneStart(); } catch (err) { console.error("Error resuming audio", err); }
             };
             window.addEventListener("touchstart", resumeAudio, { once: true });
             return () => window.removeEventListener("touchstart", resumeAudio);
         }
     }, [isMobile]);
 
-    // --- Tracking Enhanced Callbacks ---
-
     const playChordAndTrack = useCallback(
         async (chordSymbol: string) => {
             if (!piano || !areSamplesLoaded) {
-                console.warn("Piano samples not yet loaded.");
-                if (checkPosthogConfigured()) {
-                    posthog.capture('chord_play_attempt_failed', { chord_symbol: chordSymbol, reason: 'samples_not_loaded' });
-                }
+                if (checkPosthogConfigured()) { posthog.capture('chord_play_attempt_failed', { chord_symbol: chordSymbol, reason: 'samples_not_loaded' }); }
                 setActiveNotes([]); return;
             }
             if (!chordSymbol) return;
-
-            if (checkPosthogConfigured()) {
-                posthog.capture('chord_played', { chord_symbol: chordSymbol, source: 'chord_card' });
-            }
-
+            if (checkPosthogConfigured()) { posthog.capture('chord_played', { chord_symbol: chordSymbol, source: 'chord_card' }); }
             const chordData = Chord.get(chordSymbol);
             if (!chordData || !chordData.notes || chordData.notes.length === 0 || !chordData.tonic) {
                 setActiveNotes([]); return;
@@ -138,88 +130,53 @@ export default function ClientHome() {
 
     const handleNumChordsChangeAndTrack = useCallback((value: number) => {
         setNumChordsToGenerateState(value);
-        if (checkPosthogConfigured()) {
-            posthog.capture('num_chords_setting_changed', { num_chords_selected: value });
-        }
+        if (checkPosthogConfigured()) { posthog.capture('num_chords_setting_changed', { num_chords_selected: value }); }
     }, [setNumChordsToGenerateState]);
 
     const handleGenerateChordsRequestAndTrack = useCallback(() => {
         if (!areSamplesLoaded && !isLoadingSamples) { loadSamples(); }
         generateChords({ numChords: numChordsToGenerate });
-        if (checkPosthogConfigured()) {
-            posthog.capture('chords_generated', {
-                prompt_text: prompt,
-                prompt_length: prompt.length,
-                num_chords_requested: numChordsToGenerate,
-                // deep_think_enabled: isDeepThinkEnabled, // Add if you track this state
-            });
-        }
+        if (checkPosthogConfigured()) { posthog.capture('chords_generated', { prompt_text: prompt, prompt_length: prompt.length, num_chords_requested: numChordsToGenerate }); }
     }, [generateChords, numChordsToGenerate, loadSamples, areSamplesLoaded, isLoadingSamples, prompt]);
 
     const handleExampleClickAndTrack = useCallback((example: string) => {
         if (!areSamplesLoaded && !isLoadingSamples) { loadSamples(); }
-        setPrompt(example); // Set prompt for UI consistency and if generateChords uses it
+        setPrompt(example);
         generateChordsFromExample(example, numChordsToGenerate);
-        if (checkPosthogConfigured()) {
-            posthog.capture('example_prompt_clicked', {
-                example_prompt_text: example,
-                num_chords_requested: numChordsToGenerate,
-            });
-        }
+        if (checkPosthogConfigured()) { posthog.capture('example_prompt_clicked', { example_prompt_text: example, num_chords_requested: numChordsToGenerate }); }
     }, [generateChordsFromExample, numChordsToGenerate, loadSamples, areSamplesLoaded, isLoadingSamples, setPrompt]);
 
-    const handleInputKeyDownAndTrack = useCallback(
-        (e: KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                handleGenerateChordsRequestAndTrack(); // Calls the tracked version
-            }
-        }, [handleGenerateChordsRequestAndTrack]
-    );
+    const handleInputKeyDownAndTrack = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") { e.preventDefault(); handleGenerateChordsRequestAndTrack(); }
+    }, [handleGenerateChordsRequestAndTrack]);
 
     const handleAddChordRequestAndTrack = useCallback((position: number) => {
-        addChordAt(position); // Original logic
-        if (checkPosthogConfigured()) {
-            posthog.capture('manual_chord_add_initiated', {
-                insert_position: position,
-                current_chord_count: chords.length
-            });
-        }
+        addChordAt(position);
+        if (checkPosthogConfigured()) { posthog.capture('manual_chord_add_initiated', { insert_position: position, current_chord_count: chords.length }); }
     }, [addChordAt, chords.length]);
 
     const handleDragEndAndTrack = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
         if (active && over && active.id !== over.id) {
-            const oldIndex = chords.findIndex(c => String(c.id) === String(active.id)); // Ensure IDs are compared as strings if they are numbers
+            const oldIndex = chords.findIndex(c => String(c.id) === String(active.id));
             const newIndex = chords.findIndex(c => String(c.id) === String(over.id));
-
-            if (oldIndex !== -1 && newIndex !== -1 && checkPosthogConfigured()) {
-                posthog.capture('chord_rearranged', {
-                    moved_chord_symbol: chords[oldIndex]?.chord || 'unknown',
-                    original_index: oldIndex,
-                    new_index: newIndex,
-                    total_chords_in_progression: chords.length
-                });
-            }
+            if (oldIndex !== -1 && newIndex !== -1 && checkPosthogConfigured()) { posthog.capture('chord_rearranged', { moved_chord_symbol: chords[oldIndex]?.chord || 'unknown', original_index: oldIndex, new_index: newIndex, total_chords_in_progression: chords.length }); }
         }
-        originalHandleDragEnd(event); // Call the original handler from the hook
+        originalHandleDragEnd(event);
     }, [originalHandleDragEnd, chords]);
 
     const handleRemoveChordAndTrack = useCallback((chordIdToRemove: string, removedChordSymbol: string) => {
         setChords(prevChords => prevChords.filter(c => c.id !== chordIdToRemove));
-        if (checkPosthogConfigured()) {
-            posthog.capture('chord_removed', {
-                removed_chord_symbol: removedChordSymbol,
-                remaining_chords_count: chords.length > 0 ? chords.length - 1 : 0
-            });
-        }
+        if (checkPosthogConfigured()) { posthog.capture('chord_removed', { removed_chord_symbol: removedChordSymbol, remaining_chords_count: chords.length > 0 ? chords.length - 1 : 0 }); }
     }, [chords, setChords]);
 
-
+    // --- LOGIC RESTORED FOR EXPLANATION ---
     const fetchAndStreamExplanationAndTrack = async (progressionKey: string) => {
         if (explanationAbortControllerRef.current) { explanationAbortControllerRef.current.abort(); }
         explanationAbortControllerRef.current = new AbortController();
-        setIsExplanationLoading(true); let accumulatedText = ""; setCurrentExplanationText("");
+        setIsExplanationLoading(true);
+        let accumulatedText = "";
+        setCurrentExplanationText("");
 
         try {
             const response = await fetch('/api/explain-progression', {
@@ -231,17 +188,19 @@ export default function ClientHome() {
             if (!response.body) throw new Error("Response body is null");
             const reader = response.body.getReader(); const decoder = new TextDecoder();
             while (true) {
-                const { value, done: readerDone } = await reader.read(); if (readerDone) break;
+                const { value, done: readerDone } = await reader.read();
+                if (readerDone) break;
                 if (value) {
-                    const chunk = decoder.decode(value, { stream: true }); accumulatedText += chunk;
-                    if (currentProgressionKeyRef.current === progressionKey) { setCurrentExplanationText(prev => prev + chunk); }
+                    const chunk = decoder.decode(value, { stream: true });
+                    accumulatedText += chunk;
+                    if (currentProgressionKeyRef.current === progressionKey) {
+                        setCurrentExplanationText(prev => prev + chunk);
+                    }
                 }
             }
             if (currentProgressionKeyRef.current === progressionKey && !explanationAbortControllerRef.current?.signal.aborted) {
                 setExplanationCache(prevCache => new Map(prevCache).set(progressionKey, accumulatedText));
-                if (checkPosthogConfigured()) {
-                    posthog.capture('explanation_generated_successfully', { progression_key: progressionKey, prompt_used_for_explanation: prompt, explanation_length: accumulatedText.length });
-                }
+                if (checkPosthogConfigured()) { posthog.capture('explanation_generated_successfully', { progression_key: progressionKey, prompt_used_for_explanation: prompt, explanation_length: accumulatedText.length }); }
             }
         } catch (err: any) {
             if (err.name === 'AbortError') {
@@ -261,28 +220,33 @@ export default function ClientHome() {
     const handleExplainButtonClickAndTrack = () => {
         if (chords.length === 0) return;
         const progressionKey = chords.map(c => c.chord).join('-');
-        if (isExplanationPopoverOpen && currentProgressionKeyRef.current === progressionKey && !isExplanationLoading) { setIsExplanationPopoverOpen(false); return; }
-        const previousKey = currentProgressionKeyRef.current; currentProgressionKeyRef.current = progressionKey;
-        setIsExplanationPopoverOpen(true);
-        if (checkPosthogConfigured()) {
-            posthog.capture('explain_progression_button_clicked', { progression_key: progressionKey, is_cached_explanation: explanationCache.has(progressionKey), current_prompt: prompt });
+        if (isExplanationPopoverOpen && currentProgressionKeyRef.current === progressionKey && !isExplanationLoading) {
+            setIsExplanationPopoverOpen(false);
+            return;
         }
+        const previousKey = currentProgressionKeyRef.current;
+        currentProgressionKeyRef.current = progressionKey;
+        setIsExplanationPopoverOpen(true);
+        if (checkPosthogConfigured()) { posthog.capture('explain_progression_button_clicked', { progression_key: progressionKey, is_cached_explanation: explanationCache.has(progressionKey), current_prompt: prompt }); }
+
         if (explanationCache.has(progressionKey)) {
-            setCurrentExplanationText(explanationCache.get(progressionKey) || "Could not load cached explanation."); setIsExplanationLoading(false);
+            setCurrentExplanationText(explanationCache.get(progressionKey) || "Could not load cached explanation.");
+            setIsExplanationLoading(false);
         } else {
-            if (previousKey !== progressionKey || !currentExplanationText) setCurrentExplanationText("");
+            if (previousKey !== progressionKey || !currentExplanationText) {
+                setCurrentExplanationText("");
+            }
             fetchAndStreamExplanationAndTrack(progressionKey);
         }
     };
 
     const onPopoverOpenChangeAndTrack = (open: boolean) => {
         setIsExplanationPopoverOpen(open);
-        if (checkPosthogConfigured()) {
-            posthog.capture('explanation_popover_toggled', { opened: open, progression_key: currentProgressionKeyRef.current });
+        if (checkPosthogConfigured()) { posthog.capture('explanation_popover_toggled', { opened: open, progression_key: currentProgressionKeyRef.current }); }
+        if (!open && explanationAbortControllerRef.current) {
+            explanationAbortControllerRef.current.abort();
         }
-        if (!open && explanationAbortControllerRef.current) { explanationAbortControllerRef.current.abort(); }
     };
-
 
     const hasChordsProp = chords.length > 0 || fullLoading;
     const firstNote = MidiNumbers.fromNote("C3"); const lastNote = MidiNumbers.fromNote("C5");
@@ -310,32 +274,32 @@ export default function ClientHome() {
                     onNumChordsChange={handleNumChordsChangeAndTrack}
                 />
 
-                {(chords.length > 0 || fullLoading) && (
-                    <div className="w-full max-w-fit mt-4">
-                        {isMobile ? (
-                            <MobileChordGrid
-                                chords={chords}
-                                playChord={playChordAndTrack}
-                            />
+                <div className="w-full flex flex-col items-center mt-4">
+                    {(chords.length > 0 || fullLoading) && (
+                        fullLoading ? (
+                            isMobile ? ( <MobileChordGrid chords={[]} playChord={() => {}} /> ) : ( <ChordRowSkeleton /> )
                         ) : (
-                            <ChordRow
-                                chords={chords}
-                                fullLoading={fullLoading}
-                                loadingChordId={loadingChordId}
-                                sensors={sensors}
-                                handleDragEnd={handleDragEndAndTrack}
-                                addChordAt={handleAddChordRequestAndTrack}
-                                playChord={playChordAndTrack}
-                                onRemoveChord={handleRemoveChordAndTrack} // Pass the new handler here
-                                setChords={setChords} // Retained for other potential direct manipulations if any
-                                numChordsToGenerate={numChordsToGenerate}
-                            />
-                        )}
-                        <div className="h-8 flex items-center justify-center mt-2">
-                            {fullLoading && <ThinkingMessages />}
-                        </div>
+                            isMobile ? (
+                                <MobileChordGrid chords={chords} playChord={playChordAndTrack} />
+                            ) : (
+                                <ChordRow
+                                    chords={chords}
+                                    loadingChordId={loadingChordId}
+                                    sensors={sensors}
+                                    handleDragEnd={handleDragEndAndTrack}
+                                    addChordAt={handleAddChordRequestAndTrack}
+                                    playChord={playChordAndTrack}
+                                    onRemoveChord={handleRemoveChordAndTrack}
+                                    setChords={setChords}
+                                />
+                            )
+                        )
+                    )}
+
+                    <div className="h-8 flex items-center justify-center">
+                        {fullLoading && !isMobile && <ThinkingMessages />}
                     </div>
-                )}
+                </div>
 
                 <AnimatePresence>
                     {chords.length > 0 && !fullLoading && (
@@ -363,14 +327,6 @@ export default function ClientHome() {
                                     <MidiDownloader
                                         chords={chords.map((c) => c.chord)}
                                         prompt={prompt}
-                                        // onDownloadInitiated={() => { // Ideal way to track MIDI download
-                                        //     if (checkPosthogConfigured()) {
-                                        //         posthog.capture('midi_download_initiated', {
-                                        //             chord_count: chords.length,
-                                        //             prompt_for_midi: prompt
-                                        //         });
-                                        //     }
-                                        // }}
                                     />
                                 </div>
                             )}

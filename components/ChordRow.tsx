@@ -9,57 +9,39 @@ import {
 } from "@dnd-kit/sortable";
 import Spacer from "./Spacer";
 import SortableChord from "./SortableChord";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 import { ChordItem } from "@/hooks/useChordManagement";
 
 interface ChordRowProps {
     chords: ChordItem[];
-    fullLoading: boolean;
     loadingChordId: string | null;
     sensors: any;
-    handleDragEnd: (event: DragEndEvent) => void; // This should be handleDragEndAndTrack from ClientHome
-    addChordAt: (position: number) => void; // This should be handleAddChordRequestAndTrack from ClientHome
-    playChord: (chord: string) => void; // This should be playChordAndTrack from ClientHome
-    onRemoveChord: (chordId: string, chordSymbol: string) => void; // New prop for handling removal with tracking
-    setChords: React.Dispatch<React.SetStateAction<ChordItem[]>>; // Keep for other potential direct manipulations if any, or remove if all state changes are through callbacks
-    numChordsToGenerate?: number;
-}
-
-function SkeletonCardUi() {
-    return <Skeleton className="w-48 h-48 rounded-xl" />;
+    handleDragEnd: (event: DragEndEvent) => void;
+    addChordAt: (position: number) => void;
+    playChord: (chord: string) => void;
+    onRemoveChord: (chordId: string, chordSymbol: string) => void;
+    setChords: React.Dispatch<React.SetStateAction<ChordItem[]>>;
 }
 
 export default function ChordRow({
                                      chords,
-                                     fullLoading,
                                      loadingChordId,
                                      sensors,
                                      handleDragEnd,
                                      addChordAt,
                                      playChord,
-                                     onRemoveChord, // Use the new prop
-                                     setChords, // Keep or remove based on usage
-                                     numChordsToGenerate = 4,
+                                     onRemoveChord,
                                  }: ChordRowProps) {
-    let content: React.ReactNode = null;
+    const hasChords = chords.length > 0;
+    let content: React.ReactNode;
 
-    if (chords.length === 0 && fullLoading) {
-        const numberOfSkeletons = numChordsToGenerate > 0 ? numChordsToGenerate : 4;
-        content = (
-            <div className="flex gap-4">
-                {[...Array(numberOfSkeletons)].map((_, i) => (
-                    <SkeletonCardUi key={`skeleton-${i}`} />
-                ))}
-            </div>
-        );
-    }
-    else if (chords.length > 0) {
+    if (hasChords) {
         const elements = chords.flatMap((chord, index) => [
             <Spacer
                 key={`spacer-${index}-${chords.length}`}
                 position={index}
                 chordsCount={chords.length}
-                addChordAt={addChordAt} // Propagates the tracking-enabled handler
+                addChordAt={addChordAt}
             />,
             <motion.div
                 key={chord.id}
@@ -71,12 +53,9 @@ export default function ChordRow({
                 <SortableChord
                     id={chord.id}
                     item={chord}
-                    onPlay={() => playChord(chord.chord)} // Propagates the tracking-enabled handler
-                    onRemove={() => onRemoveChord(chord.id, chord.chord)} // Use the new onRemoveChord prop
-                    loading={
-                        loadingChordId === chord.id ||
-                        fullLoading
-                    }
+                    onPlay={() => playChord(chord.chord)}
+                    onRemove={() => onRemoveChord(chord.id, chord.chord)}
+                    loading={loadingChordId === chord.id}
                 />
             </motion.div>,
         ]);
@@ -86,29 +65,43 @@ export default function ChordRow({
                 key={`spacer-${chords.length}-${chords.length}`}
                 position={chords.length}
                 chordsCount={chords.length}
-                addChordAt={addChordAt} // Propagates the tracking-enabled handler
+                addChordAt={addChordAt}
             />
         );
 
         content = (
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd} // Propagates the tracking-enabled handler
-            >
-                <SortableContext
-                    items={chords.map((c) => c.id)}
-                    strategy={horizontalListSortingStrategy}
+            <div className="w-full h-full overflow-x-auto flex items-center pb-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
                 >
-                    <div className="flex gap-4 justify-center items-start w-full">
-                        <AnimatePresence>
-                            {elements}
-                        </AnimatePresence>
-                    </div>
-                </SortableContext>
-            </DndContext>
+                    <SortableContext
+                        items={chords.map((c) => c.id)}
+                        strategy={horizontalListSortingStrategy}
+                    >
+                        <div className="flex items-center gap-2 w-max">
+                            <AnimatePresence>{elements}</AnimatePresence>
+                        </div>
+                    </SortableContext>
+                </DndContext>
+            </div>
+        );
+    } else {
+        content = (
+            <div className="w-full flex justify-center items-center h-full">
+                <p className="text-muted-foreground">
+                    Your generated chords will appear here.
+                </p>
+            </div>
         );
     }
 
-    return <>{content}</>;
+    return (
+        <Card className="w-full max-w-3xl bg-transparent shadow-none">
+            <CardContent className="p-4 sm:p-6 h-52">
+                {content}
+            </CardContent>
+        </Card>
+    );
 }
