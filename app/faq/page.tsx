@@ -2,6 +2,7 @@
 'use client';
 
 import React from 'react';
+import Script from 'next/script'; // <-- 1. IMPORT Script from next/script
 import { motion } from 'framer-motion';
 import {
     Accordion,
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
+// This is the visible content on the page
 const faqData = [
     {
         question: "Is ChordGen truly free to use?",
@@ -36,42 +38,66 @@ const faqData = [
     },
 ];
 
+// ✅ 2. CREATE the FAQ schema, which now lives on the page it describes.
+// This perfectly matches the visible content from `faqData`.
+const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqData.map(item => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: {
+            "@type": "Answer",
+            text: item.answer
+        }
+    }))
+};
+
 export default function FAQPage() {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="container mx-auto max-w-3xl px-4 py-16 sm:py-24"
-        >
-            <div className="text-center mb-12">
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
-                    Frequently Asked Questions
-                </h1>
-                <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                    Have questions? We have answers. If you can't find what you're looking for, feel free to contact us.
-                </p>
-            </div>
-            <Accordion type="single" collapsible className="w-full">
-                {faqData.map((item, index) => (
-                    <AccordionItem value={`item-${index}`} key={index}>
-                        <AccordionTrigger className="text-left text-lg hover:no-underline">
-                            {item.question}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-base text-gray-600 dark:text-gray-400">
-                            {item.answer}
-                        </AccordionContent>
-                    </AccordionItem>
-                ))}
-            </Accordion>
-            <div className="text-center mt-16">
-                <p className="text-lg mb-4">Start creating your next masterpiece.</p>
-                <Button asChild size="lg">
-                    <Link href="/">
-                        Go to the Generator <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                </Button>
-            </div>
-        </motion.div>
+        // 3. WRAP the output in a fragment to include the Script tag
+        <>
+            <Script
+                id="faq-schema"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+            />
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="container mx-auto max-w-3xl px-4 py-16 sm:py-24"
+            >
+                <div className="text-center mb-12">
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
+                        Frequently Asked Questions
+                    </h1>
+                    <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
+                        Have questions? We have answers. If you can't find what you're looking for, feel free to contact us.
+                    </p>
+                </div>
+                <Accordion type="single" collapsible className="w-full">
+                    {faqData.map((item, index) => (
+                        <AccordionItem value={`item-${index}`} key={index}>
+                            <AccordionTrigger className="text-left text-lg hover:no-underline">
+                                {item.question}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-base text-gray-600 dark:text-gray-400">
+                                {item.answer}
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+                <div className="text-center mt-16">
+                    <p className="text-lg mb-4">Start creating your next masterpiece.</p>
+                    <Button asChild size="lg">
+                        <Link href="/">
+                            Go to the Generator <ArrowRight className="ml-2 h-5 w-5" />
+                        </Link>
+                    </Button>
+                </div>
+            </motion.div>
+        </>
     );
 }

@@ -7,8 +7,8 @@ import React from "react";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { CSPostHogProvider } from "./providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Footer } from "@/components/Footer"; // Import the new clean footer
-import { Header } from "@/components/Header"; // <-- IMPORT THE HEADER
+import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
 
 
 const outfit = Outfit({
@@ -18,7 +18,7 @@ const outfit = Outfit({
     display: "swap",
 });
 
-// JSON-LD Schemas - Optimized for SEO
+// ✅ CORRECT: This schema describes the entire application and belongs in the layout.
 const webAppSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -32,61 +32,8 @@ const webAppSchema = {
     image: "https://www.chordgen.org/chordgen_logo.png",
 };
 
-const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-        {
-            "@type": "Question",
-            name: "Is ChordGen free to use?",
-            acceptedAnswer: {
-                "@type": "Answer",
-                text: "Yes! ChordGen is a 100% free AI chord generator. You can create, edit, and download unlimited MIDI chord progressions without an account.",
-            },
-        },
-        {
-            "@type": "Question",
-            name: "Can I export the chords as MIDI files?",
-            acceptedAnswer: {
-                "@type": "Answer",
-                text: "Absolutely. Once you've generated your chord sequence, you can download it instantly as a standard MIDI file, ready for your DAW.",
-            },
-        },
-        {
-            "@type": "Question",
-            name: "How does ChordGen work?",
-            acceptedAnswer: {
-                "@type": "Answer",
-                text: "ChordGen uses advanced AI to interpret your natural language input (like 'sad lofi chords') and create musically coherent chord progressions. You can then play them on a virtual piano, edit them, and get a music theory explanation.",
-            },
-        },
-        {
-            "@type": "Question",
-            name: "Does this work as a piano chord progression generator?",
-            acceptedAnswer: {
-                "@type": "Answer",
-                text: "Yes! ChordGen includes an interactive piano that highlights the notes of each chord, making it an excellent tool for pianists and keyboard players to visualize and learn new progressions.",
-            },
-        },
-    ],
-};
-
-const howToSchema = {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    name: "How to Use ChordGen AI Chord & MIDI Generator",
-    description:
-        "Learn how to use our free AI tool to generate chord progressions, visualize them on a piano, get music theory explanations, and download MIDI files.",
-    step: [
-        { "@type": "HowToStep", name: "Describe Your Vibe", text: "Enter a text description (e.g., 'epic movie score chords', 'jazzy lofi progression in F minor') into the input field." },
-        { "@type": "HowToStep", name: "Select Number of Chords", text: "Use the dropdown to choose how many chords (2-8) you want in your progression." },
-        { "@type": "HowToStep", name: "Generate Your Progression", text: "Click the refresh button to have the AI generate your unique chord sequence." },
-        { "@type": "HowToStep", name: "Play & Visualize on Piano", text: "Click on any generated chord card to hear it and see the notes highlighted on the interactive piano." },
-        { "@type": "HowToStep", name: "Get a Theory Explanation", text: "Click the 'Explain Progression' button to receive an AI-generated music theory breakdown of your chord sequence." },
-        { "@type": "HowToStep", name: "Edit Your Sequence", text: "Drag and drop chords to rearrange them, click the '+' to add a new chord, or click 'X' to remove one." },
-        { "@type": "HowToStep", name: "Download Your MIDI", text: "Click the 'Download MIDI' button to save your final chord progression as a MIDI file, compatible with any DAW." },
-    ]
-};
+// ❌ REMOVED: The FAQ and HowTo schemas were removed from this file because
+// they do not apply to every page on the site.
 
 export default function RootLayout({
                                        children,
@@ -119,29 +66,17 @@ export default function RootLayout({
             <meta name="twitter:title" content="AI Chord Progression & MIDI Generator (with Piano) - ChordGen"/>
             <meta name="twitter:description" content="Create unique chord sequences with AI, visualize on a piano, and download MIDI for free. The ultimate songwriting tool."/>
             <meta name="twitter:image" content="https://www.chordgen.org/twitter-image.png"/>
+
+            {/* This script will now correctly appear on every page */}
             <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />
-            <Script id="faq-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-            <Script id="howto-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />
         </head>
 
-        {/*
-          CHANGED: Removed `flex flex-col min-h-screen` from the body.
-          The body is now just a simple container for background color and font.
-        */}
         <body className={`${outfit.className} bg-gray-50 dark:bg-black`}>
         <CSPostHogProvider>
             <Header />
-
-            {/*
-              CHANGED: Added layout classes to the <main> tag.
-              This makes the <main> element the primary container that ensures all content
-              fits between the header and footer, even on short pages.
-              Your homepage's `flex-grow` will now target this container.
-            */}
             <main className="flex flex-col min-h-[calc(100vh-theme(height.16))]">
                 {children}
             </main>
-
             <Analytics />
             <SpeedInsights/>
             <Footer />
