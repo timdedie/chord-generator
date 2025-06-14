@@ -79,12 +79,20 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt }) => {
         });
     };
 
-    const buttonAppearAnimation = {
+    // Correctly structured variants object with a const assertion
+    const buttonVariants = {
         initial: { opacity: 0, y: 10 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: 10 },
-        transition: { duration: 0.3, ease: "easeInOut" }
-    };
+        animate: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.3, ease: "easeInOut" },
+        },
+        exit: {
+            opacity: 0,
+            y: 10,
+            transition: { duration: 0.3, ease: "easeInOut" },
+        },
+    } as const; // This tells TypeScript these values are fixed and literal
 
     const sanitizePromptForFilename = (text: string) => {
         if (!text) return "prompt";
@@ -110,10 +118,10 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt }) => {
                 {(midiUrl && hasValidChords) && (
                     <motion.div
                         key="downloadButtonActual"
-                        initial={buttonAppearAnimation.initial}
-                        animate={buttonAppearAnimation.animate}
-                        exit={buttonAppearAnimation.exit}
-                        transition={buttonAppearAnimation.transition}
+                        variants={buttonVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
                     >
                         <Button
                             asChild
