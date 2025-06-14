@@ -1,15 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    darkMode: ["class"], // Required for shadcn/ui dark mode
+    darkMode: ["class"],
     content: [
         './app/**/*.{js,ts,jsx,tsx,mdx}',
         './components/**/*.{js,ts,jsx,tsx,mdx}',
-        './lib/**/*.{js,ts,jsx,tsx,mdx}', // If you use lib for components/utils
-        // Add any other paths where you use Tailwind classes
+        './lib/**/*.{js,ts,jsx,tsx,mdx}',
     ],
-    prefix: "", // shadcn/ui generally doesn't use a prefix
+    prefix: "",
     theme: {
-        container: { // Common shadcn/ui setting
+        container: {
             center: true,
             padding: "2rem",
             screens: {
@@ -71,9 +70,67 @@ module.exports = {
                 "accordion-down": "accordion-down 0.2s ease-out",
                 "accordion-up": "accordion-up 0.2s ease-out",
             },
+
+            // V-- ADD THIS ENTIRE TYPOGRAPHY SECTION --V
+            typography: ({ theme }) => ({
+                DEFAULT: {
+                    css: {
+                        '--tw-prose-body': theme('colors.slate[700]'),
+                        '--tw-prose-headings': theme('colors.slate[900]'),
+                        '--tw-prose-lead': theme('colors.slate[600]'),
+                        '--tw-prose-links': theme('colors.primary.DEFAULT'),
+                        '--tw-prose-bold': theme('colors.slate[900]'),
+                        '--tw-prose-counters': theme('colors.slate[500]'),
+                        '--tw-prose-bullets': theme('colors.primary.DEFAULT'),
+                        '--tw-prose-hr': theme('colors.slate[200]'),
+                        '--tw-prose-quotes': theme('colors.slate[900]'),
+                        '--tw-prose-quote-borders': theme('colors.primary.DEFAULT'),
+                        '--tw-prose-captions': theme('colors.slate[500]'),
+                        '--tw-prose-code': theme('colors.slate[900]'),
+                        '--tw-prose-pre-code': theme('colors.slate[200]'),
+                        '--tw-prose-pre-bg': theme('colors.slate[800]'),
+                        '--tw-prose-th-borders': theme('colors.slate[300]'),
+                        '--tw-prose-td-borders': theme('colors.slate[200]'),
+                        '--tw-prose-invert-body': theme('colors.slate[300]'),
+                        '--tw-prose-invert-headings': theme('colors.slate[50]'),
+                        '--tw-prose-invert-lead': theme('colors.slate[400]'),
+                        '--tw-prose-invert-links': theme('colors.primary.DEFAULT'),
+                        '--tw-prose-invert-bold': theme('colors.slate[50]'),
+                        '--tw-prose-invert-counters': theme('colors.slate[400]'),
+                        '--tw-prose-invert-bullets': theme('colors.primary.DEFAULT'),
+                        '--tw-prose-invert-hr': theme('colors.slate[700]'),
+                        '--tw-prose-invert-quotes': theme('colors.slate[100]'),
+                        '--tw-prose-invert-quote-borders': theme('colors.primary.DEFAULT'),
+                        '--tw-prose-invert-captions': theme('colors.slate[400]'),
+                        '--tw-prose-invert-code': theme('colors.slate[50]'),
+                        '--tw-prose-invert-pre-code': theme('colors.slate[300]'),
+                        '--tw-prose-invert-pre-bg': 'rgb(23 30 43 / 50%)',
+                        '--tw-prose-invert-th-borders': theme('colors.slate[600]'),
+                        '--tw-prose-invert-td-borders': theme('colors.slate[700]'),
+                        'h1, h2, h3, h4, h5, h6': {
+                            fontFamily: "var(--font-outfit), sans-serif",
+                        },
+                        p: {
+                            lineHeight: '1.7',
+                        },
+                        blockquote: {
+                            paddingLeft: '1rem',
+                            borderLeftWidth: '0.25rem',
+                            fontStyle: 'normal',
+                            fontWeight: '500',
+                        },
+                        'ol > li::before': {
+                            color: 'var(--tw-prose-counters)',
+                            fontWeight: '600',
+                        }
+                    },
+                },
+            }),
+            // ^-- END OF TYPOGRAPHY SECTION --^
         },
     },
     plugins: [
-        require("tailwindcss-animate"), // Essential for shadcn/ui animations
+        require("tailwindcss-animate"),
+        require("@tailwindcss/typography"), // <-- ADD THIS PLUGIN
     ],
 };

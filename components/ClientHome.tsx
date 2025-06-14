@@ -327,7 +327,6 @@ export default function ClientHome() {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
-            {isMobile ? <MobileHeader /> : <Header />}
             <motion.main
                 className="flex flex-col items-center w-full px-4"
                 initial={false}

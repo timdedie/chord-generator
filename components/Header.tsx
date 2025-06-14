@@ -1,60 +1,72 @@
-"use client";
+// components/Header.tsx
+'use client';
 
-import React from "react";
-import { Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import DarkModeToggle from "@/components/DarkModeToggle";
-import { howItWorksItems } from "@/lib/howItWorksData";
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image'; // Import the Next.js Image component
+import { BookOpen, MessageCircleQuestion } from 'lucide-react';
+import DarkModeToggle from '@/components/DarkModeToggle';
+import { Button } from './ui/button';
 
-const Header: React.FC = () => {
+export function Header() {
     return (
-        <>
-            <header className="absolute top-0 left-0 p-4 sm:p-8">
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">
-                    Chord Generator
-                </h1>
-            </header>
-            <div className="absolute top-0 right-0 p-4 sm:p-8 flex items-center gap-2 sm:gap-4">
-                <DarkModeToggle />
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="How it works">
-                            <Info className="h-5 w-5 sm:h-6 sm:w-6" />
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+
+                {/* Left Side: Brand and Main Navigation */}
+                <div className="flex items-center gap-6">
+                    <Link href="/" className="flex items-center gap-2">
+                        <Image
+                            src="/chordgen_logo.png" // IMPORTANT: Change this to your logo's filename
+                            alt="ChordGen Logo"
+                            width={28}   // IMPORTANT: Adjust to your logo's aspect ratio
+                            height={28}  // IMPORTANT: Adjust to your logo's aspect ratio
+                            className="h-7 w-7 dark:invert" // Inverts the color in dark mode
+                        />
+                        <span className="text-lg font-bold">ChordGen</span>
+                    </Link>
+                    <nav className="hidden items-center gap-6 text-sm md:flex">
+                        <Link
+                            href="/blog"
+                            className="font-medium text-foreground/60 transition-colors hover:text-foreground"
+                        >
+                            Blog
+                        </Link>
+                        <Link
+                            href="/how-it-works"
+                            className="font-medium text-foreground/60 transition-colors hover:text-foreground"
+                        >
+                            How It Works
+                        </Link>
+                        <Link
+                            href="/faq"
+                            className="font-medium text-foreground/60 transition-colors hover:text-foreground"
+                        >
+                            FAQ
+                        </Link>
+                    </nav>
+                </div>
+
+                {/* Right Side: Icons and Toggles */}
+                <div className="flex items-center gap-2">
+                    {/* Mobile navigation links */}
+                    <nav className="flex items-center gap-1 md:hidden">
+                        <Button variant="ghost" size="icon" asChild>
+                            <Link href="/blog" aria-label="Blog">
+                                <BookOpen className="h-5 w-5" />
+                            </Link>
                         </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-lg md:max-w-2xl lg:max-w-3xl p-6 sm:p-8 bg-white dark:bg-black max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl sm:text-2xl font-bold mb-4 text-black dark:text-white">
-                                How It Works
-                            </DialogTitle>
-                        </DialogHeader>
-                        <DialogDescription asChild>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
-                                {howItWorksItems.map((item, index) => (
-                                    <div key={index}>
-                                        <h3 className="text-md sm:text-lg font-semibold flex items-center gap-2 mb-1 text-black dark:text-white">
-                                            <item.IconComponent className="h-5 w-5 flex-shrink-0" /> {item.title}
-                                        </h3>
-                                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                                            {item.description}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        </DialogDescription>
-                    </DialogContent>
-                </Dialog>
+                        <Button variant="ghost" size="icon" asChild>
+                            <Link href="/faq" aria-label="FAQ">
+                                <MessageCircleQuestion className="h-5 w-5" />
+                            </Link>
+                        </Button>
+                    </nav>
+                    <DarkModeToggle />
+                </div>
             </div>
-        </>
+        </header>
     );
-};
+}
 
 export default Header;

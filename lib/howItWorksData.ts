@@ -11,6 +11,7 @@ import {
     BookOpenText,
     ListOrdered,
     LucideIcon, // Import LucideIcon type for better type safety
+    Play
 } from "lucide-react";
 import React from "react";
 
@@ -32,9 +33,9 @@ export const howItWorksItems: HowItWorksItem[] = [
         IconComponent: ListOrdered,
     },
     {
-        title: "High Creativity Mode",
-        description: 'Toggle "High Creativity Mode" to use a more creative AI model (potentially less musically accurate).',
-        IconComponent: Sparkles,
+        title: "Play Chord Progression",
+        description: 'Click the play icon to hear the entire chord progression played back.',
+        IconComponent: Play,
     },
     {
         title: "Explain Progression",
