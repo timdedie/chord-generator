@@ -1,35 +1,77 @@
+// app/sitemap.ts
+
 import { MetadataRoute } from 'next';
 
-const BASE_URL = 'https://www.chordgen.org';
+// In the future, you'll fetch your blog posts from a CMS or local files
+// This is a placeholder to show how you would do it dynamically.
+// For now, we'll hardcode the one post you have.
+async function getAllBlogPosts() {
+    // Example: When you have more posts, you'd fetch them here.
+    // const response = await fetch('https://your-cms.com/api/posts');
+    // const posts = await response.json();
+    // return posts;
 
-export default function sitemap(): MetadataRoute.Sitemap {
-    // Get current date for lastModified, or use specific dates if preferred
-    const lastModifiedDate = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
-
+    // For now, just return the static post you have:
     return [
         {
-            url: `${BASE_URL}/`,
-            lastModified: lastModifiedDate,
-            changeFrequency: 'monthly',
+            slug: 'midi-chord-generator-for-prod',
+            lastModified: new Date('2025-06-14'),
+        },
+    ];
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+    const baseUrl = 'https://www.chordgen.org';
+
+    // 1. Get all your blog posts
+    const posts = await getAllBlogPosts();
+    const blogPostUrls = posts.map((post) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: post.lastModified,
+        changeFrequency: 'weekly' as const, // Or 'monthly' if you don't update them often
+        priority: 0.8,
+    }));
+
+    // 2. Define all your static pages
+    const staticUrls = [
+        {
+            url: baseUrl,
+            lastModified: new Date(),
+            changeFrequency: 'monthly' as const,
             priority: 1.0,
         },
         {
-            url: `${BASE_URL}/contact`,
-            lastModified: '2025-05-23', // Assuming this content doesn't change often
-            changeFrequency: 'yearly',
-            priority: 0.7,
+            url: `${baseUrl}/how-it-works`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly' as const,
+            priority: 0.9,
         },
         {
-            url: `${BASE_URL}/privacy`,
-            lastModified: '2025-05-23', // Assuming this content doesn't change often
-            changeFrequency: 'yearly',
+            url: `${baseUrl}/faq`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly' as const,
+            priority: 0.9,
+        },
+        {
+            url: `${baseUrl}/contact`,
+            lastModified: new Date(),
+            changeFrequency: 'yearly' as const,
             priority: 0.5,
         },
         {
-            url: `${BASE_URL}/terms`,
-            lastModified: '2025-05-23', // Assuming this content doesn't change often
-            changeFrequency: 'yearly',
-            priority: 0.5,
+            url: `${baseUrl}/privacy`,
+            lastModified: new Date(),
+            changeFrequency: 'yearly' as const,
+            priority: 0.3,
+        },
+        {
+            url: `${baseUrl}/terms`,
+            lastModified: new Date(),
+            changeFrequency: 'yearly' as const,
+            priority: 0.3,
         },
     ];
+
+    // 3. Combine and return all URLs
+    return [...staticUrls, ...blogPostUrls];
 }
