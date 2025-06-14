@@ -52,7 +52,6 @@ export default function FAQPage() {
                     Have questions? We have answers. If you can't find what you're looking for, feel free to contact us.
                 </p>
             </div>
-
             <Accordion type="single" collapsible className="w-full">
                 {faqData.map((item, index) => (
                     <AccordionItem value={`item-${index}`} key={index}>
@@ -65,7 +64,6 @@ export default function FAQPage() {
                     </AccordionItem>
                 ))}
             </Accordion>
-
             <div className="text-center mt-16">
                 <p className="text-lg mb-4">Start creating your next masterpiece.</p>
                 <Button asChild size="lg">

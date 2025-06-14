@@ -83,7 +83,7 @@ export default function ChordRow({
             <CardContent className="relative p-4 sm:p-6 h-full flex flex-col">
                 {hasChords ? (
                     // Use a React Fragment to hold the button and the chord list as siblings
-                    <>
+                    (<>
                         {/* 2. Absolutely position the button in the top-left corner */}
                         <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10">
                             <Button
@@ -119,7 +119,6 @@ export default function ChordRow({
                                 </AnimatePresence>
                             </Button>
                         </div>
-
                         {/* 3. This container now centers the chord list vertically and horizontally */}
                         <div className="w-full h-full flex items-center justify-center">
                             <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
@@ -139,7 +138,7 @@ export default function ChordRow({
                                 </DndContext>
                             </div>
                         </div>
-                    </>
+                    </>)
                 ) : (
                     <div className="w-full h-full flex justify-center items-center">
                         <p className="text-muted-foreground">

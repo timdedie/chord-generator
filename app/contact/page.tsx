@@ -46,7 +46,7 @@ export default function ContactPage() {
                 </section>
 
                 <section className="mt-12 text-center">
-                    <Link href="/" legacyBehavior>
+                    <Link href="/">
                         <a className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-dark dark:focus:ring-offset-black transition-colors">
                             <Home className="mr-2 h-5 w-5" />
                             Back to ChordGen

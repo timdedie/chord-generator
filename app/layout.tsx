@@ -96,21 +96,11 @@ export default function RootLayout({
     return (
         <html lang="en">
         <head>
-            {/* SEO OPTIMIZED: Title front-loaded with high-impression keywords from GSC */}
-            <title>AI Chord Progression & MIDI Generator (Piano) - ChordGen</title>
-
-            {/* SEO OPTIMIZED: Description includes "piano," "MIDI download," and "sequence" to match user queries and improve CTR */}
-            <meta
-                name="description"
-                content="Instantly generate chord progressions with our free AI chord generator. Visualize chords on an interactive piano, edit your sequence, and download as a MIDI file for your DAW. Perfect for songwriters!"
-            />
+            {/* All your SEO head content remains the same */}
+            <title>ChordGen - AI Chord Progression & MIDI Generator Piano</title>
+            <meta name="description" content="Instantly generate chord progressions with our free AI chord generator. Visualize chords on an interactive piano, edit your sequence, and download as a MIDI file for your DAW. Perfect for songwriters!" />
             <meta name="author" content="ChordGen Team" />
-
-            {/* SEO OPTIMIZED: Keywords are updated directly based on your GSC data */}
-            <meta
-                name="keywords"
-                content="ai chord generator, midi chord generator, chord progression generator, piano chord generator, free midi download, chord sequence generator, ai music tool, songwriting helper"
-            />
+            <meta name="keywords" content="ai chord generator, midi chord generator, chord progression generator, piano chord generator, free midi download, chord sequence generator, ai music tool, songwriting helper" />
             <meta name="robots" content="index, follow" />
             <link rel="canonical" href="https://www.chordgen.org" />
             <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16"/>
@@ -118,13 +108,8 @@ export default function RootLayout({
             <link rel="icon" href="/favicon.ico" type="image/x-icon" />
             <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
             <link rel="manifest" href="/site.webmanifest" />
-
-            {/* SEO OPTIMIZED: OG and Twitter titles updated for better shareability and keyword alignment */}
             <meta property="og:title" content="AI Chord Progression & MIDI Generator (with Piano) - ChordGen" />
-            <meta
-                property="og:description"
-                content="Create unique chord sequences with AI, visualize on a piano, and download MIDI for free. The ultimate songwriting tool."
-            />
+            <meta property="og:description" content="Create unique chord sequences with AI, visualize on a piano, and download MIDI for free. The ultimate songwriting tool." />
             <meta property="og:type" content="website" />
             <meta property="og:url" content="https://www.chordgen.org" />
             <meta property="og:image" content="https://www.chordgen.org/og-image.png"/>
@@ -134,21 +119,32 @@ export default function RootLayout({
             <meta name="twitter:title" content="AI Chord Progression & MIDI Generator (with Piano) - ChordGen"/>
             <meta name="twitter:description" content="Create unique chord sequences with AI, visualize on a piano, and download MIDI for free. The ultimate songwriting tool."/>
             <meta name="twitter:image" content="https://www.chordgen.org/twitter-image.png"/>
-
             <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />
             <Script id="faq-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
             <Script id="howto-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />
         </head>
-        <body className={`${outfit.className} flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900`}>
+
+        {/*
+          CHANGED: Removed `flex flex-col min-h-screen` from the body.
+          The body is now just a simple container for background color and font.
+        */}
+        <body className={`${outfit.className} bg-gray-50 dark:bg-black`}>
         <CSPostHogProvider>
             <Header />
-            <main className="flex-grow">{children}</main>
+
+            {/*
+              CHANGED: Added layout classes to the <main> tag.
+              This makes the <main> element the primary container that ensures all content
+              fits between the header and footer, even on short pages.
+              Your homepage's `flex-grow` will now target this container.
+            */}
+            <main className="flex flex-col min-h-[calc(100vh-theme(height.16))]">
+                {children}
+            </main>
+
             <Analytics />
             <SpeedInsights/>
-
-            {/* The new, clean footer component is rendered here for all pages */}
             <Footer />
-
             <SonnerToaster richColors position="bottom-right" />
         </CSPostHogProvider>
         </body>

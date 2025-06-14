@@ -22,8 +22,7 @@ export function ArticleHeader({ title, date }: ArticleHeaderProps) {
             <div className="mb-6">
                 <Link
                     href="/blog"
-                    className="flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                >
+                    className="flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors">
                     <ChevronLeft className="mr-1 h-4 w-4" />
                     Back to Blog
                 </Link>

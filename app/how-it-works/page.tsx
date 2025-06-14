@@ -92,7 +92,6 @@ export default function HowItWorksPage() {
                     From a simple idea to a complete MIDI chord progression in just a few clicks.
                 </p>
             </div>
-
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -113,7 +112,6 @@ export default function HowItWorksPage() {
                     </motion.div>
                 ))}
             </motion.div>
-
             <div className="text-center mt-16">
                 <p className="text-lg mb-4">Ready to create your own progression?</p>
                 <Button asChild size="lg">

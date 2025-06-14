@@ -31,7 +31,7 @@ const ChordSymbol: React.FC<ChordSymbolProps> = ({ chord, className = "" }) => {
             className={`inline-flex items-baseline select-none ${className}`}
             aria-label={`Chord ${replaceAccidentals(chord)}`}
         >
-      <span className="text-3xl font-semibold leading-none">{root}</span>
+            <span className="text-3xl font-semibold leading-none">{root}</span>
             {parts.length > 0 && (
                 <span className="ml-1 flex items-baseline leading-none">
           {parts.map((part, i) =>
@@ -47,7 +47,7 @@ const ChordSymbol: React.FC<ChordSymbolProps> = ({ chord, className = "" }) => {
           )}
         </span>
             )}
-    </span>
+        </span>
     );
 };
 

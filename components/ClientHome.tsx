@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, KeyboardEvent, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+// <<< FIX 1: Import the 'Variants' type >>>
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
 import { start as toneStart, now as toneNow } from "tone";
@@ -321,19 +322,35 @@ export default function ClientHome() {
         }
     };
 
+
+
     const hasChordsProp = chords.length > 0 || fullLoading;
     const firstNote = MidiNumbers.fromNote("C3"); const lastNote = MidiNumbers.fromNote("C5");
-    const buttonAppearAnimation = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: 10 }, transition: { duration: 0.3, ease: "easeInOut" } };
+
+    // <<< FIX 2: Explicitly type the constant with the 'Variants' type >>>
+    const buttonVariants: Variants = {
+        hidden: { opacity: 0, y: 10 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+        },
+        exit: {
+            opacity: 0,
+            y: 10,
+            transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
             <motion.main
                 className="flex flex-col items-center w-full px-4"
                 initial={false}
-                animate={{ paddingTop: hasChordsProp ? (isMobile ? "10vh" : "20vh") : (isMobile ? "12vh" : "35vh") }}
+                animate={{ paddingTop: hasChordsProp ? (isMobile ? "10vh" : "12vh") : (isMobile ? "20vh" : "27vh") }}
                 transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
             >
-                <ChordGenerator
+            <ChordGenerator
                     prompt={prompt}
                     setPrompt={setPrompt}
                     handleKeyDown={handleInputKeyDownAndTrack}
@@ -377,7 +394,14 @@ export default function ClientHome() {
 
                 <AnimatePresence>
                     {chords.length > 0 && !fullLoading && (
-                        <motion.div key="buttonsRow" className="mt-6 w-full flex flex-row justify-center items-center space-x-4" {...buttonAppearAnimation}>
+                        <motion.div
+                            key="buttonsRow"
+                            className="mt-6 w-full flex flex-row justify-center items-center space-x-4"
+                            variants={buttonVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                        >
                             <div>
                                 <Popover open={isExplanationPopoverOpen} onOpenChange={onPopoverOpenChangeAndTrack}>
                                     <PopoverTrigger asChild>
