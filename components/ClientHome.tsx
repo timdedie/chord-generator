@@ -34,7 +34,7 @@ import {
 import { Sparkles } from "lucide-react";
 
 const MidiDownloader = dynamic(() => import('@/components/MidiDownloader'), {
-    loading: () => <Button variant="outline" size="lg" disabled>Loading Downloader...</Button>,
+    loading: () => <Button size="lg" disabled>Loading Downloader...</Button>,
     ssr: false
 });
 
