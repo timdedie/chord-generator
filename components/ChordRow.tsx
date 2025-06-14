@@ -14,7 +14,6 @@ import { ChordItem } from "@/hooks/useChordManagement";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 
-// Updated props to include playback controls and remove unused setChords
 interface ChordRowProps {
     chords: ChordItem[];
     loadingChordId: string | null;
@@ -42,8 +41,6 @@ export default function ChordRow({
                                  }: ChordRowProps) {
     const hasChords = chords.length > 0;
 
-    // This is your proven, working structure for the elements list.
-    // The only change is passing the `isPlaying` prop to SortableChord.
     const elements = hasChords ? chords.flatMap((chord, index) => [
         <Spacer
             key={`spacer-${index}-${chords.length}`}
@@ -64,7 +61,7 @@ export default function ChordRow({
                 onPlay={() => playChord(chord.chord)}
                 onRemove={() => onRemoveChord(chord.id, chord.chord)}
                 loading={loadingChordId === chord.id}
-                isPlaying={playingChordId === chord.id} // Pass down playback state
+                isPlaying={playingChordId === chord.id}
             />
         </motion.div>,
     ]) : [];
@@ -81,16 +78,51 @@ export default function ChordRow({
     }
 
     return (
-        // The layout is adjusted here, outside the D&D logic.
-        // Card is given a fixed height to match the skeleton.
         <Card className="w-full max-w-3xl bg-transparent shadow-none h-72">
-            <CardContent className="p-4 sm:p-6 h-full flex flex-col">
+            {/* 1. Add `relative` to make this the positioning container for the absolute button */}
+            <CardContent className="relative p-4 sm:p-6 h-full flex flex-col">
                 {hasChords ? (
-                    <div className="flex flex-col h-full">
-                        {/* This div grows to fill space, containing the scrolling list */}
-                        <div className="flex-grow flex items-center overflow-y-hidden">
+                    // Use a React Fragment to hold the button and the chord list as siblings
+                    <>
+                        {/* 2. Absolutely position the button in the top-left corner */}
+                        <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10">
+                            <Button
+                                onClick={onTogglePlayPause}
+                                variant="outline"
+                                size="icon"
+                                className="relative w-14 h-14 rounded-full"
+                            >
+                                <AnimatePresence mode="wait" initial={false}>
+                                    {isPlaying ? (
+                                        <motion.div
+                                            key="pause"
+                                            initial={{ opacity: 0, scale: 0.5 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.5 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute inset-0 flex items-center justify-center"
+                                        >
+                                            <Pause className="h-6 w-6" />
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="play"
+                                            initial={{ opacity: 0, scale: 0.5 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.5 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute inset-0 flex items-center justify-center"
+                                        >
+                                            <Play className="h-6 w-6" fill="currentColor" />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </Button>
+                        </div>
+
+                        {/* 3. This container now centers the chord list vertically and horizontally */}
+                        <div className="w-full h-full flex items-center justify-center">
                             <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                                {/* Your working D&D context structure is preserved perfectly here */}
                                 <DndContext
                                     sensors={sensors}
                                     collisionDetection={closestCenter}
@@ -107,14 +139,7 @@ export default function ChordRow({
                                 </DndContext>
                             </div>
                         </div>
-                        {/* This div contains the play button at the bottom */}
-                        <div className="flex-shrink-0 flex justify-center pt-4">
-                            <Button onClick={onTogglePlayPause} variant="outline" size="lg" className="transition-all w-48">
-                                {isPlaying ? <Pause className="mr-2 h-5 w-5" /> : <Play className="mr-2 h-5 w-5" />}
-                                {isPlaying ? "Pause" : "Play Progression"}
-                            </Button>
-                        </div>
-                    </div>
+                    </>
                 ) : (
                     <div className="w-full h-full flex justify-center items-center">
                         <p className="text-muted-foreground">
