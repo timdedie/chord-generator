@@ -6,7 +6,7 @@ import Script from "next/script";
 import React from "react";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { howItWorksItems } from "@/lib/howItWorksData";
-import { CSPostHogProvider } from "./providers"; // Or your chosen path e.g. ./posthog-provider
+import { CSPostHogProvider } from "./providers";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const outfit = Outfit({
@@ -16,7 +16,7 @@ const outfit = Outfit({
     display: "swap",
 });
 
-// JSON-LD Schemas (Keep as is)
+// JSON-LD Schemas
 const webAppSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -55,7 +55,7 @@ const faqSchema = {
             name: "How does ChordGen work?",
             acceptedAnswer: {
                 "@type": "Answer",
-                text: "ChordGen uses advanced AI models (like Deepseek Chat and Deepseek Reasoner) to interpret your natural language input and create musically coherent chord progressions. You can ch[...]"
+                text: "ChordGen uses advanced AI models (like Deepseek Chat and Deepseek Reasoner) to interpret your natural language input and create musically coherent chord progressions. You can choose the number of chords, enable a 'Deep Think' mode for more complex results, and then play, edit, or download the final progression.",
             },
         },
         {
@@ -63,7 +63,7 @@ const faqSchema = {
             name: "Do I need musical knowledge to use ChordGen?",
             acceptedAnswer: {
                 "@type": "Answer",
-                text: "No prior music theory knowledge is required. Simply describe the mood or style you want. You can also use the 'Explain Progression' feature to learn about the music theory behin[...]"
+                text: "No prior music theory knowledge is required. Simply describe the mood or style you want. You can also use the 'Explain Progression' feature to learn about the music theory behind your generated chords, making it a great learning tool.",
             },
         },
     ],
@@ -78,10 +78,10 @@ const howToSchema = {
     step: [
         { "@type": "HowToStep", name: "Describe Desired Chords", text: "Enter a text description (e.g., 'epic movie score chords', 'jazzy lofi progression in F minor') into the input field." },
         { "@type": "HowToStep", name: "Select Number of Chords", text: "Use the dropdown to choose how many chords (2-8) you want in your progression." },
-        { "@type": "HowToStep", name: "Enable Deep Think (Optional)", text: "Toggle the 'Deep Think' switch to use a more advanced AI model for potentially richer or more complex chord suggestions. Th[...]" },
+        { "@type": "HowToStep", name: "Enable Deep Think (Optional)", text: "Toggle the 'Deep Think' switch to use a more advanced AI model for potentially richer or more complex chord suggestions. This may take slightly longer but can produce more unique results." },
         { "@type": "HowToStep", name: "Generate Progression", text: "Click the refresh button or press Enter in the input field to generate your chord progression." },
         { "@type": "HowToStep", name: "Play Chords", text: "Click on any of the generated chord cards to hear the chord played on the virtual piano." },
-        { "@type": "HowToStep", name: "Explain Progression", text: "Click the 'Explain Progression' button (appears after generation) to receive an AI-generated music theory explanation of the chord s[...]" },
+        { "@type": "HowToStep", name: "Explain Progression", text: "Click the 'Explain Progression' button (appears after generation) to receive an AI-generated music theory explanation of the chord sequence, helping you understand why the chords work together." },
         { "@type": "HowToStep", name: "Rearrange Chords (Desktop)", text: "On a desktop computer, hover over a chord card to reveal the move icon, then drag and drop the chord to a new position." },
         { "@type": "HowToStep", name: "Add Chords (Desktop)", text: "On desktop, click the plus icon (+) that appears between chords to have the AI suggest and insert a new chord at that spot." },
         { "@type": "HowToStep", name: "Remove Chords (Desktop)", text: "On desktop, hover over a chord card and click the 'X' icon to remove that chord from the progression." },
@@ -101,7 +101,7 @@ export default function RootLayout({
             <title>ChordGen – Free AI Chord Progression Generator & MIDI Export Tool</title>
             <meta
                 name="description"
-                content="Generate unique chord progressions instantly using natural language with ChordGen. Free to use! Edit chords, rearrange them, download MIDI files, and learn music theory with A[...]"
+                content="Generate unique chord progressions instantly using natural language with ChordGen. Free to use! Edit chords, rearrange them, download MIDI files, and learn music theory with AI-powered explanations."
             />
             <meta name="author" content="ChordGen Team" />
             <meta
@@ -146,9 +146,9 @@ export default function RootLayout({
             />
         </head>
         <body className={`${outfit.className} flex flex-col min-h-screen`}>
-        <CSPostHogProvider> {/* MOVED PROVIDER TO WRAP CONTENT INSIDE BODY */}
+        <CSPostHogProvider>
             <main className="flex-grow">{children}</main>
-            <Analytics /> {/* Vercel Analytics */}
+            <Analytics />
             <SpeedInsights/>
             <footer className="w-full text-center text-sm text-gray-500 dark:text-gray-400 p-8 space-y-8 relative z-20 bg-white dark:bg-black">
                 <div>

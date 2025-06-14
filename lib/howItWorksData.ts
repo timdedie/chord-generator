@@ -48,22 +48,22 @@ export const howItWorksItems: HowItWorksItem[] = [
     },
     {
         title: "Rearranging Chords",
-        description: "Hover a chord, then drag its move icon to reorder. (Desktop only)",
+        description: "Hover a chord, then drag its move icon to reorder.",
         IconComponent: MoveHorizontal,
     },
     {
         title: "Adding Chords",
-        description: "Click the plus icon (+) between chords to add a new one. (Desktop only)",
+        description: "Click the plus icon (+) between chords to add a new one.",
         IconComponent: Plus,
     },
     {
         title: "Removing Chords",
-        description: "Hover a chord and click its 'X' icon to remove it. (Desktop only)",
+        description: "Hover a chord and click its 'X' icon to remove it.",
         IconComponent: X,
     },
     {
         title: "Downloading MIDI",
-        description: "Download your progression as a MIDI file. (Desktop only)",
+        description: "Download your progression as a MIDI file.",
         IconComponent: Download,
     },
     {
