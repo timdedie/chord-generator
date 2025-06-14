@@ -76,6 +76,12 @@ export default function ClientHome() {
     const explanationAbortControllerRef = useRef<AbortController | null>(null);
     const currentProgressionKeyRef = useRef<string>("");
 
+    const [isPlayingProgression, setIsPlayingProgression] = useState(false);
+    const [playingChordId, setPlayingChordId] = useState<string | null>(null);
+    const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const heldNotesRef = useRef<string[]>([]);
+    const CHORD_PLAYBACK_INTERVAL = 1200;
+
     const checkPosthogConfigured = () => {
         return typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY && process.env.NEXT_PUBLIC_POSTHOG_HOST;
     }
@@ -96,37 +102,105 @@ export default function ClientHome() {
         }
     }, [isMobile]);
 
-    const playChordAndTrack = useCallback(
-        async (chordSymbol: string) => {
-            if (!piano || !areSamplesLoaded) {
-                if (checkPosthogConfigured()) { posthog.capture('chord_play_attempt_failed', { chord_symbol: chordSymbol, reason: 'samples_not_loaded' }); }
-                setActiveNotes([]); return;
-            }
-            if (!chordSymbol) return;
-            if (checkPosthogConfigured()) { posthog.capture('chord_played', { chord_symbol: chordSymbol, source: 'chord_card' }); }
-            const chordData = Chord.get(chordSymbol);
-            if (!chordData || !chordData.notes || chordData.notes.length === 0 || !chordData.tonic) {
-                setActiveNotes([]); return;
-            }
-            const rootPc = chordData.tonic; const notesPc = chordData.notes;
-            let startOctave = 3; const bassOctave = startOctave - 1; const bassNote = rootPc + bassOctave.toString();
-            const voicedNotes: string[] = []; let previousNoteMidi: number | null = null; let currentProcessingOctave = startOctave;
-            for (const pc of notesPc) {
-                let noteWithOctave = pc + currentProcessingOctave; let currentNoteMidi = Note.midi(noteWithOctave);
-                if (currentNoteMidi === null) { voicedNotes.push(pc + "4"); previousNoteMidi = Note.midi(pc + "4"); continue; }
-                if (previousNoteMidi !== null) {
-                    while (currentNoteMidi! <= previousNoteMidi!) {
-                        currentProcessingOctave++; noteWithOctave = pc + currentProcessingOctave; currentNoteMidi = Note.midi(noteWithOctave);
-                        if (currentNoteMidi === null) { noteWithOctave = pc + (currentProcessingOctave - 1); break; }
-                    }
+    const getVoicedChordNotes = (chordSymbol: string): string[] => {
+        const chordData = Chord.get(chordSymbol);
+        if (!chordData || !chordData.notes || chordData.notes.length === 0 || !chordData.tonic) {
+            return [];
+        }
+        const rootPc = chordData.tonic; const notesPc = chordData.notes;
+        let startOctave = 3; const bassOctave = startOctave - 1; const bassNote = rootPc + bassOctave.toString();
+        const voicedNotes: string[] = []; let previousNoteMidi: number | null = null; let currentProcessingOctave = startOctave;
+        for (const pc of notesPc) {
+            let noteWithOctave = pc + currentProcessingOctave; let currentNoteMidi = Note.midi(noteWithOctave);
+            if (currentNoteMidi === null) { voicedNotes.push(pc + "4"); previousNoteMidi = Note.midi(pc + "4"); continue; }
+            if (previousNoteMidi !== null) {
+                while (currentNoteMidi! <= previousNoteMidi!) {
+                    currentProcessingOctave++; noteWithOctave = pc + currentProcessingOctave; currentNoteMidi = Note.midi(noteWithOctave);
+                    if (currentNoteMidi === null) { noteWithOctave = pc + (currentProcessingOctave - 1); break; }
                 }
-                voicedNotes.push(noteWithOctave); previousNoteMidi = currentNoteMidi; currentProcessingOctave = startOctave;
             }
-            const allNotesToPlay = [bassNote, ...voicedNotes]; const noteDuration = 0.5;
-            setActiveNotes(allNotesToPlay); piano.triggerAttackRelease(allNotesToPlay, noteDuration, toneNow());
-            setTimeout(() => setActiveNotes([]), noteDuration * 1000);
-        }, [piano, areSamplesLoaded]
-    );
+            voicedNotes.push(noteWithOctave); previousNoteMidi = currentNoteMidi; currentProcessingOctave = startOctave;
+        }
+        return [bassNote, ...voicedNotes];
+    };
+
+    const playChordOnce = useCallback(async (chordSymbol: string) => {
+        if (!piano || !areSamplesLoaded) return;
+        if (checkPosthogConfigured()) posthog.capture('chord_played', { chord_symbol: chordSymbol, source: 'chord_card' });
+
+        const notesToPlay = getVoicedChordNotes(chordSymbol);
+        if (notesToPlay.length === 0) {
+            setActiveNotes([]);
+            return;
+        }
+
+        const noteDuration = 0.8;
+        setActiveNotes(notesToPlay);
+        piano.triggerAttackRelease(notesToPlay, noteDuration, toneNow());
+        setTimeout(() => setActiveNotes([]), noteDuration * 1000);
+    }, [piano, areSamplesLoaded]);
+
+    const pauseProgression = useCallback(() => {
+        if (playbackTimeoutRef.current) clearTimeout(playbackTimeoutRef.current);
+        playbackTimeoutRef.current = null;
+
+        if (piano && heldNotesRef.current.length > 0) {
+            piano.triggerRelease(heldNotesRef.current, toneNow());
+            heldNotesRef.current = [];
+        }
+
+        setIsPlayingProgression(false);
+        setPlayingChordId(null);
+        setActiveNotes([]);
+    }, [piano]);
+
+    const playNextChord = useCallback((index: number) => {
+        if (index >= chords.length) {
+            pauseProgression();
+            return;
+        }
+
+        const chordToPlay = chords[index];
+        if (chordToPlay && piano) {
+            setPlayingChordId(chordToPlay.id);
+            const newNotes = getVoicedChordNotes(chordToPlay.chord);
+
+            if (newNotes.length > 0) {
+                if (heldNotesRef.current.length > 0) {
+                    piano.triggerRelease(heldNotesRef.current, toneNow());
+                }
+                piano.triggerAttack(newNotes, toneNow());
+                heldNotesRef.current = newNotes;
+                setActiveNotes(newNotes);
+            }
+
+            playbackTimeoutRef.current = setTimeout(() => {
+                playNextChord(index + 1);
+            }, CHORD_PLAYBACK_INTERVAL);
+        } else {
+            pauseProgression();
+        }
+    }, [chords, piano, areSamplesLoaded, pauseProgression, CHORD_PLAYBACK_INTERVAL]);
+
+    const handleTogglePlayPause = useCallback(() => {
+        if (isPlayingProgression) {
+            pauseProgression();
+            if (checkPosthogConfigured()) posthog.capture('progression_playback_paused', { progression: chords.map(c => c.chord).join('-') });
+        } else {
+            if (chords.length === 0) return;
+            if (!areSamplesLoaded) {
+                if (!isLoadingSamples) loadSamples();
+                return;
+            }
+            setIsPlayingProgression(true);
+            playNextChord(0);
+            if (checkPosthogConfigured()) posthog.capture('progression_playback_started', { progression: chords.map(c => c.chord).join('-'), chord_count: chords.length });
+        }
+    }, [isPlayingProgression, pauseProgression, playNextChord, chords, areSamplesLoaded, isLoadingSamples, loadSamples]);
+
+    useEffect(() => {
+        pauseProgression();
+    }, [chords, pauseProgression]);
 
     const handleNumChordsChangeAndTrack = useCallback((value: number) => {
         setNumChordsToGenerateState(value);
@@ -170,7 +244,6 @@ export default function ClientHome() {
         if (checkPosthogConfigured()) { posthog.capture('chord_removed', { removed_chord_symbol: removedChordSymbol, remaining_chords_count: chords.length > 0 ? chords.length - 1 : 0 }); }
     }, [chords, setChords]);
 
-    // --- LOGIC RESTORED FOR EXPLANATION ---
     const fetchAndStreamExplanationAndTrack = async (progressionKey: string) => {
         if (explanationAbortControllerRef.current) { explanationAbortControllerRef.current.abort(); }
         explanationAbortControllerRef.current = new AbortController();
@@ -275,12 +348,12 @@ export default function ClientHome() {
                 />
 
                 <div className="w-full flex flex-col items-center mt-4">
-                    {(chords.length > 0 || fullLoading) && (
+                    {(chords.length > 0 || fullLoading) ? (
                         fullLoading ? (
                             isMobile ? ( <MobileChordGrid chords={[]} playChord={() => {}} /> ) : ( <ChordRowSkeleton /> )
                         ) : (
                             isMobile ? (
-                                <MobileChordGrid chords={chords} playChord={playChordAndTrack} />
+                                <MobileChordGrid chords={chords} playChord={playChordOnce} />
                             ) : (
                                 <ChordRow
                                     chords={chords}
@@ -288,13 +361,15 @@ export default function ClientHome() {
                                     sensors={sensors}
                                     handleDragEnd={handleDragEndAndTrack}
                                     addChordAt={handleAddChordRequestAndTrack}
-                                    playChord={playChordAndTrack}
+                                    playChord={playChordOnce}
                                     onRemoveChord={handleRemoveChordAndTrack}
-                                    setChords={setChords}
+                                    playingChordId={playingChordId}
+                                    isPlaying={isPlayingProgression}
+                                    onTogglePlayPause={handleTogglePlayPause}
                                 />
                             )
                         )
-                    )}
+                    ) : null}
 
                     <div className="h-8 flex items-center justify-center">
                         {fullLoading && !isMobile && <ThinkingMessages />}
