@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/.idea/chord-generator.iml
+/.idea/modules.xml
+/test-tonal.js
+/.idea/vcs.xml
