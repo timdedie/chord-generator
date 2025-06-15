@@ -1,14 +1,21 @@
+// app/contact/page.tsx (The New, Correct Version)
+
 import React from 'react';
 import Link from 'next/link';
 import { Mail, Home } from 'lucide-react';
+import type { Metadata } from 'next'; // It's good practice to import the type
 
-export const metadata = {
+// --- METADATA FIX: Added the 'alternates' property ---
+export const metadata: Metadata = {
     title: 'Contact ChordGen',
     description: 'Get in touch with the ChordGen team. We welcome your feedback, questions, and suggestions to help us improve our AI chord generator.',
+    alternates: {
+        canonical: '/contact', // This fixes the Google Search Console error
+    },
 };
 
 export default function ContactPage() {
-    const contactEmail = "contact@chordgen.org"; // Your actual contact email
+    const contactEmail = "contact@chordgen.org";
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-gray-100 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
@@ -19,7 +26,7 @@ export default function ContactPage() {
                         Get in Touch
                     </h1>
                     <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-                        We&apos;d love to hear from you! Whether you have a question, feedback, or a feature idea, please feel free to reach out.
+                        We'd love to hear from you! Whether you have a question, feedback, or a feature idea, please feel free to reach out.
                     </p>
                 </header>
 
@@ -46,11 +53,13 @@ export default function ContactPage() {
                 </section>
 
                 <section className="mt-12 text-center">
-                    <Link href="/">
-                        <a className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-dark dark:focus:ring-offset-black transition-colors">
-                            <Home className="mr-2 h-5 w-5" />
-                            Back to ChordGen
-                        </a>
+                    {/* --- LINK FIX: Removed the unnecessary <a> tag --- */}
+                    <Link
+                        href="/"
+                        className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-dark dark:focus:ring-offset-black transition-colors"
+                    >
+                        <Home className="mr-2 h-5 w-5" />
+                        Back to ChordGen
                     </Link>
                 </section>
             </div>

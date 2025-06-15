@@ -1,4 +1,5 @@
-// app/layout.tsx
+// app/layout.tsx (The new, correct version)
+
 import "./globals.css";
 import { Outfit } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
@@ -9,7 +10,7 @@ import { CSPostHogProvider } from "./providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-
+import type { Metadata } from 'next'; // <--- IMPORT METADATA TYPE
 
 const outfit = Outfit({
     subsets: ["latin"],
@@ -18,8 +19,8 @@ const outfit = Outfit({
     display: "swap",
 });
 
-// ✅ CORRECT: This schema describes the entire application and belongs in the layout.
 const webAppSchema = {
+    // ... your schema object remains the same
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: "ChordGen",
@@ -32,8 +33,62 @@ const webAppSchema = {
     image: "https://www.chordgen.org/chordgen_logo.png",
 };
 
-// ❌ REMOVED: The FAQ and HowTo schemas were removed from this file because
-// they do not apply to every page on the site.
+// ==================================================================
+//  START OF NEW METADATA OBJECT
+// ==================================================================
+export const metadata: Metadata = {
+    // metadataBase is crucial for resolving relative URLs for canonicals and OG images
+    metadataBase: new URL('https://www.chordgen.org'),
+
+    // Default title for homepage, with a template for other pages
+    title: {
+        default: 'ChordGen - AI Chord Progression & MIDI Generator Piano',
+        template: '%s | ChordGen',
+    },
+    description: 'Instantly generate chord progressions with our free AI chord generator. Visualize chords on an interactive piano, edit your sequence, and download as a MIDI file for your DAW. Perfect for songwriters!',
+    authors: [{ name: 'ChordGen Team', url: 'https://www.chordgen.org' }],
+    keywords: ['ai chord generator', 'midi chord generator', 'chord progression generator', 'piano chord generator', 'free midi download', 'chord sequence generator', 'ai music tool', 'songwriting helper'],
+
+    // This replaces your <link rel="icon"> tags
+    icons: {
+        icon: [
+            { url: '/favicon.ico', type: 'image/x-icon' },
+            { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
+            { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
+        ],
+        apple: '/apple-touch-icon.png',
+    },
+    manifest: '/site.webmanifest',
+
+    // Default Open Graph and Twitter card data (will be overridden by individual pages)
+    openGraph: {
+        title: 'AI Chord Progression & MIDI Generator (with Piano) - ChordGen',
+        description: 'Create unique chord sequences with AI, visualize on a piano, and download MIDI for free. The ultimate songwriting tool.',
+        url: '/', // This will become https://www.chordgen.org
+        siteName: 'ChordGen',
+        images: [
+            {
+                url: '/og-image.png', // Relative to metadataBase
+                width: 1200,
+                height: 630,
+            },
+        ],
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'AI Chord Progression & MIDI Generator (with Piano) - ChordGen',
+        description: 'Create unique chord sequences with AI, visualize on a piano, and download MIDI for free. The ultimate songwriting tool.',
+        images: ['/twitter-image.png'], // Relative to metadataBase
+    },
+
+    // IMPORTANT: No canonical tag here. It will be set per-page.
+    // If you want one for the homepage, set it in app/page.tsx
+};
+// ==================================================================
+//  END OF NEW METADATA OBJECT
+// ==================================================================
+
 
 export default function RootLayout({
                                        children,
@@ -41,36 +96,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
+        // Next.js automatically injects the <head> based on the metadata object
         <html lang="en">
-        <head>
-            {/* All your SEO head content remains the same */}
-            <title>ChordGen - AI Chord Progression & MIDI Generator Piano</title>
-            <meta name="description" content="Instantly generate chord progressions with our free AI chord generator. Visualize chords on an interactive piano, edit your sequence, and download as a MIDI file for your DAW. Perfect for songwriters!" />
-            <meta name="author" content="ChordGen Team" />
-            <meta name="keywords" content="ai chord generator, midi chord generator, chord progression generator, piano chord generator, free midi download, chord sequence generator, ai music tool, songwriting helper" />
-            <meta name="robots" content="index, follow" />
-            <link rel="canonical" href="https://www.chordgen.org" />
-            <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16"/>
-            <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32"/>
-            <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-            <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-            <link rel="manifest" href="/site.webmanifest" />
-            <meta property="og:title" content="AI Chord Progression & MIDI Generator (with Piano) - ChordGen" />
-            <meta property="og:description" content="Create unique chord sequences with AI, visualize on a piano, and download MIDI for free. The ultimate songwriting tool." />
-            <meta property="og:type" content="website" />
-            <meta property="og:url" content="https://www.chordgen.org" />
-            <meta property="og:image" content="https://www.chordgen.org/og-image.png"/>
-            <meta property="og:image:width" content="1200" />
-            <meta property="og:image:height" content="630" />
-            <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:title" content="AI Chord Progression & MIDI Generator (with Piano) - ChordGen"/>
-            <meta name="twitter:description" content="Create unique chord sequences with AI, visualize on a piano, and download MIDI for free. The ultimate songwriting tool."/>
-            <meta name="twitter:image" content="https://www.chordgen.org/twitter-image.png"/>
-
-            {/* This script will now correctly appear on every page */}
-            <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />
-        </head>
-
         <body className={`${outfit.className} bg-gray-50 dark:bg-black`}>
         <CSPostHogProvider>
             <Header />
@@ -78,10 +105,13 @@ export default function RootLayout({
                 {children}
             </main>
             <Analytics />
-            <SpeedInsights/>
+            <SpeedInsights />
             <Footer />
             <SonnerToaster richColors position="bottom-right" />
         </CSPostHogProvider>
+
+        {/* Your schema script can stay here */}
+        <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />
         </body>
         </html>
     );

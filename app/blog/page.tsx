@@ -1,62 +1,20 @@
-// app/blog/page.tsx
-'use client';
+// app/blog/page.tsx (The New Server Component Shell)
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { posts } from '@/lib/blogData';
-import { PostCard } from '@/components/blog/PostCard';
+// NO 'use client' here!
 
-const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.1,
-        },
+import type { Metadata } from 'next';
+import BlogIndexClient from './BlogIndexClient'; // Import the client component we just made
+
+// ✅ Metadata lives here, in a server component, where it belongs.
+export const metadata: Metadata = {
+    title: 'Blog', // Will become "Blog | ChordGen" via your layout template
+    description: 'The ChordGen Blog: Songwriting tips, music theory insights, and product updates to help you create better music.',
+    alternates: {
+        canonical: '/blog', // The correct canonical URL for the blog index
     },
 };
 
-const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-        y: 0,
-        opacity: 1,
-        transition: {
-            duration: 0.5,
-        },
-    },
-};
-
+// This is the entire page component. It just renders the client part.
 export default function BlogIndexPage() {
-    return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="container mx-auto max-w-4xl px-4 py-16 sm:py-24"
-        >
-            <div className="text-center mb-12">
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
-                    The ChordGen Blog
-                </h1>
-                <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                    Songwriting tips, music theory insights, and product updates to help you create better music.
-                </p>
-            </div>
-
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-1 md:grid-cols-2 gap-8"
-            >
-                {posts.map((post) => (
-                    <motion.div variants={itemVariants} key={post.slug}>
-                        <PostCard post={post} />
-                    </motion.div>
-                ))}
-                {/* As you add more posts to lib/blogData.ts, they will automatically appear here */}
-            </motion.div>
-        </motion.div>
-    );
+    return <BlogIndexClient />;
 }
