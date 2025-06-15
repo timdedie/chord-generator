@@ -14,8 +14,16 @@ async function getAllBlogPosts() {
     // For now, just return the static post you have:
     return [
         {
-            slug: 'midi-chord-generator-for-prod',
+            slug: 'midi-chord-generator-for-producers',
             lastModified: new Date('2025-06-14'),
+        },
+        {
+            slug: 'free-online-piano-chord-generator',
+            lastModified: new Date('2025-06-15'),
+        },
+        {
+            slug: 'break-writers-block-random-chord-generator',
+            lastModified: new Date('2025-06-15'),
         },
     ];
 }
