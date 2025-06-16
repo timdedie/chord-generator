@@ -79,18 +79,17 @@ export default function ChordRow({
 
     return (
         <Card className="w-full max-w-3xl bg-transparent shadow-none h-72">
-            {/* 1. Add `relative` to make this the positioning container for the absolute button */}
-            <CardContent className="relative p-4 sm:p-6 h-full flex flex-col">
+            {/* 1. This is now the main horizontal flex container */}
+            <CardContent className="p-4 sm:p-6 h-full flex items-center gap-4 sm:gap-6">
                 {hasChords ? (
-                    // Use a React Fragment to hold the button and the chord list as siblings
-                    (<>
-                        {/* 2. Absolutely position the button in the top-left corner */}
-                        <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10">
+                    <>
+                        {/* 2. The Play button is the first item in the flex row */}
+                        <div>
                             <Button
                                 onClick={onTogglePlayPause}
                                 variant="outline"
                                 size="icon"
-                                className="relative w-14 h-14 rounded-full"
+                                className="relative w-14 h-14 rounded-full flex-shrink-0"
                             >
                                 <AnimatePresence mode="wait" initial={false}>
                                     {isPlaying ? (
@@ -119,9 +118,10 @@ export default function ChordRow({
                                 </AnimatePresence>
                             </Button>
                         </div>
-                        {/* 3. This container now centers the chord list vertically and horizontally */}
-                        <div className="w-full h-full flex items-center justify-center">
-                            <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+
+                        {/* 3. This container for chords takes up the remaining space */}
+                        <div className="flex-1 min-w-0">
+                            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
                                 <DndContext
                                     sensors={sensors}
                                     collisionDetection={closestCenter}
@@ -131,14 +131,14 @@ export default function ChordRow({
                                         items={chords.map((c) => c.id)}
                                         strategy={horizontalListSortingStrategy}
                                     >
-                                        <div className="flex items-center gap-2 w-max py-4">
+                                        <div className="flex items-center justify-center gap-2 w-max py-4 mx-auto">
                                             <AnimatePresence>{elements}</AnimatePresence>
                                         </div>
                                     </SortableContext>
                                 </DndContext>
                             </div>
                         </div>
-                    </>)
+                    </>
                 ) : (
                     <div className="w-full h-full flex justify-center items-center">
                         <p className="text-muted-foreground">
