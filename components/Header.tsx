@@ -18,10 +18,10 @@ export function Header() {
 
                     <Link href="/" className="flex items-center gap-2">
                         <Image
-                            src="/chordgen_logo.png"
+                            src="/chordgen_logo_small.png"
                             alt="ChordGen Logo"
-                            width={1024}
-                            height={1024}
+                            width={64}
+                            height={64}
                             className="h-7 w-7 dark:invert"
                             priority
                         />

@@ -1,6 +1,6 @@
-// app/faq/FaqClient.tsx
+// app/faq/FaqClient.tsx (Updated)
 
-'use client'; // This directive STAYS HERE for the Accordion and animations.
+'use client';
 
 import React from 'react';
 import Script from 'next/script';
@@ -15,11 +15,11 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-// This is the visible content on the page
+// --- UPDATED FAQ DATA ---
 const faqData = [
     {
         question: "Is ChordGen truly free to use?",
-        answer: "Yes! ChordGen is 100% free. You can generate, edit, and download unlimited MIDI chord progressions without creating an account or providing any payment information."
+        answer: "Yes! ChordGen is 100% free. You can use our AI chord progression generator to create, edit, and download unlimited MIDI files without an account or payment."
     },
     {
         question: "Can I use the generated chords in my commercial music?",
@@ -27,15 +27,20 @@ const faqData = [
     },
     {
         question: "How do I export the chords as MIDI files?",
-        answer: "Once you've generated or edited your chord progression, simply click the 'Download MIDI' button. A standard MIDI file (.mid) will be saved to your computer, ready to be imported into any Digital Audio Workstation (DAW)."
+        answer: "Once our chord maker has generated your chord sequence, you can edit it and then click the 'Download MIDI' button. A standard MIDI file (.mid) will be saved, ready to import into any Digital Audio Workstation (DAW)."
     },
     {
+        // This answer now includes an internal link
         question: "What kind of AI does ChordGen use?",
-        answer: "ChordGen uses a fine-tuned version of a large language model (LLM) that has been trained on music theory concepts, popular song structures, and harmonic principles to generate musically coherent and creative chord progressions based on your text prompts."
+        answer: (
+            <>
+                ChordGen uses a fine-tuned large language model (LLM) trained on music theory and harmonic principles. It analyzes your text to generate musically creative chord progressions. You can learn more about the process on our <Link href="/how-it-works" className="text-primary underline hover:no-underline">How It Works</Link> page.
+            </>
+        )
     },
     {
         question: "Does this work on mobile devices?",
-        answer: "Yes, ChordGen is fully responsive. You can generate and play chords on your phone or tablet. For the best experience, including editing features like drag-and-drop and MIDI download, we recommend using a desktop browser."
+        answer: "Yes, ChordGen is fully responsive. You can generate and play chords on your phone or tablet. For the best experience with our chord progression maker, including drag-and-drop editing, we recommend using a desktop browser."
     },
 ];
 
@@ -47,12 +52,12 @@ const faqSchema = {
         name: item.question,
         acceptedAnswer: {
             "@type": "Answer",
-            text: item.answer
+            // Handle the case where the answer is a string or a JSX element
+            text: typeof item.answer === 'string' ? item.answer : 'ChordGen uses a fine-tuned large language model (LLM) trained on music theory and harmonic principles. It analyzes your text to generate musically creative chord progressions. You can learn more about the process on our How It Works page.'
         }
     }))
 };
 
-// Renamed the function for clarity. The code inside is identical.
 export default function FaqClient() {
     return (
         <>
@@ -61,13 +66,13 @@ export default function FaqClient() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
             />
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
                 className="container mx-auto max-w-3xl px-4 py-16 sm:py-24"
             >
+                {/* ... The rest of your component remains exactly the same ... */}
                 <div className="text-center mb-12">
                     <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
                         Frequently Asked Questions

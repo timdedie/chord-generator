@@ -1,31 +1,21 @@
-// app/blog/break-writers-block-random-chord-generator/page.tsx (The New, Correct Version)
-
-// NO 'use client' HERE! This is now a Server Component.
+// app/blog/break-writers-block-random-chord-generator/page.tsx
 
 import React from 'react';
 import type { Metadata } from 'next';
+import Link from 'next/link'; // <-- IMPORT ADDED
 import { CTA } from '@/components/blog/CTA';
 import { ArticleHeader } from '@/components/blog/ArticleHeader';
 import { posts } from '@/lib/blogData';
 
-// --- START: NEW METADATA FUNCTION ---
 const slug = 'break-writers-block-random-chord-generator';
 
-// This function runs on the server to generate metadata for this specific page
 export async function generateMetadata(): Promise<Metadata> {
     const post = posts.find(p => p.slug === slug);
-
-    if (!post) {
-        return { title: 'Post Not Found' };
-    }
-
+    if (!post) { return { title: 'Post Not Found' }; }
     return {
         title: post.title,
         description: "Stuck in a creative rut? Discover how a random chord progression generator can break writer's block and spark new musical ideas instantly.",
-        alternates: {
-            canonical: `/blog/${slug}`,
-        },
-        // Optional: Add specific Open Graph tags for better social sharing
+        alternates: { canonical: `/blog/${slug}` },
         openGraph: {
             title: post.title,
             description: "Stuck in a creative rut? Discover how a random chord progression generator can break writer's block and spark new musical ideas instantly.",
@@ -39,15 +29,9 @@ export async function generateMetadata(): Promise<Metadata> {
         }
     };
 }
-// --- END: NEW METADATA FUNCTION ---
 
-
-// This is the React component for your page. It runs on the server.
 export default function WritersBlockPost() {
-    // We find the post data again here to render the content.
-    // This is fine and very fast since it's from a local file.
     const post = posts.find(p => p.slug === slug);
-
     if (!post) {
         return (
             <div className="container mx-auto max-w-3xl px-4 py-16 sm:py-24 text-center">
@@ -59,7 +43,6 @@ export default function WritersBlockPost() {
         );
     }
 
-    // The rest of your component is exactly the same!
     return (
         <div className="container mx-auto max-w-3xl px-4 py-16 sm:py-24">
             <ArticleHeader title={post.title} date={post.date} />
@@ -75,7 +58,8 @@ export default function WritersBlockPost() {
                     Our brains are wired to follow patterns. That's why we often fall back on the same familiar chord shapes and progressions. A random chord generator forces you out of that comfort zone. It presents you with new harmonic combinations you might never have considered, sparking fresh melodic ideas and pushing your music in unexpected directions.
                 </p>
                 <p>
-                    But what if "random" could be even better? A purely random generator might give you chords that don't work together at all. An <strong>AI chord generator</strong> like ChordGen offers "intelligent randomness"—it provides surprising and unique progressions that are still grounded in music theory, ensuring they sound musical and cohesive.
+                    But what if "random" could be even better? A purely random generator might give you chords that don't work together at all. An {/* --- LINK ADDED --- */}
+                    <Link href="/"><strong>AI chord generator</strong></Link> like ChordGen offers "intelligent randomness"—it provides surprising and unique progressions that are still grounded in music theory, ensuring they sound musical and cohesive.
                 </p>
                 <h2>How to Use a Generator for Genre-Specific Inspiration</h2>
                 <p>
@@ -83,7 +67,8 @@ export default function WritersBlockPost() {
                 </p>
                 <h3>1. For Lofi and Hip Hop Beats</h3>
                 <p>
-                    Struggling to find that perfect, chill vibe? Try a prompt like <strong>"jazzy lofi chords for studying"</strong> or <strong>"nostalgic boom bap piano progression."</strong> The AI will instantly generate sophisticated 7th and 9th chords that are perfect for creating a relaxed, atmospheric track.
+                    Struggling to find that perfect, chill vibe? Try a prompt like <strong>"jazzy lofi chords for studying"</strong> or <strong>"nostalgic boom bap piano progression."</strong> The AI will instantly generate sophisticated 7th and 9th chords that are perfect for creating a relaxed, atmospheric track. You can even see the notes on a virtual keyboard, making it a great {/* --- LINK ADDED --- */}
+                    <Link href="/blog/free-online-piano-chord-generator">free online piano chord generator</Link> for visualizing voicings.
                 </p>
                 <h3>2. For Energetic EDM and House Tracks</h3>
                 <p>
@@ -99,7 +84,8 @@ export default function WritersBlockPost() {
                     The best part of using a generator is the speed. Once you have a progression you love, you don't have to manually write it out.
                 </p>
                 <p>
-                    With ChordGen, you can simply click "Download MIDI." This gives you a file containing all the chord data. You can drag these <strong>free MIDI chord progressions</strong> directly into your DAW, assign any instrument you want, and start building your track immediately. It's the fastest way to turn a spark of inspiration into a fully-fledged song idea.
+                    With ChordGen, you can simply click "Download MIDI." This gives you a file containing all the chord data. You can drag these <strong>free MIDI chord progressions</strong> directly into your DAW, assign any instrument you want, and start building your track immediately. It's the fastest way to turn a spark of inspiration into a fully-fledged song idea, making it the ultimate {/* --- LINK ADDED --- */}
+                    <Link href="/blog/midi-chord-generator-for-producers">MIDI chord generator for producers</Link>.
                 </p>
                 <p>
                     Stop letting writer's block win. Embrace the power of intelligent randomness and start generating fresh, exciting chord progressions today. Your next great song might just be one click away.

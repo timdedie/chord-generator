@@ -5,7 +5,7 @@ import PianoProvider from "@/components/PianoProvider";
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'ChordGen - AI Chord Progression & MIDI Generator Piano',
+    title: 'AI Chord Progression Generator from Text | ChordGen',
     description: 'Instantly generate chord progressions with our free AI chord generator. Visualize chords on an interactive piano, edit your sequence, and download as a MIDI file for your DAW. Perfect for songwriters!',
     alternates: {
         canonical: '/',

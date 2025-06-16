@@ -1,4 +1,4 @@
-// app/layout.tsx (The new, correct version)
+// app/layout.tsx (Optimized and Unified)
 
 import "./globals.css";
 import { Outfit } from "next/font/google";
@@ -10,7 +10,7 @@ import { CSPostHogProvider } from "./providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-import type { Metadata } from 'next'; // <--- IMPORT METADATA TYPE
+import type { Metadata } from 'next';
 
 const outfit = Outfit({
     subsets: ["latin"],
@@ -19,37 +19,32 @@ const outfit = Outfit({
     display: "swap",
 });
 
+// --- UNIFIED DESCRIPTION ---
+const unifiedDescription = 'Describe a mood, genre, or feeling, and our AI instantly generates unique chord progressions. Visualize on piano, edit, and download free MIDI files for any DAW.';
+
 const webAppSchema = {
-    // ... your schema object remains the same
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: "ChordGen",
     url: "https://www.chordgen.org",
-    description:
-        "Free AI chord progression generator with an interactive piano. Generate unique chord sequences using natural language and download as MIDI files.",
+    description: unifiedDescription, // <--- Use unified description
     applicationCategory: "MusicApplication",
     operatingSystem: "ALL",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     image: "https://www.chordgen.org/chordgen_logo.png",
 };
 
-// ==================================================================
-//  START OF NEW METADATA OBJECT
-// ==================================================================
 export const metadata: Metadata = {
-    // metadataBase is crucial for resolving relative URLs for canonicals and OG images
     metadataBase: new URL('https://www.chordgen.org'),
 
-    // Default title for homepage, with a template for other pages
     title: {
-        default: 'ChordGen - AI Chord Progression & MIDI Generator Piano',
+        default: 'AI Chord Progression Generator from Text | ChordGen', // Your excellent new title
         template: '%s | ChordGen',
     },
-    description: 'Instantly generate chord progressions with our free AI chord generator. Visualize chords on an interactive piano, edit your sequence, and download as a MIDI file for your DAW. Perfect for songwriters!',
+    description: unifiedDescription, // <--- Use unified description
     authors: [{ name: 'ChordGen Team', url: 'https://www.chordgen.org' }],
-    keywords: ['ai chord generator', 'midi chord generator', 'chord progression generator', 'piano chord generator', 'free midi download', 'chord sequence generator', 'ai music tool', 'songwriting helper'],
+    keywords: ['ai chord generator', 'chord progression generator', 'midi generator', 'chord maker', 'ai music generator', 'songwriting tool', 'free midi', 'natural language music'],
 
-    // This replaces your <link rel="icon"> tags
     icons: {
         icon: [
             { url: '/favicon.ico', type: 'image/x-icon' },
@@ -60,43 +55,24 @@ export const metadata: Metadata = {
     },
     manifest: '/site.webmanifest',
 
-    // Default Open Graph and Twitter card data (will be overridden by individual pages)
     openGraph: {
-        title: 'AI Chord Progression & MIDI Generator (with Piano) - ChordGen',
-        description: 'Create unique chord sequences with AI, visualize on a piano, and download MIDI for free. The ultimate songwriting tool.',
-        url: '/', // This will become https://www.chordgen.org
+        title: 'AI Chord Progression Generator from Text | ChordGen',
+        description: unifiedDescription, // <--- Use unified description
+        url: '/',
         siteName: 'ChordGen',
-        images: [
-            {
-                url: '/og-image.png', // Relative to metadataBase
-                width: 1200,
-                height: 630,
-            },
-        ],
+        images: [ { url: '/og-image.png', width: 1200, height: 630 } ],
         type: 'website',
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'AI Chord Progression & MIDI Generator (with Piano) - ChordGen',
-        description: 'Create unique chord sequences with AI, visualize on a piano, and download MIDI for free. The ultimate songwriting tool.',
-        images: ['/twitter-image.png'], // Relative to metadataBase
+        title: 'AI Chord Progression Generator from Text | ChordGen',
+        description: unifiedDescription, // <--- Use unified description
+        images: ['/twitter-image.png'],
     },
-
-    // IMPORTANT: No canonical tag here. It will be set per-page.
-    // If you want one for the homepage, set it in app/page.tsx
 };
-// ==================================================================
-//  END OF NEW METADATA OBJECT
-// ==================================================================
 
-
-export default function RootLayout({
-                                       children,
-                                   }: {
-    children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode; }) {
     return (
-        // Next.js automatically injects the <head> based on the metadata object
         <html lang="en">
         <body className={`${outfit.className} bg-gray-50 dark:bg-black`}>
         <CSPostHogProvider>
@@ -109,8 +85,6 @@ export default function RootLayout({
             <Footer />
             <SonnerToaster richColors position="bottom-right" />
         </CSPostHogProvider>
-
-        {/* Your schema script can stay here */}
         <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />
         </body>
         </html>

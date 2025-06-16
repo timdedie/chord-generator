@@ -13,10 +13,10 @@ export function Footer() {
                     <div className="space-y-3 col-span-2 md:col-span-1">
                         <Link href="/" className="flex items-center gap-2">
                             <Image
-                                src="/chordgen_logo.png"
+                                src="/chordgen_logo_small.png"
                                 alt="ChordGen Logo"
-                                width={1024}  // Use the actual native width
-                                height={1024} // Use the actual native height
+                                width={64}  // Use the actual native width
+                                height={64} // Use the actual native height
                                 className="h-7 w-7 dark:invert" // Style it as a square
                             />
                             <span className="font-bold text-xl text-gray-900 dark:text-gray-100">ChordGen</span>
