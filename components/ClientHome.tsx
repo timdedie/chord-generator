@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, KeyboardEvent, useRef } from "react";
-// <<< FIX 1: Import the 'Variants' type >>>
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
@@ -15,14 +14,12 @@ import { useChordManagement } from "@/hooks/useChordManagement";
 import { useExamplePrompts } from "@/hooks/useExamplePrompts";
 
 import ThinkingMessages from "@/components/ThinkingMessages";
-import Header from "@/components/Header";
 import PianoKeyboard from "@/components/PianoKeyboard";
 import ChordRow from "@/components/ChordRow";
 import ChordGenerator from "@/components/ChordGenerator";
 import { usePiano } from "@/components/PianoProvider";
 import MobileChordGrid from "@/components/MobileChordRow";
 import ChordRowSkeleton from "@/components/ChordRowSkeleton";
-import MobileHeader from "@/components/MobileHeader";
 import { PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useMediaQuery } from "react-responsive";
 
@@ -327,7 +324,6 @@ export default function ClientHome() {
     const hasChordsProp = chords.length > 0 || fullLoading;
     const firstNote = MidiNumbers.fromNote("C3"); const lastNote = MidiNumbers.fromNote("C5");
 
-    // <<< FIX 2: Explicitly type the constant with the 'Variants' type >>>
     const buttonVariants: Variants = {
         hidden: { opacity: 0, y: 10 },
         visible: {
