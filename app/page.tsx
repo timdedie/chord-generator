@@ -15,7 +15,6 @@ export const metadata: Metadata = {
 export default function HomePage() {
     return (
         <PianoProvider>
-            {/* The <main> tag is removed from here */}
             <ClientHome />
         </PianoProvider>
     );

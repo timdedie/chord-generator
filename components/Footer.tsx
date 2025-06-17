@@ -15,8 +15,8 @@ export function Footer() {
                             <Image
                                 src="/chordgen_logo_small.png"
                                 alt="ChordGen Logo"
-                                width={64}  // Use the actual native width
-                                height={64} // Use the actual native height
+                                width={64}
+                                height={64}
                                 className="h-7 w-7 dark:invert" // Style it as a square
                             />
                             <span className="font-bold text-xl text-gray-900 dark:text-gray-100">ChordGen</span>
