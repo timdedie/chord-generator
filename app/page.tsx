@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
     title: 'AI Chord Progression Generator from Text | ChordGen',
-    description: 'Instantly generate chord progressions with our free AI chord generator. Visualize chords on an interactive piano, edit your sequence, and download as a MIDI file for your DAW. Perfect for songwriters!',
+    description: 'Generate chord progressions instantly with our free AI chord progression generator. Visualize on an interactive piano, edit, and download MIDI files.',
     alternates: {
         canonical: '/',
     },
