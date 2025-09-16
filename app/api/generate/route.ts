@@ -1,4 +1,5 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+// import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
 import { generateObject, CoreMessage } from 'ai';
 import { z } from 'zod';
 import { Chord } from 'tonal'; // For backend validation
@@ -19,14 +20,27 @@ interface ApiError extends Error {
     details?: any; // To include error details, e.g., from Zod
 }
 
-const { GOOGLE_GENERATIVE_AI_API_KEY } = process.env;
-if (!GOOGLE_GENERATIVE_AI_API_KEY) {
-    throw new Error('GOOGLE_GENERATIVE_AI_API_KEY environment variable is not set.');
+// const { GOOGLE_GENERATIVE_AI_API_KEY } = process.env;
+// if (!GOOGLE_GENERATIVE_AI_API_KEY) {
+//     throw new Error('GOOGLE_GENERATIVE_AI_API_KEY environment variable is not set.');
+// }
+//
+// const googleAIProvider = createGoogleGenerativeAI({});
+// // const PRIMARY_MODEL_ID = 'gemini-1.5-flash-latest';
+// const PRIMARY_MODEL_ID = 'gemini-1.5-pro-latest';
+
+// Ensure the DEEPSEEK_API_KEY is available
+const { DEEPSEEK_API_KEY } = process.env;
+if (!DEEPSEEK_API_KEY) {
+    throw new Error("DEEPSEEK_API_KEY environment variable is not set.");
 }
 
-const googleAIProvider = createGoogleGenerativeAI({});
-// const PRIMARY_MODEL_ID = 'gemini-1.5-flash-latest';
-const PRIMARY_MODEL_ID = 'gemini-1.5-pro-latest';
+const deepseek = createOpenAI({
+    baseURL: 'https://api.deepseek.com',
+    apiKey: DEEPSEEK_API_KEY,
+});
+
+const PRIMARY_MODEL_ID = 'deepseek-chat';
 const DEFAULT_TEMPERATURE = 1.0;
 const MAX_RETRIES = 2; // Initial attempt + 2 retries = 3 total attempts
 
@@ -111,7 +125,7 @@ async function createChordObjectGeneration<T extends z.ZodTypeAny>(
     userMessage: string,
     schema: T
 ): Promise<z.infer<T>> {
-    const modelClient = googleAIProvider(PRIMARY_MODEL_ID);
+    const modelClient = deepseek(PRIMARY_MODEL_ID);
     const systemMessage = `
 You are an expert musician and composer specializing in chord progressions.
 Your primary goal is to generate chords that are musically correct, harmonically rich, and sound genuinely good.
