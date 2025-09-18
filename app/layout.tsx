@@ -10,6 +10,7 @@ import { CSPostHogProvider } from "./providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { DonationButton } from "@/components/DonationButton";
 import type { Metadata } from 'next';
 
 const outfit = Outfit({
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode; })
             <Analytics />
             <SpeedInsights />
             <Footer />
+            <DonationButton />
             <SonnerToaster richColors position="bottom-right" />
         </CSPostHogProvider>
         <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />
