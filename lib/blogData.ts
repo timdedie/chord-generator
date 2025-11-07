@@ -24,6 +24,12 @@ export const posts: Post[] = [
         title: 'How a Random Chord Progression Generator Can Break Writer\'s Block',
         date: '2025-06-15', // Use today's date
         description: 'Feeling stuck? Learn how to use a random and AI chord generator to spark instant inspiration, find new ideas, and download free MIDI progressions for your next track.'
+    },
+    {
+        slug: 'common-chord-progressions-guide',
+        title: 'Common Chord Progressions: The Complete Guide for Musicians',
+        date: '2025-11-07',
+        description: 'Master the most popular chord progressions used in music. From I-V-vi-IV to jazz standards, learn the theory and hear examples of progressions that work in every genre.'
     }
     // Add your next blog post here...
 ];
