@@ -341,7 +341,7 @@ export default function ClientHome() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
             <motion.main
-                className="flex flex-col items-center w-full px-4"
+                className={`flex flex-col items-center w-full px-4 ${isMobile ? 'pb-32' : 'pb-24'}`}
                 initial={false}
                 animate={{ paddingTop: hasChordsProp ? (isMobile ? "10vh" : "12vh") : (isMobile ? "20vh" : "27vh") }}
                 transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}

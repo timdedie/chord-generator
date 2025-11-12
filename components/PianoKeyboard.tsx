@@ -23,7 +23,12 @@ export default function PianoKeyboard({
     // const piano = useContext(PianoContext); // Old way
     const { piano, areSamplesLoaded } = usePiano(); // New way using custom hook
     const isMobile = useMediaQuery({ maxWidth: 768 });
-    const responsiveWidth = isMobile ? 320 : width;
+
+    // Calculate responsive width based on viewport
+    // On mobile, use 85% of viewport width to ensure it fits with padding
+    const responsiveWidth = isMobile
+        ? Math.min(typeof window !== 'undefined' ? window.innerWidth * 0.85 : 280, 280)
+        : width;
 
     const handlePlayNote = (midiNumber: number) => {
         if (piano && areSamplesLoaded) { // Check if piano instance exists and samples are loaded
@@ -58,8 +63,11 @@ export default function PianoKeyboard({
         .filter((midi): midi is number => midi !== null);
 
     return (
-        <motion.div style={{ opacity }} className="fixed bottom-0 left-0 right-0 flex justify-center p-4">
-            <div className={`w-full ${isMobile ? 'max-w-[320px]' : 'max-w-[600px]'} bg-transparent`}>
+        <motion.div
+            style={{ opacity }}
+            className={`fixed bottom-0 left-0 right-0 flex justify-center ${isMobile ? 'p-2' : 'p-4'}`}
+        >
+            <div className={`w-full ${isMobile ? 'max-w-[280px]' : 'max-w-[600px]'} bg-transparent`}>
                 <div className="bg-transparent drop-shadow-md">
                     <Piano
                         noteRange={{ first: firstNote, last: lastNote }}
