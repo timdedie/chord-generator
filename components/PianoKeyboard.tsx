@@ -27,7 +27,7 @@ export default function PianoKeyboard({
     // Calculate responsive width based on viewport
     // On mobile, use 85% of viewport width to ensure it fits with padding
     const responsiveWidth = isMobile
-        ? Math.min(typeof window !== 'undefined' ? window.innerWidth * 0.85 : 280, 280)
+        ? Math.min(typeof window !== 'undefined' ? window.innerWidth * 0.85 : 220, 220)
         : width;
 
     const handlePlayNote = (midiNumber: number) => {
@@ -67,7 +67,7 @@ export default function PianoKeyboard({
             style={{ opacity }}
             className={`fixed bottom-0 left-0 right-0 flex justify-center ${isMobile ? 'p-2' : 'p-4'}`}
         >
-            <div className={`w-full ${isMobile ? 'max-w-[280px]' : 'max-w-[600px]'} bg-transparent`}>
+            <div className={`w-full ${isMobile ? 'max-w-[220px]' : 'max-w-[600px]'} bg-transparent`}>
                 <div className="bg-transparent drop-shadow-md">
                     <Piano
                         noteRange={{ first: firstNote, last: lastNote }}
