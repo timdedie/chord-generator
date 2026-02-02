@@ -6,9 +6,22 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 })
 
 const nextConfig: NextConfig = {
-    // Your other Next.js config options can go here
-    // For example, if you have reactStrictMode, it would look like:
-    // reactStrictMode: true,
+    trailingSlash: false,
+    async redirects() {
+        return [
+            {
+                source: '/:path*',
+                has: [
+                    {
+                        type: 'host',
+                        value: 'chordgen.org',
+                    },
+                ],
+                destination: 'https://www.chordgen.org/:path*',
+                permanent: true,
+            },
+        ];
+    },
 };
 
 export default withBundleAnalyzer(nextConfig);

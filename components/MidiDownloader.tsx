@@ -52,7 +52,7 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt }) => {
 
         setHasValidChords(true);
         const writer = new MidiWriter.Writer([track]);
-        const blob = new Blob([writer.buildFile()], {
+        const blob = new Blob([writer.buildFile() as BlobPart], {
             type: "audio/midi",
         });
         const newUrl = URL.createObjectURL(blob);
