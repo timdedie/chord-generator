@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import MidiWriter from "midi-writer-js";
@@ -11,9 +10,10 @@ import { toast } from "sonner";
 interface MidiDownloaderProps {
     chords: string[];
     prompt: string;
+    compact?: boolean;
 }
 
-const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt }) => {
+const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt, compact = false }) => {
     const [midiUrl, setMidiUrl] = useState<string>("");
     const [hasValidChords, setHasValidChords] = useState<boolean>(false);
 
@@ -79,21 +79,6 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt }) => {
         });
     };
 
-    // Correctly structured variants object with a const assertion
-    const buttonVariants = {
-        initial: { opacity: 0, y: 10 },
-        animate: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.3, ease: "easeInOut" },
-        },
-        exit: {
-            opacity: 0,
-            y: 10,
-            transition: { duration: 0.3, ease: "easeInOut" },
-        },
-    } as const; // This tells TypeScript these values are fixed and literal
-
     const sanitizePromptForFilename = (text: string) => {
         if (!text) return "prompt";
         return text
@@ -112,35 +97,26 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt }) => {
         return `${sanitizedPrompt}_${safeChords.join('_')}.mid`;
     };
 
+    if (!midiUrl || !hasValidChords) {
+        return null;
+    }
+
     return (
-        <div>
-            <AnimatePresence>
-                {(midiUrl && hasValidChords) && (
-                    <motion.div
-                        key="downloadButtonActual"
-                        variants={buttonVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                    >
-                        <Button
-                            asChild
-                            className="transition transform gap-2 max-w-xs sm:w-auto"
-                            onClick={handleDownloadClick}
-                        >
-                            <a
-                                href={midiUrl}
-                                download={generateFilename()}
-                                className="flex items-center"
-                            >
-                                <Download className="h-5 w-5" />
-                                Download MIDI
-                            </a>
-                        </Button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+        <Button
+            asChild
+            variant={compact ? "outline" : "default"}
+            size={compact ? "sm" : "default"}
+            onClick={handleDownloadClick}
+        >
+            <a
+                href={midiUrl}
+                download={generateFilename()}
+                className="flex items-center gap-1"
+            >
+                <Download className={compact ? "h-4 w-4" : "h-5 w-5"} />
+                {compact ? "MIDI" : "Download MIDI"}
+            </a>
+        </Button>
     );
 };
 

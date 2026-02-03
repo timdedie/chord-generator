@@ -13,14 +13,15 @@ interface NumChordsSelectorProps {
     value: number;
     onChange: (value: number) => void;
     disabled?: boolean;
+    compact?: boolean;
 }
 
 const chordCountOptions = [2, 3, 4, 5, 6, 7, 8];
 
-export default function NumChordsSelector({ value, onChange, disabled }: NumChordsSelectorProps) {
+export default function NumChordsSelector({ value, onChange, disabled, compact = false }: NumChordsSelectorProps) {
     return (
         <div className="flex flex-col items-start gap-1.5">
-            <label htmlFor="num-chords-select" className="text-sm text-gray-600 dark:text-gray-300 sr-only"> {/* sr-only if label is implied by context or visually redundant */}
+            <label htmlFor="num-chords-select" className="text-sm text-gray-600 dark:text-gray-300 sr-only">
                 Number of Chords
             </label>
             <Select
@@ -30,7 +31,7 @@ export default function NumChordsSelector({ value, onChange, disabled }: NumChor
                 name="num-chords-select"
             >
                 <SelectTrigger
-                    className="w-full sm:w-[130px] h-16 text-base"  // Adjusted height to match button
+                    className={compact ? "w-[110px] h-10 text-sm border-0 bg-transparent focus:ring-0" : "w-full sm:w-[130px] h-16 text-base"}
                     id="num-chords-select"
                     aria-label="Select number of chords to generate"
                 >
@@ -38,7 +39,7 @@ export default function NumChordsSelector({ value, onChange, disabled }: NumChor
                 </SelectTrigger>
                 <SelectContent>
                     {chordCountOptions.map((num) => (
-                        <SelectItem key={num} value={String(num)} className="text-base">
+                        <SelectItem key={num} value={String(num)} className={compact ? "text-sm" : "text-base"}>
                             {num} Chords
                         </SelectItem>
                     ))}

@@ -1,11 +1,9 @@
 "use client";
 
-import React from "react"; // Removed useContext as usePiano is used
+import React from "react";
 import { Piano, MidiNumbers } from "react-piano";
-// import { PianoContext } from "./PianoProvider"; // Old import
-import { usePiano } from "./PianoProvider"; // New import for custom hook
+import { usePiano } from "./PianoProvider";
 import { useMediaQuery } from "react-responsive";
-import { motion, useScroll, useTransform } from "framer-motion";
 
 interface PianoKeyboardProps {
     firstNote: number;
@@ -18,16 +16,14 @@ export default function PianoKeyboard({
                                           firstNote,
                                           lastNote,
                                           activeNotes,
-                                          width = 600,
+                                          width = 400,
                                       }: PianoKeyboardProps) {
-    // const piano = useContext(PianoContext); // Old way
-    const { piano, areSamplesLoaded } = usePiano(); // New way using custom hook
+    const { piano, areSamplesLoaded } = usePiano();
     const isMobile = useMediaQuery({ maxWidth: 768 });
 
-    // Calculate responsive width based on viewport
-    // On mobile, use 85% of viewport width to ensure it fits with padding
+    // Calculate responsive width - smaller overall
     const responsiveWidth = isMobile
-        ? Math.min(typeof window !== 'undefined' ? window.innerWidth * 0.85 : 220, 220)
+        ? Math.min(typeof window !== 'undefined' ? window.innerWidth * 0.7 : 180, 180)
         : width;
 
     const handlePlayNote = (midiNumber: number) => {
@@ -46,9 +42,6 @@ export default function PianoKeyboard({
         }
     };
 
-    const { scrollY } = useScroll();
-    const opacity = useTransform(scrollY, [0, 100], [1, 0]);
-
     const sanitizedActiveNotes = activeNotes
         .map(n => n.trim())
         .filter(n => /^[A-G](?:#|b)?\d$/.test(n))
@@ -63,12 +56,9 @@ export default function PianoKeyboard({
         .filter((midi): midi is number => midi !== null);
 
     return (
-        <motion.div
-            style={{ opacity }}
-            className={`fixed bottom-0 left-0 right-0 flex justify-center ${isMobile ? 'p-2' : 'p-4'}`}
-        >
-            <div className={`w-full ${isMobile ? 'max-w-[220px]' : 'max-w-[600px]'} bg-transparent`}>
-                <div className="bg-transparent drop-shadow-md">
+        <div className={`fixed bottom-0 left-0 right-0 flex justify-center z-40 ${isMobile ? 'p-2' : 'p-4'}`}>
+            <div className={`w-full ${isMobile ? 'max-w-[180px]' : 'max-w-[400px]'} bg-transparent`}>
+                <div className="bg-transparent drop-shadow-lg">
                     <Piano
                         noteRange={{ first: firstNote, last: lastNote }}
                         playNote={handlePlayNote}
@@ -79,6 +69,6 @@ export default function PianoKeyboard({
                     />
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 }

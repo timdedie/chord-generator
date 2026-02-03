@@ -1,8 +1,5 @@
-// app/page.tsx
-
-import ClientHome from "@/components/ClientHome";
-import PianoProvider from "@/components/PianoProvider";
 import type { Metadata } from 'next';
+import HomeClient from "@/components/HomeClient";
 
 export const metadata: Metadata = {
     title: 'AI Chord Progression Generator from Text | ChordGen',
@@ -13,9 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-    return (
-        <PianoProvider>
-            <ClientHome />
-        </PianoProvider>
-    );
+    return <HomeClient />;
 }

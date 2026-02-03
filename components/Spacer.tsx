@@ -16,7 +16,7 @@ const Spacer: React.FC<SpacerProps> = ({ position, chordsCount, addChordAt }) =>
 
     return (
         <div
-            className="w-[30px] h-48 relative"
+            className="w-[30px] h-28 relative"
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
         >
