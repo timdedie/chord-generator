@@ -4,13 +4,12 @@ import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
-import { start as toneStart } from "tone";
 import posthog from "posthog-js";
 
 import SearchHeader from "@/components/SearchHeader";
 import ProgressionCard from "@/components/ProgressionCard";
 import PianoKeyboard from "@/components/PianoKeyboard";
-import PianoProvider, { usePiano } from "@/components/PianoProvider";
+import { usePiano } from "@/components/PianoProvider";
 import ThinkingMessages from "@/components/ThinkingMessages";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -110,7 +109,7 @@ function ResultsContent() {
         const params = new URLSearchParams();
         params.set("q", prompt);
         params.set("n", String(numChords));
-        router.push(`/results?${params.toString()}`);
+        router.push(`/app/results?${params.toString()}`);
 
         generateProgressions(prompt, numChords);
     }, [prompt, numChords, router, generateProgressions]);
@@ -131,8 +130,8 @@ function ResultsContent() {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
-            {/* Top gradient below header */}
-            <div className="fixed top-16 left-0 right-0 h-12 bg-gradient-to-b from-gray-50 dark:from-black to-transparent pointer-events-none z-30" />
+            {/* Top gradient */}
+            <div className="fixed top-0 md:top-0 left-0 right-0 h-12 bg-gradient-to-b from-gray-50 dark:from-black to-transparent pointer-events-none z-30" />
 
             <SearchHeader
                 prompt={prompt}
@@ -143,7 +142,7 @@ function ResultsContent() {
                 isLoading={isLoading}
             />
 
-            <main className="container max-w-4xl mx-auto px-4 pt-32 pb-48">
+            <main className="container max-w-4xl mx-auto px-4 pt-24 md:pt-24 pb-48">
                 {isLoading ? (
                     <div className="space-y-6">
                         <div className="flex items-center justify-center py-8">
@@ -192,14 +191,12 @@ function ResultsContent() {
 
 export default function ResultsPage() {
     return (
-        <PianoProvider>
-            <Suspense fallback={
-                <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
-                    <div className="animate-pulse text-muted-foreground">Loading...</div>
-                </div>
-            }>
-                <ResultsContent />
-            </Suspense>
-        </PianoProvider>
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
+                <div className="animate-pulse text-muted-foreground">Loading...</div>
+            </div>
+        }>
+            <ResultsContent />
+        </Suspense>
     );
 }

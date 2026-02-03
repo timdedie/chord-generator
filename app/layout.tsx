@@ -1,4 +1,4 @@
-// app/layout.tsx (Optimized and Unified)
+// app/layout.tsx - Root layout with providers only
 
 import "./globals.css";
 import { Outfit } from "next/font/google";
@@ -8,9 +8,6 @@ import React from "react";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { CSPostHogProvider } from "./providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { ConditionalFooter } from "@/components/ConditionalFooter";
-import { Header } from "@/components/Header";
-import { ConditionalDonationButton } from "@/components/ConditionalDonationButton";
 import type { Metadata } from 'next';
 
 const outfit = Outfit({
@@ -20,7 +17,6 @@ const outfit = Outfit({
     display: "swap",
 });
 
-// --- UNIFIED DESCRIPTION ---
 const unifiedDescription = 'Describe a mood, genre, or feeling, and our AI instantly generates unique chord progressions. Visualize on piano, edit, and download free MIDI files for any DAW.';
 
 const webAppSchema = {
@@ -28,7 +24,7 @@ const webAppSchema = {
     "@type": "WebApplication",
     name: "ChordGen",
     url: "https://www.chordgen.org",
-    description: unifiedDescription, // <--- Use unified description
+    description: unifiedDescription,
     applicationCategory: "MusicApplication",
     operatingSystem: "ALL",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -39,10 +35,10 @@ export const metadata: Metadata = {
     metadataBase: new URL('https://www.chordgen.org'),
 
     title: {
-        default: 'AI Chord Progression Generator from Text | ChordGen', // Your excellent new title
+        default: 'AI Chord Progression Generator from Text | ChordGen',
         template: '%s | ChordGen',
     },
-    description: unifiedDescription, // <--- Use unified description
+    description: unifiedDescription,
     authors: [{ name: 'ChordGen Team', url: 'https://www.chordgen.org' }],
     keywords: ['ai chord generator', 'chord progression generator', 'midi generator', 'chord maker', 'ai music generator', 'songwriting tool', 'free midi', 'natural language music'],
 
@@ -58,7 +54,7 @@ export const metadata: Metadata = {
 
     openGraph: {
         title: 'AI Chord Progression Generator from Text | ChordGen',
-        description: unifiedDescription, // <--- Use unified description
+        description: unifiedDescription,
         url: '/',
         siteName: 'ChordGen',
         images: [ { url: '/og-image.png', width: 1200, height: 630 } ],
@@ -67,7 +63,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'AI Chord Progression Generator from Text | ChordGen',
-        description: unifiedDescription, // <--- Use unified description
+        description: unifiedDescription,
         images: ['/twitter-image.png'],
     },
 };
@@ -77,14 +73,9 @@ export default function RootLayout({ children }: { children: React.ReactNode; })
         <html lang="en">
         <body className={`${outfit.className} bg-gray-50 dark:bg-black`}>
         <CSPostHogProvider>
-            <Header />
-            <main className="flex flex-col min-h-[calc(100vh-theme(height.16))]">
-                {children}
-            </main>
+            {children}
             <Analytics />
             <SpeedInsights />
-            <ConditionalFooter />
-            <ConditionalDonationButton />
             <SonnerToaster richColors position="bottom-right" />
         </CSPostHogProvider>
         <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />

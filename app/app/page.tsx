@@ -14,7 +14,7 @@ const checkPosthogConfigured = () => {
     return typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY && process.env.NEXT_PUBLIC_POSTHOG_HOST;
 }
 
-export default function HomeClient() {
+export default function AppPage() {
     const router = useRouter();
     const { randomExamples } = useExamplePrompts();
 
@@ -32,14 +32,14 @@ export default function HomeClient() {
                 prompt_text: prompt,
                 prompt_length: prompt.length,
                 num_chords_requested: numChords,
-                source: 'homepage',
+                source: 'app_page',
             });
         }
 
         const params = new URLSearchParams();
         params.set("q", prompt);
         params.set("n", String(numChords));
-        router.push(`/results?${params.toString()}`);
+        router.push(`/app/results?${params.toString()}`);
     }, [prompt, numChords, router]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
@@ -62,7 +62,7 @@ export default function HomeClient() {
         const params = new URLSearchParams();
         params.set("q", example);
         params.set("n", String(numChords));
-        router.push(`/results?${params.toString()}`);
+        router.push(`/app/results?${params.toString()}`);
     }, [numChords, router]);
 
     const handleNumChordsChange = useCallback((value: number) => {
@@ -73,10 +73,10 @@ export default function HomeClient() {
     }, []);
 
     return (
-        <div className="min-h-[calc(100vh-theme(height.16))] bg-gray-50 dark:bg-black transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
-            <main className="flex flex-col items-center justify-center w-full px-4 min-h-[calc(100vh-theme(height.16))]">
+        <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
+            <main className="flex flex-col items-center justify-center w-full px-4 min-h-screen">
                 <div className="w-full max-w-3xl">
-                    {/* Search bar - same style as results page */}
+                    {/* Search bar */}
                     <div className="flex items-center gap-2 bg-white dark:bg-black rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-2 mb-6">
                         <Input
                             value={prompt}

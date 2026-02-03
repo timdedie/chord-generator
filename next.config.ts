@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
                 destination: 'https://www.chordgen.org/:path*',
                 permanent: true,
             },
+            {
+                source: '/results',
+                destination: '/app/results',
+                permanent: true,
+            },
         ];
     },
 };
