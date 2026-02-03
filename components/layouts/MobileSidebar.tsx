@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, Home, Moon, Sun, Monitor } from 'lucide-react';
+import { Menu, SquarePen, Moon, Sun, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -68,7 +68,7 @@ export function MobileSidebar() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-64 p-0">
                     <SheetHeader className="h-14 px-4 border-b border-border flex flex-row items-center justify-start">
-                        <Link href="/app" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+                        <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
                             <Image
                                 src="/chordgen_logo_small.png"
                                 alt="ChordGen Logo"
@@ -80,11 +80,21 @@ export function MobileSidebar() {
                         </Link>
                     </SheetHeader>
 
+                    {/* New progression button */}
+                    <div className="p-4 border-b border-border">
+                        <Button asChild variant="ghost" className="w-full justify-start" onClick={() => setOpen(false)}>
+                            <Link href="/app">
+                                <SquarePen className="h-4 w-4 mr-2" />
+                                New Progression
+                            </Link>
+                        </Button>
+                    </div>
+
                     <nav className="flex-1 py-4 px-4">
                         {/* Future: History, saved progressions, settings links */}
                     </nav>
 
-                    <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border space-y-3">
+                    <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
                         <div className="space-y-1">
                             <label className="text-xs text-muted-foreground">Theme</label>
                             <Select value={theme} onValueChange={handleThemeChange}>
@@ -113,23 +123,11 @@ export function MobileSidebar() {
                                 </SelectContent>
                             </Select>
                         </div>
-
-                        <Button
-                            variant="outline"
-                            asChild
-                            className="w-full justify-start"
-                            onClick={() => setOpen(false)}
-                        >
-                            <Link href="/">
-                                <Home className="h-4 w-4 mr-2" />
-                                Back to site
-                            </Link>
-                        </Button>
                     </div>
                 </SheetContent>
             </Sheet>
 
-            <Link href="/app" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
                 <Image
                     src="/chordgen_logo_small.png"
                     alt="ChordGen Logo"

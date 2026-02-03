@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Plus, Moon, Sun, Monitor } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SquarePen, Moon, Sun, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -53,12 +53,12 @@ export function AppSidebar() {
 
     return (
         <aside
-            className={`hidden md:flex flex-col h-screen bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 transition-all duration-200 ${
+            className={`hidden md:flex flex-col fixed top-0 left-0 h-screen bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 transition-all duration-200 z-40 ${
                 collapsed ? 'w-14' : 'w-56'
             }`}
         >
             {/* Top section: Logo and collapse toggle */}
-            <div className="flex items-center justify-between h-16 px-3 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between h-16 px-3">
                 <Link href="/" className="flex items-center gap-2 overflow-hidden">
                     <Image
                         src="/chordgen_logo_small.png"
@@ -88,14 +88,15 @@ export function AppSidebar() {
             </div>
 
             {/* New progression button */}
-            <div className="p-2 border-b border-gray-200 dark:border-gray-800">
+            <div className="p-2">
                 <Button
                     asChild
-                    variant="default"
-                    className={`w-full ${collapsed ? 'px-0 justify-center' : 'justify-start'}`}
+                    variant="ghost"
+                    size={collapsed ? "icon" : "default"}
+                    className={`w-full ${collapsed ? '' : 'justify-start'}`}
                 >
                     <Link href="/app">
-                        <Plus className="h-4 w-4 flex-shrink-0" />
+                        <SquarePen className="h-4 w-4 flex-shrink-0" />
                         {!collapsed && <span className="ml-2">New Progression</span>}
                     </Link>
                 </Button>
@@ -107,7 +108,7 @@ export function AppSidebar() {
             </nav>
 
             {/* Bottom section: Dark mode toggle */}
-            <div className="p-3 border-t border-gray-200 dark:border-gray-800">
+            <div className="p-3">
                 {collapsed ? (
                     <Button
                         variant="ghost"

@@ -31,7 +31,7 @@ export default function SearchHeader({
     };
 
     return (
-        <div className="fixed top-0 left-0 right-0 z-40 px-4 py-4 md:top-4">
+        <div className="fixed top-0 left-0 md:left-14 right-0 z-30 px-4 py-4 md:top-4">
             <div className="container max-w-3xl mx-auto">
                 <div className="flex items-center gap-2 bg-white dark:bg-black rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-2">
                     {/* Search input */}

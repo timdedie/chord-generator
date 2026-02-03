@@ -35,6 +35,13 @@ function ResultsContent() {
     const [activeNotes, setActiveNotes] = useState<string[]>([]);
     const [hasInitialized, setHasInitialized] = useState(false);
 
+    // Load samples on mount
+    useEffect(() => {
+        if (!areSamplesLoaded && !isLoadingSamples) {
+            loadSamples();
+        }
+    }, [areSamplesLoaded, isLoadingSamples, loadSamples]);
+
     // Load from URL params on mount
     useEffect(() => {
         const q = searchParams.get("q");
@@ -131,7 +138,7 @@ function ResultsContent() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
             {/* Top gradient */}
-            <div className="fixed top-0 md:top-0 left-0 right-0 h-12 bg-gradient-to-b from-gray-50 dark:from-black to-transparent pointer-events-none z-30" />
+            <div className="fixed top-0 left-0 md:left-14 right-0 h-12 bg-gradient-to-b from-gray-50 dark:from-black to-transparent pointer-events-none z-20" />
 
             <SearchHeader
                 prompt={prompt}
@@ -142,7 +149,7 @@ function ResultsContent() {
                 isLoading={isLoading}
             />
 
-            <main className="container max-w-4xl mx-auto px-4 pt-24 md:pt-24 pb-48">
+            <main className="container max-w-4xl mx-auto px-4 pt-36 pb-48">
                 {isLoading ? (
                     <div className="space-y-6">
                         <div className="flex items-center justify-center py-8">
@@ -182,7 +189,7 @@ function ResultsContent() {
             </main>
 
             {/* Bottom gradient above piano */}
-            <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-50 dark:from-black to-transparent pointer-events-none z-30" />
+            <div className="fixed bottom-0 left-0 md:left-14 right-0 h-32 bg-gradient-to-t from-gray-50 dark:from-black to-transparent pointer-events-none z-20" />
 
             <PianoKeyboard firstNote={firstNote} lastNote={lastNote} activeNotes={activeNotes} />
         </div>

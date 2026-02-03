@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState, useCallback, KeyboardEvent } from "react";
+import React, { useState, useCallback, useEffect, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
 import NumChordsSelector from "@/components/NumChordsSelector";
 import { useExamplePrompts } from "@/hooks/useExamplePrompts";
+import SplitText from "@/components/SplitText";
 import posthog from "posthog-js";
 
 const checkPosthogConfigured = () => {
@@ -21,6 +23,13 @@ export default function AppPage() {
     const [prompt, setPrompt] = useState("");
     const [numChords, setNumChords] = useState(4);
     const [isNavigating, setIsNavigating] = useState(false);
+    const [showText, setShowText] = useState(false);
+
+    // Start text animation slightly after logo starts (not when it completes)
+    useEffect(() => {
+        const timer = setTimeout(() => setShowText(true), 400);
+        return () => clearTimeout(timer);
+    }, []);
 
     const handleGenerate = useCallback(() => {
         if (!prompt.trim()) return;
@@ -76,6 +85,48 @@ export default function AppPage() {
         <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300 selection:bg-primary/70 selection:text-primary-foreground">
             <main className="flex flex-col items-center justify-center w-full px-4 min-h-screen">
                 <div className="w-full max-w-3xl">
+                    {/* Animated intro - logo and text side by side */}
+                    <div className="flex items-center gap-4 mb-8">
+                        {/* Logo animation */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
+                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                            transition={{
+                                duration: 0.8,
+                                ease: [0.16, 1, 0.3, 1],
+                            }}
+                            className="flex-shrink-0"
+                        >
+                            <Image
+                                src="/chordgen_logo_small.png"
+                                alt="ChordGen Logo"
+                                width={56}
+                                height={56}
+                                className="h-14 w-14 dark:invert"
+                                priority
+                            />
+                        </motion.div>
+
+                        {/* Text animation */}
+                        {showText && (
+                            <SplitText
+                                text="What do you want to create?"
+                                className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white"
+                                delay={15}
+                                duration={0.3}
+                                ease="power3.out"
+                                splitType="chars"
+                                from={{ opacity: 0, y: 15 }}
+                                to={{ opacity: 1, y: 0 }}
+                                threshold={0.1}
+                                rootMargin="0px"
+                                textAlign="left"
+                                tag="h1"
+                                onLetterAnimationComplete={() => {}}
+                            />
+                        )}
+                    </div>
+
                     {/* Search bar */}
                     <div className="flex items-center gap-2 bg-white dark:bg-black rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-2 mb-6">
                         <Input
