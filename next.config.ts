@@ -10,17 +10,6 @@ const nextConfig: NextConfig = {
     async redirects() {
         return [
             {
-                source: '/:path*',
-                has: [
-                    {
-                        type: 'host',
-                        value: 'chordgen.org',
-                    },
-                ],
-                destination: 'https://www.chordgen.org/:path*',
-                permanent: true,
-            },
-            {
                 source: '/results',
                 destination: '/app/results',
                 permanent: true,

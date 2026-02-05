@@ -33,6 +33,9 @@ const webAppSchema = {
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://www.chordgen.org'),
+    alternates: {
+        canonical: '/',
+    },
 
     title: {
         default: 'AI Chord Progression Generator from Text | ChordGen',
@@ -55,7 +58,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'AI Chord Progression Generator from Text | ChordGen',
         description: unifiedDescription,
-        url: '/',
+        url: 'https://www.chordgen.org/',
         siteName: 'ChordGen',
         images: [ { url: '/og-image.png', width: 1200, height: 630 } ],
         type: 'website',
