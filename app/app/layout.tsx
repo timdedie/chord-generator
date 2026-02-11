@@ -3,7 +3,9 @@ import type { Metadata } from 'next';
 import AppShell from './AppShell';
 
 export const metadata: Metadata = {
-    title: 'Create Chord Progression',
+    title: {
+        absolute: 'ChordGen',
+    },
     description: 'Generate AI-powered chord progressions from text descriptions. Visualize on piano, edit, and download free MIDI files.',
 };
 

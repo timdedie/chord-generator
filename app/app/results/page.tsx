@@ -6,12 +6,14 @@ import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
 import posthog from "posthog-js";
 
+import { Plus } from "lucide-react";
 import SearchHeader from "@/components/SearchHeader";
 import ProgressionCard from "@/components/ProgressionCard";
 import PianoKeyboard from "@/components/PianoKeyboard";
 import { usePiano } from "@/components/PianoProvider";
 import ThinkingMessages from "@/components/ThinkingMessages";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 interface ProgressionData {
     id: string;
@@ -32,6 +34,7 @@ function ResultsContent() {
     const [numChords, setNumChords] = useState(4);
     const [progressions, setProgressions] = useState<ProgressionData[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [activeNotes, setActiveNotes] = useState<string[]>([]);
     const [hasInitialized, setHasInitialized] = useState(false);
 
@@ -109,6 +112,51 @@ function ResultsContent() {
         setIsLoading(false);
     }, [areSamplesLoaded, isLoadingSamples, loadSamples]);
 
+    const generateMoreProgressions = useCallback(async () => {
+        if (!prompt.trim() || isLoadingMore) return;
+
+        setIsLoadingMore(true);
+
+        try {
+            const existingProgressions = progressions.map((p) => ({
+                chords: p.chords,
+                style: p.style,
+            }));
+
+            const res = await fetch("/api/generate-multiple", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    prompt,
+                    numChords,
+                    existingProgressions,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+                console.error("Generate more error:", data.error);
+                setIsLoadingMore(false);
+                return;
+            }
+
+            setProgressions((prev) => [...prev, ...(data.progressions || [])]);
+
+            if (checkPosthogConfigured()) {
+                posthog.capture('more_progressions_generated', {
+                    prompt_text: prompt,
+                    num_chords_requested: numChords,
+                    total_progressions: progressions.length + (data.progressions?.length || 0),
+                });
+            }
+        } catch (err) {
+            console.error("Network error:", err);
+        }
+
+        setIsLoadingMore(false);
+    }, [prompt, numChords, progressions, isLoadingMore]);
+
     const handleGenerate = useCallback(() => {
         if (!prompt.trim()) return;
 
@@ -173,6 +221,26 @@ function ResultsContent() {
                                 onActiveNotesChange={handleActiveNotesChange}
                             />
                         ))}
+                        {isLoadingMore ? (
+                            <>
+                                {[1, 2, 3].map((i) => (
+                                    <div key={`skeleton-more-${i}`} className="w-full">
+                                        <Skeleton className="h-[200px] w-full rounded-lg" />
+                                    </div>
+                                ))}
+                            </>
+                        ) : (
+                            <div className="flex justify-center pt-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={generateMoreProgressions}
+                                    className="h-12 w-12 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/60 transition-colors"
+                                >
+                                    <Plus className="h-5 w-5 text-muted-foreground" />
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-20 text-center">

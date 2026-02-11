@@ -9,6 +9,7 @@ import {
 interface RequestBody {
     prompt: string;
     numChords: number;
+    existingProgressions?: { chords: string[]; style: string }[];
 }
 
 interface ApiError extends Error {
@@ -129,10 +130,26 @@ Ensure your response strictly adheres to all CHORD_FORMATTING_RULES and the requ
     throw finalError;
 }
 
-function buildMultipleProgressionsMessage(prompt: string, numChords: number): string {
+function buildMultipleProgressionsMessage(
+    prompt: string,
+    numChords: number,
+    existingProgressions?: { chords: string[]; style: string }[]
+): string {
     const count = numChords >= 2 && numChords <= 8 ? numChords : 4;
+
+    let existingSection = '';
+    if (existingProgressions && existingProgressions.length > 0) {
+        const listing = existingProgressions
+            .map((p, i) => `  ${i + 1}. [${p.style}] ${p.chords.join(' → ')}`)
+            .join('\n');
+        existingSection = `
+
+IMPORTANT: The user already has these progressions. You MUST generate completely DIFFERENT ones — use different keys, modes, and harmonic approaches. Do NOT repeat or closely resemble any of these:
+${listing}`;
+    }
+
     return `
-Create THREE DIFFERENT ${count}-chord progressions based on this requirement: "${prompt}".
+Create THREE DIFFERENT ${count}-chord progressions based on this requirement: "${prompt}".${existingSection}
 
 Each progression should:
 1. Have exactly ${count} chords
@@ -171,7 +188,7 @@ Example format:
 export async function POST(request: Request): Promise<Response> {
     try {
         const body = (await request.json()) as RequestBody;
-        const { prompt, numChords } = body;
+        const { prompt, numChords, existingProgressions } = body;
 
         if (!prompt) {
             return createResponse(
@@ -181,7 +198,7 @@ export async function POST(request: Request): Promise<Response> {
         }
 
         const effectiveCount = (typeof numChords === 'number' && numChords >= 2 && numChords <= 8) ? numChords : 4;
-        const userMessage = buildMultipleProgressionsMessage(prompt, effectiveCount);
+        const userMessage = buildMultipleProgressionsMessage(prompt, effectiveCount, existingProgressions);
 
         const validatedResponse = await createMultipleProgressionsGeneration(userMessage);
 
