@@ -6,7 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import React from "react";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
-import { CSPostHogProvider } from "./providers";
+
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from 'next';
 
@@ -75,12 +75,10 @@ export default function RootLayout({ children }: { children: React.ReactNode; })
     return (
         <html lang="en">
         <body className={`${outfit.className} bg-gray-50 dark:bg-black`}>
-        <CSPostHogProvider>
             {children}
             <Analytics />
             <SpeedInsights />
             <SonnerToaster richColors position="bottom-right" />
-        </CSPostHogProvider>
         <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />
         </body>
         </html>

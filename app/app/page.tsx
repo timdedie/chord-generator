@@ -9,16 +9,13 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
 import NumChordsSelector from "@/components/NumChordsSelector";
 import { useExamplePrompts } from "@/hooks/useExamplePrompts";
+import { usePiano } from "@/components/PianoProvider";
 import SplitText from "@/components/SplitText";
-import posthog from "posthog-js";
-
-const checkPosthogConfigured = () => {
-    return typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY && process.env.NEXT_PUBLIC_POSTHOG_HOST;
-}
 
 export default function AppPage() {
     const router = useRouter();
     const { randomExamples } = useExamplePrompts();
+    const { loadSamples, areSamplesLoaded, isLoadingSamples } = usePiano();
 
     const [prompt, setPrompt] = useState("");
     const [numChords, setNumChords] = useState(4);
@@ -34,22 +31,16 @@ export default function AppPage() {
     const handleGenerate = useCallback(() => {
         if (!prompt.trim()) return;
 
-        setIsNavigating(true);
+        // Start loading piano samples now (user gesture unlocks AudioContext)
+        if (!areSamplesLoaded && !isLoadingSamples) loadSamples();
 
-        if (checkPosthogConfigured()) {
-            posthog.capture('chords_generated', {
-                prompt_text: prompt,
-                prompt_length: prompt.length,
-                num_chords_requested: numChords,
-                source: 'app_page',
-            });
-        }
+        setIsNavigating(true);
 
         const params = new URLSearchParams();
         params.set("q", prompt);
         params.set("n", String(numChords));
         router.push(`/app/results?${params.toString()}`);
-    }, [prompt, numChords, router]);
+    }, [prompt, numChords, router, areSamplesLoaded, isLoadingSamples, loadSamples]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
@@ -59,12 +50,7 @@ export default function AppPage() {
     }, [handleGenerate]);
 
     const handleExampleClick = useCallback((example: string) => {
-        if (checkPosthogConfigured()) {
-            posthog.capture('example_prompt_clicked', {
-                example_prompt_text: example,
-                num_chords_requested: numChords,
-            });
-        }
+        if (!areSamplesLoaded && !isLoadingSamples) loadSamples();
 
         setIsNavigating(true);
 
@@ -72,13 +58,10 @@ export default function AppPage() {
         params.set("q", example);
         params.set("n", String(numChords));
         router.push(`/app/results?${params.toString()}`);
-    }, [numChords, router]);
+    }, [numChords, router, areSamplesLoaded, isLoadingSamples, loadSamples]);
 
     const handleNumChordsChange = useCallback((value: number) => {
         setNumChords(value);
-        if (checkPosthogConfigured()) {
-            posthog.capture('num_chords_setting_changed', { num_chords_selected: value });
-        }
     }, []);
 
     return (

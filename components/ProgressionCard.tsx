@@ -16,8 +16,6 @@ import { now as toneNow } from "tone";
 import { usePiano } from "@/components/PianoProvider";
 import { getVoicedChordNotes } from "@/lib/chordUtils";
 import dynamic from "next/dynamic";
-import posthog from "posthog-js";
-
 const MidiDownloaderInline = dynamic(() => import("@/components/MidiDownloader"), {
     loading: () => <Button size="sm" variant="outline" disabled><Download className="h-4 w-4 mr-1" />MIDI</Button>,
     ssr: false
@@ -42,10 +40,6 @@ interface ProgressionCardProps {
 }
 
 const generateUniqueId = () => `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-
-const checkPosthogConfigured = () => {
-    return typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY && process.env.NEXT_PUBLIC_POSTHOG_HOST;
-}
 
 export default function ProgressionCard({
     id,
@@ -83,7 +77,6 @@ export default function ProgressionCard({
 
     const playChordOnce = useCallback(async (chordSymbol: string) => {
         if (!piano || !areSamplesLoaded) return;
-        if (checkPosthogConfigured()) posthog.capture('chord_played', { chord_symbol: chordSymbol, source: 'progression_card' });
         onChordPlay?.(chordSymbol);
 
         const notesToPlay = getVoicedChordNotes(chordSymbol);
@@ -143,7 +136,6 @@ export default function ProgressionCard({
     const handleTogglePlayPause = useCallback(() => {
         if (isPlaying) {
             pauseProgression();
-            if (checkPosthogConfigured()) posthog.capture('progression_playback_paused', { progression: chords.map(c => c.chord).join('-') });
         } else {
             if (chords.length === 0) return;
             if (!areSamplesLoaded) {
@@ -152,7 +144,6 @@ export default function ProgressionCard({
             }
             setIsPlaying(true);
             playNextChord(0);
-            if (checkPosthogConfigured()) posthog.capture('progression_playback_started', { progression: chords.map(c => c.chord).join('-'), chord_count: chords.length });
         }
     }, [isPlaying, pauseProgression, playNextChord, chords, areSamplesLoaded, isLoadingSamples, loadSamples]);
 
@@ -171,28 +162,11 @@ export default function ProgressionCard({
             if (oldIndex === -1 || newIndex === -1) return items;
             return arrayMove(items, oldIndex, newIndex);
         });
+    }, []);
 
-        if (checkPosthogConfigured()) {
-            const oldIndex = chords.findIndex(c => String(c.id) === String(active.id));
-            const newIndex = chords.findIndex(c => String(c.id) === String(over.id));
-            posthog.capture('chord_rearranged', {
-                moved_chord_symbol: chords[oldIndex]?.chord || 'unknown',
-                original_index: oldIndex,
-                new_index: newIndex,
-                total_chords_in_progression: chords.length
-            });
-        }
-    }, [chords]);
-
-    const handleRemoveChord = useCallback((chordId: string, chordSymbol: string) => {
+    const handleRemoveChord = useCallback((chordId: string) => {
         setChords(prev => prev.filter(c => c.id !== chordId));
-        if (checkPosthogConfigured()) {
-            posthog.capture('chord_removed', {
-                removed_chord_symbol: chordSymbol,
-                remaining_chords_count: chords.length > 0 ? chords.length - 1 : 0
-            });
-        }
-    }, [chords.length]);
+    }, []);
 
     const addChordAt = useCallback(async (position: number) => {
         if (chords.length >= 8) return;
@@ -292,12 +266,6 @@ export default function ProgressionCard({
 
             if (currentProgressionKeyRef.current === progressionKey) {
                 setExplanationCache(prev => new Map(prev).set(progressionKey, accumulatedText));
-                if (checkPosthogConfigured()) {
-                    posthog.capture('explanation_generated_successfully', {
-                        progression_key: progressionKey,
-                        prompt_used_for_explanation: prompt
-                    });
-                }
             }
         } catch (err: unknown) {
             if (err instanceof Error && err.name === 'AbortError') {
@@ -363,7 +331,7 @@ export default function ProgressionCard({
                 id={chord.id}
                 item={chord}
                 onPlay={() => playChordOnce(chord.chord)}
-                onRemove={() => handleRemoveChord(chord.id, chord.chord)}
+                onRemove={() => handleRemoveChord(chord.id)}
                 loading={loadingChordId === chord.id}
                 isPlaying={playingChordId === chord.id}
             />

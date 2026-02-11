@@ -4,12 +4,9 @@ import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { MidiNumbers } from "react-piano";
 import "react-piano/dist/styles.css";
-import posthog from "posthog-js";
-
-import { Plus } from "lucide-react";
+import { Plus} from "lucide-react";
 import SearchHeader from "@/components/SearchHeader";
-import ProgressionCard from "@/components/ProgressionCard";
-import MobileProgressionCard from "@/components/MobileProgressionCard";
+import ChordColumnsContainer from "@/components/ChordColumns/ChordColumnsContainer";
 import PianoKeyboard from "@/components/PianoKeyboard";
 import { usePiano } from "@/components/PianoProvider";
 import ThinkingMessages from "@/components/ThinkingMessages";
@@ -20,10 +17,6 @@ interface ProgressionData {
     id: string;
     chords: string[];
     style: string;
-}
-
-const checkPosthogConfigured = () => {
-    return typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY && process.env.NEXT_PUBLIC_POSTHOG_HOST;
 }
 
 function ResultsContent() {
@@ -98,14 +91,6 @@ function ResultsContent() {
             }
 
             setProgressions(data.progressions || []);
-
-            if (checkPosthogConfigured()) {
-                posthog.capture('multiple_progressions_generated', {
-                    prompt_text: queryPrompt,
-                    num_chords_requested: queryNumChords,
-                    num_progressions: data.progressions?.length || 0,
-                });
-            }
         } catch (err) {
             console.error("Network error:", err);
         }
@@ -143,14 +128,6 @@ function ResultsContent() {
             }
 
             setProgressions((prev) => [...prev, ...(data.progressions || [])]);
-
-            if (checkPosthogConfigured()) {
-                posthog.capture('more_progressions_generated', {
-                    prompt_text: prompt,
-                    num_chords_requested: numChords,
-                    total_progressions: progressions.length + (data.progressions?.length || 0),
-                });
-            }
         } catch (err) {
             console.error("Network error:", err);
         }
@@ -172,9 +149,6 @@ function ResultsContent() {
 
     const handleNumChordsChange = useCallback((value: number) => {
         setNumChords(value);
-        if (checkPosthogConfigured()) {
-            posthog.capture('num_chords_setting_changed', { num_chords_selected: value });
-        }
     }, []);
 
     const handleActiveNotesChange = useCallback((notes: string[]) => {
@@ -206,39 +180,27 @@ function ResultsContent() {
                         </div>
                         {[1, 2, 3].map((i) => (
                             <div key={i} className="w-full">
-                                <Skeleton className="h-[200px] w-full rounded-lg" />
+                                <Skeleton className="h-[340px] w-full rounded-xl" />
                             </div>
                         ))}
                     </div>
                 ) : progressions.length > 0 ? (
                     <div className="space-y-6">
                         {progressions.map((progression) => (
-                            <React.Fragment key={progression.id}>
-                                <div className="hidden md:block">
-                                    <ProgressionCard
-                                        id={progression.id}
-                                        initialChords={progression.chords}
-                                        style={progression.style}
-                                        prompt={prompt}
-                                        onActiveNotesChange={handleActiveNotesChange}
-                                    />
-                                </div>
-                                <div className="block md:hidden">
-                                    <MobileProgressionCard
-                                        id={progression.id}
-                                        initialChords={progression.chords}
-                                        style={progression.style}
-                                        prompt={prompt}
-                                        onActiveNotesChange={handleActiveNotesChange}
-                                    />
-                                </div>
-                            </React.Fragment>
+                            <ChordColumnsContainer
+                                key={progression.id}
+                                id={progression.id}
+                                initialChords={progression.chords}
+                                style={progression.style}
+                                prompt={prompt}
+                                onActiveNotesChange={handleActiveNotesChange}
+                            />
                         ))}
                         {isLoadingMore ? (
                             <>
                                 {[1, 2, 3].map((i) => (
                                     <div key={`skeleton-more-${i}`} className="w-full">
-                                        <Skeleton className="h-[200px] w-full rounded-lg" />
+                                        <Skeleton className="h-[340px] w-full rounded-xl" />
                                     </div>
                                 ))}
                             </>
