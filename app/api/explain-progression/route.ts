@@ -1,18 +1,5 @@
-import { createOpenAI } from '@ai-sdk/openai';
 import { streamText, CoreMessage } from 'ai';
-
-// Ensure the DEEPSEEK_API_KEY is available
-const { DEEPSEEK_API_KEY } = process.env;
-if (!DEEPSEEK_API_KEY) {
-    throw new Error("DEEPSEEK_API_KEY environment variable is not set.");
-}
-
-const deepseek = createOpenAI({
-    baseURL: 'https://api.deepseek.com',
-    apiKey: DEEPSEEK_API_KEY,
-});
-
-const EXPLANATION_MODEL = 'deepseek-chat';
+import { deepseek, PRIMARY_MODEL_ID } from '@/lib/ai';
 
 export async function POST(request: Request) {
     try {
@@ -57,7 +44,7 @@ For Dm7 - G7 - Cmaj7: "A classic **ii-V-I** in C Major. **Dm7** leads to the ten
         ];
 
         const result = await streamText({
-            model: deepseek(EXPLANATION_MODEL),
+            model: deepseek(PRIMARY_MODEL_ID),
             system: systemMessage,
             messages: messages,
             temperature: 0.6,

@@ -38,81 +38,51 @@ Provide only the chord symbols according to these rules. For example, a progress
 `.trim();
 
 /**
- * Schema for validating a single chord symbol.
- * Transforms and cleans the input, then validates using Tonal.js.
+ * Validates a chord symbol string.
+ * Cleans common AI artifacts (quotes, trailing punctuation), then validates with tonal.js.
  */
 export const ValidChordStringSchema = z.string()
-    .describe("A musical chord symbol, strictly adhering to the CHORD_FORMATTING_RULES.")
-    .transform(chordSymbol => {
-        let cleaned = chordSymbol.trim();
-        // Remove surrounding quotes if present
+    .describe("A chord symbol (e.g. F#m7, Cmaj7/E, Bbm)")
+    .transform(s => {
+        let cleaned = s.trim();
         if ((cleaned.startsWith("'") && cleaned.endsWith("'")) || (cleaned.startsWith('"') && cleaned.endsWith('"'))) {
             cleaned = cleaned.substring(1, cleaned.length - 1).trim();
         }
-        // Remove trailing punctuation
-        cleaned = cleaned.replace(/[.,;:!?]$/, "").trim();
-        return cleaned;
+        return cleaned.replace(/[.,;:!?]$/, "").trim();
     })
-    .refine(chordSymbol => {
-        if (!chordSymbol) return false;
-        const chordData = Chord.get(chordSymbol);
-        return !!(chordData && !chordData.empty && chordData.name && chordData.name.length > 0 && chordData.notes && chordData.notes.length > 0);
-    }, {
-        message: "Invalid chord symbol or format. Ensure it matches CHORD_FORMATTING_RULES and is a recognized chord.",
-    });
+    .refine(s => {
+        if (!s) return false;
+        const chord = Chord.get(s);
+        return chord && !chord.empty;
+    }, { message: "Invalid or unrecognized chord symbol." });
 
 /**
- * Creates a schema for a chord progression with a specific number of chords.
+ * Schema factories — enforce exact chord count at the schema level.
  */
 export const createProgressionSchema = (numChords: number) => z.object({
     chords: z.array(ValidChordStringSchema)
-        .length(numChords, `Progression must have exactly ${numChords} chords`)
-        .describe('An array of chord names forming a progression.'),
+        .length(numChords)
+        .describe(`A ${numChords}-chord progression.`),
 });
 
-/**
- * Schema for a chord progression without length validation.
- * Used when the exact number of chords is flexible.
- */
-export const ChordProgressionSchema = z.object({
-    chords: z.array(ValidChordStringSchema)
-        .describe('An array of chord names forming a progression.'),
-});
-
-/**
- * Schema for a single chord response.
- */
-export const SingleChordSchema = z.object({
-    chord: ValidChordStringSchema
-        .describe("A single musical chord symbol, strictly adhering to the CHORD_FORMATTING_RULES. Example: 'F#m7'."),
-});
-
-/**
- * Schema for a single progression with a style label.
- */
-export const ProgressionWithStyleSchema = z.object({
-    chords: z.array(ValidChordStringSchema)
-        .min(2)
-        .max(8)
-        .describe('An array of chord names forming a progression.'),
-    style: z.string()
-        .describe("A short 2-4 word style label like 'Jazz Soul' or 'Neo Soul Variation'"),
-});
-
-/**
- * Schema for multiple progressions response (3 progressions with style labels).
- */
-export const MultipleProgressionsSchema = z.object({
-    progressions: z.array(ProgressionWithStyleSchema)
+export const createMultipleProgressionsSchema = (numChords: number) => z.object({
+    progressions: z.array(z.object({
+        chords: z.array(ValidChordStringSchema)
+            .length(numChords)
+            .describe(`A ${numChords}-chord progression.`),
+        style: z.string()
+            .describe("A 2-4 word style label (e.g. 'Warm Jazz', 'Dark Cinematic')"),
+    }))
         .length(3)
-        .describe('An array of 3 different chord progressions, each with a style label.'),
+        .describe('3 distinct chord progressions, each with a style label.'),
+});
+
+export const SingleChordSchema = z.object({
+    chord: ValidChordStringSchema.describe("A single chord symbol (e.g. F#m7)"),
 });
 
 /**
- * Type definitions derived from schemas
+ * Type definitions
  */
 export type ValidChordString = z.infer<typeof ValidChordStringSchema>;
-export type ChordProgression = z.infer<typeof ChordProgressionSchema>;
 export type SingleChord = z.infer<typeof SingleChordSchema>;
-export type ProgressionWithStyle = z.infer<typeof ProgressionWithStyleSchema>;
-export type MultipleProgressions = z.infer<typeof MultipleProgressionsSchema>;
