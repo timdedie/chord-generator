@@ -9,6 +9,7 @@ import posthog from "posthog-js";
 import { Plus } from "lucide-react";
 import SearchHeader from "@/components/SearchHeader";
 import ProgressionCard from "@/components/ProgressionCard";
+import MobileProgressionCard from "@/components/MobileProgressionCard";
 import PianoKeyboard from "@/components/PianoKeyboard";
 import { usePiano } from "@/components/PianoProvider";
 import ThinkingMessages from "@/components/ThinkingMessages";
@@ -197,7 +198,7 @@ function ResultsContent() {
                 isLoading={isLoading}
             />
 
-            <main className="container max-w-4xl mx-auto px-4 pt-36 pb-48">
+            <main className="container max-w-6xl mx-auto px-4 pt-36 pb-48">
                 {isLoading ? (
                     <div className="space-y-6">
                         <div className="flex items-center justify-center py-8">
@@ -212,14 +213,26 @@ function ResultsContent() {
                 ) : progressions.length > 0 ? (
                     <div className="space-y-6">
                         {progressions.map((progression) => (
-                            <ProgressionCard
-                                key={progression.id}
-                                id={progression.id}
-                                initialChords={progression.chords}
-                                style={progression.style}
-                                prompt={prompt}
-                                onActiveNotesChange={handleActiveNotesChange}
-                            />
+                            <React.Fragment key={progression.id}>
+                                <div className="hidden md:block">
+                                    <ProgressionCard
+                                        id={progression.id}
+                                        initialChords={progression.chords}
+                                        style={progression.style}
+                                        prompt={prompt}
+                                        onActiveNotesChange={handleActiveNotesChange}
+                                    />
+                                </div>
+                                <div className="block md:hidden">
+                                    <MobileProgressionCard
+                                        id={progression.id}
+                                        initialChords={progression.chords}
+                                        style={progression.style}
+                                        prompt={prompt}
+                                        onActiveNotesChange={handleActiveNotesChange}
+                                    />
+                                </div>
+                            </React.Fragment>
                         ))}
                         {isLoadingMore ? (
                             <>

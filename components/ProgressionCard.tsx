@@ -11,9 +11,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import SortableChord from "@/components/SortableChord";
 import Spacer from "@/components/Spacer";
 import { ChordItem } from "@/hooks/useChordManagement";
-import { Chord, Note } from "tonal";
+import { Chord } from "tonal";
 import { now as toneNow } from "tone";
 import { usePiano } from "@/components/PianoProvider";
+import { getVoicedChordNotes } from "@/lib/chordUtils";
 import dynamic from "next/dynamic";
 import posthog from "posthog-js";
 
@@ -79,46 +80,6 @@ export default function ProgressionCard({
     const playbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const heldNotesRef = useRef<string[]>([]);
     const CHORD_PLAYBACK_INTERVAL = 1200;
-
-    const getVoicedChordNotes = (chordSymbol: string): string[] => {
-        const chordData = Chord.get(chordSymbol);
-        if (!chordData || !chordData.notes || chordData.notes.length === 0 || !chordData.tonic) {
-            return [];
-        }
-        const rootPc = chordData.tonic;
-        const notesPc = chordData.notes;
-        const startOctave = 3;
-        const bassOctave = startOctave - 1;
-        const bassNote = rootPc + bassOctave.toString();
-        const voicedNotes: string[] = [];
-        let previousNoteMidi: number | null = null;
-        let currentProcessingOctave = startOctave;
-
-        for (const pc of notesPc) {
-            let noteWithOctave = pc + currentProcessingOctave;
-            let currentNoteMidi = Note.midi(noteWithOctave);
-            if (currentNoteMidi === null) {
-                voicedNotes.push(pc + "4");
-                previousNoteMidi = Note.midi(pc + "4");
-                continue;
-            }
-            if (previousNoteMidi !== null) {
-                while (currentNoteMidi! <= previousNoteMidi!) {
-                    currentProcessingOctave++;
-                    noteWithOctave = pc + currentProcessingOctave;
-                    currentNoteMidi = Note.midi(noteWithOctave);
-                    if (currentNoteMidi === null) {
-                        noteWithOctave = pc + (currentProcessingOctave - 1);
-                        break;
-                    }
-                }
-            }
-            voicedNotes.push(noteWithOctave);
-            previousNoteMidi = currentNoteMidi;
-            currentProcessingOctave = startOctave;
-        }
-        return [bassNote, ...voicedNotes];
-    };
 
     const playChordOnce = useCallback(async (chordSymbol: string) => {
         if (!piano || !areSamplesLoaded) return;
