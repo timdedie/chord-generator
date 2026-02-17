@@ -7,6 +7,9 @@ export const metadata: Metadata = {
         absolute: 'ChordGen',
     },
     description: 'Generate AI-powered chord progressions from text descriptions. Visualize on piano, edit, and download free MIDI files.',
+    alternates: {
+        canonical: '/app',
+    },
 };
 
 export default function AppLayout({
