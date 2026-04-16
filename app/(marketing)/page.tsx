@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import {
     ArrowRight,
     Sparkles,
@@ -8,6 +9,9 @@ import {
     Download,
     Edit3,
     ChevronRight,
+    Mic2,
+    Headphones,
+    BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +22,35 @@ import {
 } from '@/components/ui/accordion';
 import { MotionSection, MotionItem, ScrollIndicator } from '@/components/motion-wrapper';
 import { faqs } from '@/lib/constants';
+
+export const metadata: Metadata = {
+    title: 'AI Chord Progression Generator — Free, No Sign-Up | ChordGen',
+    description: 'Generate chord progressions instantly from any mood, genre, or feeling. Interactive piano preview, drag-and-drop editing, free MIDI download for any DAW. No account needed.',
+    alternates: { canonical: '/' },
+};
+
+const useCases = [
+    {
+        Icon: Mic2,
+        title: 'Songwriters',
+        description: 'Break through writer\'s block. Describe the emotion of your song and get harmonic ideas in seconds — no theory knowledge required.',
+    },
+    {
+        Icon: Headphones,
+        title: 'Producers',
+        description: 'Prototype chord beds for beats, EDM drops, or cinematic cues. Export MIDI and layer it with your sounds instantly.',
+    },
+    {
+        Icon: Piano,
+        title: 'Instrumentalists',
+        description: 'Explore new harmonic territory for jazz, classical, or contemporary playing. Use the interactive piano to visualize every chord.',
+    },
+    {
+        Icon: BookOpen,
+        title: 'Music students',
+        description: 'Learn how real progressions are built across genres. Generate examples for any style — from blues to neo-soul to film scoring.',
+    },
+];
 
 const features = [
     {
@@ -180,8 +213,40 @@ export default function LandingPage() {
                 </MotionSection>
             </section>
 
-            {/* FAQ Section */}
+            {/* Use Cases Section */}
             <section className="py-24 sm:py-32 px-4">
+                <MotionSection variant="stagger" className="max-w-6xl mx-auto">
+                    <MotionItem className="text-center mb-16">
+                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
+                            Built for every musician
+                        </h2>
+                        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 font-medium">
+                            Whether you&apos;re writing your first song or scoring your hundredth.
+                        </p>
+                    </MotionItem>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {useCases.map((useCase, index) => (
+                            <MotionItem key={index} variant="scaleIn">
+                                <div className="group p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:shadow-xl h-full">
+                                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                                        <useCase.Icon className="h-7 w-7 text-primary" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                                        {useCase.title}
+                                    </h3>
+                                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                                        {useCase.description}
+                                    </p>
+                                </div>
+                            </MotionItem>
+                        ))}
+                    </div>
+                </MotionSection>
+            </section>
+
+            {/* FAQ Section */}
+            <section className="py-24 sm:py-32 px-4 bg-white dark:bg-gray-950">
                 <MotionSection variant="stagger" className="max-w-3xl mx-auto">
                     <MotionItem className="text-center mb-16">
                         <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white mb-4">

@@ -31,6 +31,15 @@ const webAppSchema = {
     image: "https://www.chordgen.org/chordgen_logo.png",
 };
 
+const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "ChordGen",
+    url: "https://www.chordgen.org",
+    logo: "https://www.chordgen.org/chordgen_logo.png",
+    description: unifiedDescription,
+};
+
 export const metadata: Metadata = {
     metadataBase: new URL('https://www.chordgen.org'),
     alternates: {
@@ -43,6 +52,8 @@ export const metadata: Metadata = {
     },
     description: unifiedDescription,
     authors: [{ name: 'ChordGen Team', url: 'https://www.chordgen.org' }],
+    creator: 'ChordGen',
+    publisher: 'ChordGen',
     keywords: ['ai chord generator', 'chord progression generator', 'midi generator', 'chord maker', 'ai music generator', 'songwriting tool', 'free midi', 'natural language music'],
 
     icons: {
@@ -80,6 +91,7 @@ export default function RootLayout({ children }: { children: React.ReactNode; })
             <SpeedInsights />
             <SonnerToaster richColors position="bottom-right" />
         <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />
+        <Script id="org-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
         </body>
         </html>
     );
