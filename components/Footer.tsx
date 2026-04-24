@@ -58,9 +58,9 @@ export function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <a href="mailto:contact@chordgen.org" className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
+                                <Link href="/contact" className="text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
                                     Contact
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </nav>

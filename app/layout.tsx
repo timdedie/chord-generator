@@ -38,6 +38,13 @@ const organizationSchema = {
     url: "https://www.chordgen.org",
     logo: "https://www.chordgen.org/chordgen_logo.png",
     description: unifiedDescription,
+    email: "contact@chordgen.org",
+    contactPoint: {
+        "@type": "ContactPoint",
+        email: "contact@chordgen.org",
+        contactType: "customer support",
+        url: "https://www.chordgen.org/contact",
+    },
 };
 
 export const metadata: Metadata = {
