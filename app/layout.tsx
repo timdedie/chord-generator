@@ -71,14 +71,23 @@ export const metadata: Metadata = {
         description: unifiedDescription,
         url: 'https://www.chordgen.org/',
         siteName: 'ChordGen',
-        images: [ { url: '/og-image.png', width: 1200, height: 630 } ],
+        images: [
+            {
+                url: '/og-image.png',
+                width: 1200,
+                height: 630,
+                alt: 'ChordGen — generate AI chord progressions from a text prompt',
+            },
+        ],
         type: 'website',
     },
     twitter: {
         card: 'summary_large_image',
         title: 'AI Chord Progression Generator from Text | ChordGen',
         description: unifiedDescription,
-        images: ['/twitter-image.png'],
+        images: [
+            { url: '/twitter-image.png', alt: 'ChordGen — AI chord progression generator' },
+        ],
     },
 };
 

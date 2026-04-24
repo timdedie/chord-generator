@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import type { Metadata } from 'next';
 import {
     ArrowRight,
@@ -82,6 +83,32 @@ const steps = [
     { number: '04', title: 'Export', description: 'Download as MIDI and drop directly into your DAW' },
 ];
 
+const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+    })),
+};
+
+const howToSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'How to generate a chord progression with ChordGen',
+    description:
+        'Generate AI-powered chord progressions from a text description, preview them on a piano, edit them, and export as MIDI.',
+    totalTime: 'PT2M',
+    step: steps.map((s, i) => ({
+        '@type': 'HowToStep',
+        position: i + 1,
+        name: s.title,
+        text: s.description,
+        url: `https://www.chordgen.org/#step-${i + 1}`,
+    })),
+};
+
 export default function LandingPage() {
     return (
         <div className="bg-gray-50 dark:bg-black overflow-hidden">
@@ -114,10 +141,9 @@ export default function LandingPage() {
 
                         {/* Subheadline */}
                         <MotionItem>
-                            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-10 font-medium">
-                                Describe a mood. Get chord progressions.
-                                <br className="hidden sm:block" />
-                                Download MIDI. It&apos;s that simple.
+                            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-4 font-medium">
+                                The free AI chord progression generator.
+                                Describe a mood, preview on piano, download MIDI.
                             </p>
                         </MotionItem>
 
@@ -245,6 +271,98 @@ export default function LandingPage() {
                 </MotionSection>
             </section>
 
+            {/* Browse by genre / key */}
+            <section className="py-24 sm:py-32 px-4">
+                <MotionSection variant="stagger" className="max-w-5xl mx-auto">
+                    <MotionItem className="text-center mb-12">
+                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
+                            Browse by genre or key
+                        </h2>
+                        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 font-medium">
+                            Reference guides for every common style and tonality.
+                        </p>
+                    </MotionItem>
+
+                    <MotionItem>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-5">
+                                    Popular genres
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {[
+                                        ['lo-fi', 'Lo-Fi'],
+                                        ['jazz', 'Jazz'],
+                                        ['pop', 'Pop'],
+                                        ['edm', 'EDM'],
+                                        ['rnb', 'R&B'],
+                                        ['rock', 'Rock'],
+                                        ['blues', 'Blues'],
+                                        ['neo-soul', 'Neo-Soul'],
+                                        ['cinematic', 'Cinematic'],
+                                        ['ambient', 'Ambient'],
+                                        ['folk', 'Folk'],
+                                        ['country', 'Country'],
+                                        ['gospel', 'Gospel'],
+                                        ['bossa-nova', 'Bossa Nova'],
+                                    ].map(([slug, label]) => (
+                                        <Link
+                                            key={slug}
+                                            href={`/chords/${slug}`}
+                                            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-800 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors"
+                                        >
+                                            {label}
+                                        </Link>
+                                    ))}
+                                </div>
+                                <Link
+                                    href="/chords"
+                                    className="inline-flex items-center gap-1 mt-5 text-sm font-bold text-primary hover:underline"
+                                >
+                                    All genres <ChevronRight className="h-4 w-4" />
+                                </Link>
+                            </div>
+
+                            <div className="p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-5">
+                                    Common keys
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {[
+                                        ['c-major', 'C Major'],
+                                        ['g-major', 'G Major'],
+                                        ['d-major', 'D Major'],
+                                        ['a-major', 'A Major'],
+                                        ['e-major', 'E Major'],
+                                        ['f-major', 'F Major'],
+                                        ['a-minor', 'A Minor'],
+                                        ['e-minor', 'E Minor'],
+                                        ['d-minor', 'D Minor'],
+                                        ['b-minor', 'B Minor'],
+                                        ['f-sharp-minor', 'F♯ Minor'],
+                                        ['c-minor', 'C Minor'],
+                                    ].map(([slug, label]) => (
+                                        <Link
+                                            key={slug}
+                                            href={`/key/${slug}`}
+                                            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-800 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors"
+                                        >
+                                            {label}
+                                        </Link>
+                                    ))}
+                                </div>
+                                <Link
+                                    href="/key"
+                                    className="inline-flex items-center gap-1 mt-5 text-sm font-bold text-primary hover:underline"
+                                >
+                                    All keys <ChevronRight className="h-4 w-4" />
+                                </Link>
+                            </div>
+                        </div>
+                    </MotionItem>
+                </MotionSection>
+            </section>
+
             {/* FAQ Section */}
             <section className="py-24 sm:py-32 px-4 bg-white dark:bg-gray-950">
                 <MotionSection variant="stagger" className="max-w-3xl mx-auto">
@@ -308,6 +426,17 @@ export default function LandingPage() {
                     </div>
                 </MotionSection>
             </section>
+
+            <Script
+                id="faq-schema"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+            />
+            <Script
+                id="howto-schema"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
+            />
         </div>
     );
 }
