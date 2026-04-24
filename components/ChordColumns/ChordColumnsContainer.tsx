@@ -90,8 +90,10 @@ export default function ChordColumnsContainer({
 
   // --- Playback ---
 
+  const singlePlayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const playChordOnce = useCallback(
-    async (chordSymbol: string) => {
+    async (chordSymbol: string, chordId?: string) => {
       if (!areSamplesLoaded) {
         if (!isLoadingSamples) await loadSamples();
         return;
@@ -108,9 +110,18 @@ export default function ChordColumnsContainer({
       const noteDuration = 0.8;
       onActiveNotesChange(notesToPlay);
       piano.triggerAttackRelease(notesToPlay, noteDuration, toneNow());
+
+      if (chordId && !isPlaying) {
+        if (singlePlayTimeoutRef.current) clearTimeout(singlePlayTimeoutRef.current);
+        setPlayingChordId(chordId);
+        singlePlayTimeoutRef.current = setTimeout(() => {
+          setPlayingChordId((prev) => (prev === chordId ? null : prev));
+        }, noteDuration * 1000);
+      }
+
       setTimeout(() => onActiveNotesChange([]), noteDuration * 1000);
     },
-    [piano, areSamplesLoaded, isLoadingSamples, loadSamples, onActiveNotesChange, onChordPlay]
+    [piano, areSamplesLoaded, isLoadingSamples, loadSamples, onActiveNotesChange, onChordPlay, isPlaying]
   );
 
   const pauseProgression = useCallback(() => {
@@ -425,7 +436,7 @@ export default function ChordColumnsContainer({
                     }
                     isPlaying={playingChordId === chord.id}
                     loading={loadingChordId === chord.id}
-                    onPlay={() => playChordOnce(chord.chord)}
+                    onPlay={() => playChordOnce(chord.chord, chord.id)}
                     onRemove={() => handleRemoveChord(chord.id)}
                   />,
                 ])}

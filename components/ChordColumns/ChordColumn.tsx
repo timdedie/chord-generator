@@ -41,7 +41,6 @@ export default function ChordColumn({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    backgroundColor: color.bg,
   };
 
   if (loading || !chord) {
@@ -77,52 +76,57 @@ export default function ChordColumn({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      {/* Playing pulse overlay */}
-      {isPlaying && (
-        <motion.div
-          className="absolute inset-0 bg-white/20"
-          animate={{ opacity: [0.1, 0.3, 0.1] }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-        />
-      )}
-
-      {/* Hover overlay with controls */}
-      <div
-        className={cn(
-          "absolute inset-0 transition-opacity duration-200 z-10",
-          hover ? "opacity-100" : "opacity-0"
-        )}
+      {/* Pressed animation — scale down + darken, like a button press */}
+      <motion.div
+        className="absolute inset-0"
+        animate={{ scale: isPlaying ? 0.93 : 1 }}
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        style={{ backgroundColor: color.bg }}
       >
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-          className="absolute top-3 right-3 p-1.5 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors cursor-pointer"
-          style={{ color: color.text }}
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Remove</span>
-        </button>
+        <motion.div
+          className="absolute inset-0 bg-black pointer-events-none"
+          animate={{ opacity: isPlaying ? 0.18 : 0 }}
+          transition={{ duration: 0.15 }}
+        />
 
-        {/* Drag handle - only this element triggers drag */}
+        {/* Hover overlay with controls */}
         <div
-          {...attributes}
-          {...listeners}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2 rounded-full bg-black/10 cursor-grab active:cursor-grabbing touch-none"
-          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "absolute inset-0 transition-opacity duration-200 z-10",
+            hover ? "opacity-100" : "opacity-0"
+          )}
         >
-          <GripVertical
-            className="h-5 w-5"
-            style={{ color: color.text, opacity: 0.7 }}
-          />
-        </div>
-      </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            className="absolute top-3 right-3 p-1.5 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm transition-colors cursor-pointer"
+            style={{ color: color.text }}
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Remove</span>
+          </button>
 
-      {/* Chord info anchored to bottom */}
-      <div className="absolute bottom-0 left-0 right-0 pb-6 flex justify-center">
-        <ColumnChordInfo chord={chord} textColor={color.text} />
-      </div>
+          {/* Drag handle - only this element triggers drag */}
+          <div
+            {...attributes}
+            {...listeners}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2 rounded-full bg-black/10 cursor-grab active:cursor-grabbing touch-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical
+              className="h-5 w-5"
+              style={{ color: color.text, opacity: 0.7 }}
+            />
+          </div>
+        </div>
+
+        {/* Chord info anchored to bottom */}
+        <div className="absolute bottom-0 left-0 right-0 pb-6 flex justify-center">
+          <ColumnChordInfo chord={chord} textColor={color.text} />
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
