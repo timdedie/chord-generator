@@ -2,7 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import Script from 'next/script';
 import type { Metadata } from 'next';
-import { Mail, MessageSquare, Bug, Sparkles } from 'lucide-react';
+import { MessageSquare, Bug, Sparkles } from 'lucide-react';
+import CopyEmail from './CopyEmail';
 
 const email = 'contact@chordgen.org';
 const url = 'https://www.chordgen.org/contact';
@@ -88,24 +89,7 @@ export default function ContactPage() {
 
             <section className="px-4 pb-20">
                 <div className="max-w-3xl mx-auto">
-                    <a
-                        href={`mailto:${email}`}
-                        className="group block p-10 rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 hover:border-primary/50 transition-all hover:shadow-xl mb-12"
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                                <Mail className="h-7 w-7 text-primary" />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-sm font-semibold text-gray-500 dark:text-gray-500 mb-1">
-                                    Email us
-                                </p>
-                                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors break-all">
-                                    {email}
-                                </p>
-                            </div>
-                        </div>
-                    </a>
+                    <CopyEmail email={email} />
 
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">
                         What can we help with?
