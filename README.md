@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chord Gen
+
+AI-powered chord progression generator. Describe a mood, genre, or vibe and get musically valid chord progressions you can play, edit, and export.
+
+## Features
+
+- Generate chord progressions from natural language prompts
+- 3 style variations per generation (e.g. simple, jazzy, complex)
+- Interactive piano keyboard with Tone.js audio playback
+- Drag-and-drop chord reordering
+- Chord editing with AI-assisted suggestions
+- MIDI file export
+- Progression analysis and explanation
+
+## Stack
+
+- **Framework**: Next.js 16 (App Router), React 19, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui
+- **AI**: Vercel AI SDK + DeepSeek Chat
+- **Music**: tonal.js (chord validation), Tone.js (audio), midi-writer-js (MIDI export)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create `.env.local`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+DEEPSEEK_API_KEY=your_deepseek_api_key
+```
 
-## Learn More
+### Development
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+app/
+├── (marketing)/        # Landing page
+├── app/                # Main application
+│   └── results/        # Chord progression display
+└── api/
+    ├── generate/           # Single chord/progression generation
+    ├── generate-multiple/  # 3 progression variations
+    └── explain-progression/
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+components/
+├── ProgressionCard.tsx     # Main progression UI (edit, play, drag-and-drop)
+├── PianoKeyboard.tsx       # Interactive piano
+└── PianoProvider.tsx       # Audio context
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+hooks/
+└── useChordManagement.ts   # Chord generation and state
+
+lib/
+└── schemas.ts              # Zod schemas for AI responses
+```
+
+## How It Works
+
+1. Enter a prompt on the home page (e.g. "melancholic jazz in D minor")
+2. The app calls `/api/generate-multiple` which generates 3 variations
+3. Each progression is validated with tonal.js — invalid chords trigger a retry (up to 2x)
+4. Results are displayed with playback, editing, and export options
