@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, Variants } from "motion/react";
+import { motion, type Variants } from "framer-motion";
 
 function LoadingThreeDotsJumping() {
     const dotVariants: Variants = {
