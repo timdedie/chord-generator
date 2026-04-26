@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Piano, MidiNumbers } from "react-piano";
+import "react-piano/dist/styles.css";
 import { usePiano } from "./PianoProvider";
-import { useMediaQuery } from "react-responsive";
 
 interface PianoKeyboardProps {
     firstNote: number;
@@ -19,12 +19,17 @@ export default function PianoKeyboard({
                                           width = 400,
                                       }: PianoKeyboardProps) {
     const { piano, areSamplesLoaded } = usePiano();
-    const isMobile = useMediaQuery({ maxWidth: 768 });
+    const [isMobile, setIsMobile] = useState(false);
 
-    // Calculate responsive width - smaller overall
-    const responsiveWidth = isMobile
-        ? Math.min(typeof window !== 'undefined' ? window.innerWidth * 0.7 : 180, 180)
-        : width;
+    useEffect(() => {
+        const mq = window.matchMedia("(max-width: 768px)");
+        setIsMobile(mq.matches);
+        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        mq.addEventListener("change", handler);
+        return () => mq.removeEventListener("change", handler);
+    }, []);
+
+    const responsiveWidth = isMobile ? Math.min(window.innerWidth * 0.7, 180) : width;
 
     const handlePlayNote = (midiNumber: number) => {
         if (piano && areSamplesLoaded) { // Check if piano instance exists and samples are loaded

@@ -26,11 +26,13 @@ What makes a great progression:
 3. **Borrowed color** — don't shy away from modal interchange (bVII, iv in major), secondary dominants (V/V, V/vi), or chromatic passing chords when they serve the mood.
 4. **Restraint** — a well-placed triad is more powerful than a pile of extensions. Add complexity only when it deepens the emotion, not to show off.
 
-Avoid these unless specifically requested:
+Read the user's prompt for intent. If they name a genre, era, or style defined by a canonical progression (blues, doo-wop, classic pop ballad, worship, punk, folk), honor that convention — the familiar pattern *is* the answer. Otherwise, avoid these defaults:
 - I–V–vi–IV and its rotations
 - i–VI–III–VII and its rotations
 - Randomly stacking extensions without harmonic purpose
 - Staying purely diatonic when a touch of chromaticism would elevate the progression
+
+The blacklist applies to generic-by-default, not generic-by-request.
 
 ${CHORD_FORMATTING_RULES}
 `.trim();

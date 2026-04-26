@@ -121,51 +121,39 @@ export default function LandingPage() {
                 </div>
 
                 <div className="max-w-5xl mx-auto text-center">
-                    <MotionSection variant="stagger" animate="onMount">
-                        {/* Badge */}
-                        <MotionItem>
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-8">
-                                <Sparkles className="h-4 w-4" />
-                                <span>Free AI-Powered Tool</span>
-                            </div>
-                        </MotionItem>
+                    {/* Badge */}
+                    <div className="animate-fade-in-up inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-8">
+                        <Sparkles className="h-4 w-4" />
+                        <span>Free AI-Powered Tool</span>
+                    </div>
 
-                        {/* Main headline */}
-                        <MotionItem>
-                            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight text-gray-900 dark:text-white leading-[0.95] mb-6">
-                                Generate chords
-                                <br />
-                                <span className="text-primary">from words.</span>
-                            </h1>
-                        </MotionItem>
+                    {/* Main headline */}
+                    <h1 className="animate-fade-in-up-delay-1 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight text-gray-900 dark:text-white leading-[0.95] mb-6">
+                        Generate chords
+                        <br />
+                        <span className="text-primary">from words.</span>
+                    </h1>
 
-                        {/* Subheadline */}
-                        <MotionItem>
-                            <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-4 font-medium">
-                                The free AI chord progression generator.
-                                Describe a mood, preview on piano, download MIDI.
-                            </p>
-                        </MotionItem>
+                    {/* Subheadline */}
+                    <p className="animate-fade-in-up-delay-2 text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-4 font-medium">
+                        The free AI chord progression generator.
+                        Describe a mood, preview on piano, download MIDI.
+                    </p>
 
-                        {/* CTA */}
-                        <MotionItem>
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                                <Button asChild size="lg" className="text-lg px-8 py-7 rounded-2xl font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-shadow">
-                                    <Link href="/app">
-                                        Start Creating
-                                        <ArrowRight className="ml-2 h-5 w-5" />
-                                    </Link>
-                                </Button>
-                            </div>
-                        </MotionItem>
+                    {/* CTA */}
+                    <div className="animate-fade-in-up-delay-3 flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <Button asChild size="lg" className="text-lg px-8 py-7 rounded-2xl font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-shadow">
+                            <Link href="/app">
+                                Start Creating
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
+                        </Button>
+                    </div>
 
-                        {/* Trust signal */}
-                        <MotionItem>
-                            <p className="mt-8 text-sm text-gray-500 dark:text-gray-500">
-                                No sign-up required. 100% free. Forever.
-                            </p>
-                        </MotionItem>
-                    </MotionSection>
+                    {/* Trust signal */}
+                    <p className="animate-fade-in-up-delay-4 mt-8 text-sm text-gray-500 dark:text-gray-500">
+                        No sign-up required. 100% free. Forever.
+                    </p>
                 </div>
 
                 {/* Scroll indicator */}

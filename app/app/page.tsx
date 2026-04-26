@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, KeyboardEvent } from "react";
+import React, { useState, useCallback, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
@@ -10,7 +10,6 @@ import { ArrowRight } from "lucide-react";
 import NumChordsSelector from "@/components/NumChordsSelector";
 import { useExamplePrompts } from "@/hooks/useExamplePrompts";
 import { usePiano } from "@/components/PianoProvider";
-import SplitText from "@/components/SplitText";
 
 export default function AppPage() {
     const router = useRouter();
@@ -20,13 +19,6 @@ export default function AppPage() {
     const [prompt, setPrompt] = useState("");
     const [numChords, setNumChords] = useState(4);
     const [isNavigating, setIsNavigating] = useState(false);
-    const [showText, setShowText] = useState(false);
-
-    // Start text animation slightly after logo starts (not when it completes)
-    useEffect(() => {
-        const timer = setTimeout(() => setShowText(true), 400);
-        return () => clearTimeout(timer);
-    }, []);
 
     const handleGenerate = useCallback(() => {
         if (!prompt.trim()) return;
@@ -91,23 +83,14 @@ export default function AppPage() {
                         </motion.div>
 
                         {/* Text animation */}
-                        {showText && (
-                            <SplitText
-                                text="What do you want to create?"
-                                className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white"
-                                delay={15}
-                                duration={0.3}
-                                ease="power3.out"
-                                splitType="chars"
-                                from={{ opacity: 0, y: 15 }}
-                                to={{ opacity: 1, y: 0 }}
-                                threshold={0.1}
-                                rootMargin="0px"
-                                textAlign="left"
-                                tag="h1"
-                                onLetterAnimationComplete={() => {}}
-                            />
-                        )}
+                        <motion.h1
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                            className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white"
+                        >
+                            What do you want to create?
+                        </motion.h1>
                     </div>
 
                     {/* Search bar */}

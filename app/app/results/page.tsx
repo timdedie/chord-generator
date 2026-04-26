@@ -3,11 +3,12 @@
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { MidiNumbers } from "react-piano";
-import "react-piano/dist/styles.css";
 import { Plus} from "lucide-react";
+import dynamic from "next/dynamic";
 import SearchHeader from "@/components/SearchHeader";
 import ChordColumnsContainer from "@/components/ChordColumns/ChordColumnsContainer";
-import PianoKeyboard from "@/components/PianoKeyboard";
+
+const PianoKeyboard = dynamic(() => import("@/components/PianoKeyboard"), { ssr: false });
 import { usePiano } from "@/components/PianoProvider";
 import ThinkingMessages from "@/components/ThinkingMessages";
 import { Skeleton } from "@/components/ui/skeleton";
