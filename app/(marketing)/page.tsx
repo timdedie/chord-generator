@@ -113,7 +113,7 @@ export default function LandingPage() {
     return (
         <div className="bg-gray-50 dark:bg-black overflow-hidden">
             {/* Hero Section */}
-            <section className="relative min-h-[90vh] flex items-center justify-center px-4">
+            <section className="relative min-h-[640px] lg:min-h-[800px] flex items-center justify-center px-4">
                 {/* Background gradient */}
                 <div className="absolute inset-0 -z-10">
                     <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />

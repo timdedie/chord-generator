@@ -14,7 +14,7 @@ const outfit = Outfit({
     subsets: ["latin"],
     weight: ["400", "500", "600", "700", "800", "900"],
     variable: "--font-outfit",
-    display: "swap",
+    display: "optional",
 });
 
 const unifiedDescription = 'Describe a mood, genre, or feeling, and our AI instantly generates unique chord progressions. Visualize on piano, edit, and download free MIDI files for any DAW.';

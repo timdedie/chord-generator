@@ -65,19 +65,24 @@
 
 @layer utilities {
   .animate-fade-in-up {
-    animation: fadeInUp 0.6s ease-out both;
+    animation: fadeInUp 0.6s ease-out forwards;
+    will-change: transform, opacity;
   }
   .animate-fade-in-up-delay-1 {
-    animation: fadeInUp 0.6s ease-out 0.1s both;
+    animation: fadeInUp 0.6s ease-out 0.1s forwards;
+    will-change: transform, opacity;
   }
   .animate-fade-in-up-delay-2 {
-    animation: fadeInUp 0.6s ease-out 0.2s both;
+    animation: fadeInUp 0.6s ease-out 0.2s forwards;
+    will-change: transform, opacity;
   }
   .animate-fade-in-up-delay-3 {
-    animation: fadeInUp 0.6s ease-out 0.35s both;
+    animation: fadeInUp 0.6s ease-out 0.35s forwards;
+    will-change: transform, opacity;
   }
   .animate-fade-in-up-delay-4 {
-    animation: fadeInUp 0.6s ease-out 0.5s both;
+    animation: fadeInUp 0.6s ease-out 0.5s forwards;
+    will-change: transform, opacity;
   }
 }
 
