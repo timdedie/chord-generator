@@ -13,7 +13,7 @@ export const deepseek = createOpenAI({
     apiKey: DEEPSEEK_API_KEY,
 });
 
-export const PRIMARY_MODEL_ID = 'deepseek-chat';
+export const PRIMARY_MODEL_ID = 'deepseek-v4-flash';
 
 const MAX_RETRIES = 2;
 
