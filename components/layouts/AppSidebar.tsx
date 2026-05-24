@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, SquarePen, Moon, Sun, Monitor } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SquarePen, Moon, Sun, Monitor, User, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -12,12 +12,21 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { useUser, UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
 
 type Theme = 'light' | 'dark' | 'system';
 
 export function AppSidebar() {
     const [collapsed, setCollapsed] = useState(true);
     const [theme, setTheme] = useState<Theme>('system');
+    const { isSignedIn, isLoaded } = useUser();
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -102,58 +111,105 @@ export function AppSidebar() {
                 </Button>
             </div>
 
-            {/* Middle section: Empty nav area for future features */}
-            <nav className="flex-1 py-4 px-2">
-                {/* Future: History, saved progressions, settings links */}
-            </nav>
+            {/* Middle section */}
+            <nav className="flex-1 py-4 px-2" />
 
-            {/* Bottom section: Dark mode toggle */}
-            <div className="p-3">
-                {collapsed ? (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                            const newTheme = theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark';
-                            handleThemeChange(newTheme);
-                        }}
-                        className="w-full h-8"
-                        aria-label="Toggle theme"
-                    >
-                        {theme === 'dark' ? (
-                            <Moon className="h-4 w-4" />
-                        ) : theme === 'light' ? (
-                            <Sun className="h-4 w-4" />
+            {/* Bottom section: Settings → Account */}
+            <div className="flex flex-col gap-1 p-2 pb-3">
+                {/* Settings */}
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size={collapsed ? "icon" : "default"}
+                            className={`w-full ${collapsed ? '' : 'justify-start'}`}
+                            aria-label="Settings"
+                        >
+                            <Settings className="h-4 w-4 flex-shrink-0" />
+                            {!collapsed && <span className="ml-2">Settings</span>}
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-[560px] max-w-[90vw] h-[420px] p-0 flex flex-col overflow-hidden">
+                        <DialogHeader className="px-6 py-4 border-b border-border flex-shrink-0">
+                            <DialogTitle className="text-base">Settings</DialogTitle>
+                        </DialogHeader>
+                        <div className="flex flex-1 overflow-hidden">
+                            {/* Sidebar */}
+                            <div className="w-40 border-r border-border p-3 flex-shrink-0">
+                                <p className="px-2 py-1.5 text-sm font-medium bg-accent rounded-md">Appearance</p>
+                            </div>
+                            {/* Content */}
+                            <div className="flex-1 p-6 overflow-y-auto">
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Theme</label>
+                                        <Select value={theme} onValueChange={handleThemeChange}>
+                                            <SelectTrigger className="w-48">
+                                                <SelectValue placeholder="Theme" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="light">
+                                                    <div className="flex items-center gap-2">
+                                                        <Sun className="h-4 w-4" />
+                                                        <span>Light</span>
+                                                    </div>
+                                                </SelectItem>
+                                                <SelectItem value="dark">
+                                                    <div className="flex items-center gap-2">
+                                                        <Moon className="h-4 w-4" />
+                                                        <span>Dark</span>
+                                                    </div>
+                                                </SelectItem>
+                                                <SelectItem value="system">
+                                                    <div className="flex items-center gap-2">
+                                                        <Monitor className="h-4 w-4" />
+                                                        <span>System</span>
+                                                    </div>
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Account */}
+                {isLoaded && (
+                    collapsed ? (
+                        isSignedIn ? (
+                            <div className="flex justify-center py-1">
+                                <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }} />
+                            </div>
                         ) : (
-                            <Monitor className="h-4 w-4" />
-                        )}
-                    </Button>
-                ) : (
-                    <Select value={theme} onValueChange={handleThemeChange}>
-                        <SelectTrigger className="w-full h-8 text-sm">
-                            <SelectValue placeholder="Theme" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="light">
-                                <div className="flex items-center gap-2">
-                                    <Sun className="h-4 w-4" />
-                                    <span>Light</span>
-                                </div>
-                            </SelectItem>
-                            <SelectItem value="dark">
-                                <div className="flex items-center gap-2">
-                                    <Moon className="h-4 w-4" />
-                                    <span>Dark</span>
-                                </div>
-                            </SelectItem>
-                            <SelectItem value="system">
-                                <div className="flex items-center gap-2">
-                                    <Monitor className="h-4 w-4" />
-                                    <span>System</span>
-                                </div>
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
+                            <SignInButton mode="modal">
+                                <Button variant="ghost" size="icon" className="w-full h-9" aria-label="Sign in">
+                                    <User className="h-4 w-4" />
+                                </Button>
+                            </SignInButton>
+                        )
+                    ) : (
+                        isSignedIn ? (
+                            <div className="flex items-center gap-2 px-2 py-1">
+                                <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }} />
+                                <span className="text-sm text-muted-foreground truncate">Account</span>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-1">
+                                <SignUpButton mode="modal">
+                                    <Button size="sm" className="w-full rounded-full font-semibold text-xs">
+                                        Sign up free
+                                    </Button>
+                                </SignUpButton>
+                                <SignInButton mode="modal">
+                                    <Button variant="ghost" size="sm" className="w-full text-xs">
+                                        Sign in
+                                    </Button>
+                                </SignInButton>
+                            </div>
+                        )
+                    )
                 )}
             </div>
         </aside>

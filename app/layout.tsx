@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import React from "react";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { ClerkProvider } from "@clerk/nextjs";
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from 'next';
@@ -100,15 +101,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode; }) {
     return (
-        <html lang="en">
-        <body className={`${outfit.className} bg-gray-50 dark:bg-black`}>
-            {children}
-            <Analytics />
-            <SpeedInsights />
-            <SonnerToaster richColors position="bottom-right" />
-        <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />
-        <Script id="org-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
-        </body>
-        </html>
+        <ClerkProvider>
+            <html lang="en">
+            <body className={`${outfit.className} bg-gray-50 dark:bg-black`}>
+                {children}
+                <Analytics />
+                <SpeedInsights />
+                <SonnerToaster richColors position="bottom-right" />
+            <Script id="webapp-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }} />
+            <Script id="org-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
+            </body>
+            </html>
+        </ClerkProvider>
     );
 }
