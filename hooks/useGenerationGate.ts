@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 
 const STORAGE_KEY = 'chordgen_guest_count';
-const FREE_LIMIT = 3;
+const FREE_LIMIT = 5;
 
 export interface UseGenerationGateReturn {
     checkAndGate: () => boolean;

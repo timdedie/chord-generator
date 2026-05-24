@@ -22,7 +22,7 @@ export function PaywallModal({ open, onOpenChange }: PaywallModalProps) {
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-bold">
-                        You&apos;ve used your 3 free generations
+                        You&apos;ve used your 5 free generations
                     </DialogTitle>
                     <DialogDescription className="text-base pt-1">
                         Create a free account to keep generating unlimited chord progressions.
