@@ -2,12 +2,13 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Download, Sparkles } from "lucide-react";
+import { Play, Pause, Download, Sparkles, Heart } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { SignInButton } from "@clerk/nextjs";
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
@@ -47,6 +48,9 @@ interface ColumnToolbarProps {
   onPopoverOpenChange: (open: boolean) => void;
   isExplanationLoading: boolean;
   currentExplanationText: string;
+  isSaved?: boolean;
+  onToggleSave?: () => void;
+  isSignedIn?: boolean;
 }
 
 export default function ColumnToolbar({
@@ -60,6 +64,9 @@ export default function ColumnToolbar({
   onPopoverOpenChange,
   isExplanationLoading,
   currentExplanationText,
+  isSaved = false,
+  onToggleSave,
+  isSignedIn = false,
 }: ColumnToolbarProps) {
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-sm border-b border-border/50">
@@ -100,6 +107,24 @@ export default function ColumnToolbar({
       </div>
 
       <div className="flex items-center gap-1.5">
+        {onToggleSave && (
+          isSignedIn ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleSave}
+              className={isSaved ? "text-red-500 hover:text-red-600" : ""}
+            >
+              <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
+            </Button>
+          ) : (
+            <SignInButton mode="modal">
+              <Button variant="ghost" size="sm">
+                <Heart className="h-4 w-4" />
+              </Button>
+            </SignInButton>
+          )
+        )}
         <Popover
           open={isExplanationPopoverOpen}
           onOpenChange={onPopoverOpenChange}

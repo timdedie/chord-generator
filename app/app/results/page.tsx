@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useGenerationGate } from "@/hooks/useGenerationGate";
 import { PaywallModal } from "@/components/PaywallModal";
 import { useUser } from "@clerk/nextjs";
+import { useSavedProgressions } from "@/hooks/useSavedProgressions";
 
 interface ProgressionData {
     id: string;
@@ -29,6 +30,7 @@ function ResultsContent() {
     const { loadSamples, areSamplesLoaded, isLoadingSamples } = usePiano();
     const { checkAndGate, incrementCount, paywallOpen, setPaywallOpen } = useGenerationGate();
     const { isSignedIn } = useUser();
+    const { isSaved, toggleSave, isSignedIn: isSavedSignedIn } = useSavedProgressions();
 
     const [prompt, setPrompt] = useState("");
     const [numChords, setNumChords] = useState(4);
@@ -208,6 +210,9 @@ function ResultsContent() {
                                 style={progression.style}
                                 prompt={prompt}
                                 onActiveNotesChange={handleActiveNotesChange}
+                                isSaved={isSaved(progression.id)}
+                                onToggleSave={(chords) => toggleSave({ id: progression.id, chords, style: progression.style, prompt })}
+                                isSignedIn={isSavedSignedIn}
                             />
                         ))}
                         {isLoadingMore ? (

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, SquarePen, Moon, Sun, Monitor, User, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SquarePen, Moon, Sun, Monitor, User, Settings, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -112,7 +112,19 @@ export function AppSidebar() {
             </div>
 
             {/* Middle section */}
-            <nav className="flex-1 py-4 px-2" />
+            <nav className="flex-1 py-4 px-2">
+                <Button
+                    asChild
+                    variant="ghost"
+                    size={collapsed ? "icon" : "default"}
+                    className={`w-full ${collapsed ? '' : 'justify-start'}`}
+                >
+                    <Link href="/app/saved">
+                        <Heart className="h-4 w-4 flex-shrink-0" />
+                        {!collapsed && <span className="ml-2">Saved</span>}
+                    </Link>
+                </Button>
+            </nav>
 
             {/* Bottom section: Settings → Account */}
             <div className="flex flex-col gap-1 p-2 pb-3">

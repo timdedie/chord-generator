@@ -36,6 +36,9 @@ interface ChordColumnsContainerProps {
   prompt: string;
   onActiveNotesChange: (notes: string[]) => void;
   onChordPlay?: (chord: string) => void;
+  isSaved?: boolean;
+  onToggleSave?: (chords: string[]) => void;
+  isSignedIn?: boolean;
 }
 
 export default function ChordColumnsContainer({
@@ -45,6 +48,9 @@ export default function ChordColumnsContainer({
   prompt,
   onActiveNotesChange,
   onChordPlay,
+  isSaved = false,
+  onToggleSave,
+  isSignedIn = false,
 }: ChordColumnsContainerProps) {
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === "dark";
@@ -397,6 +403,9 @@ export default function ChordColumnsContainer({
         onPopoverOpenChange={onPopoverOpenChange}
         isExplanationLoading={isExplanationLoading}
         currentExplanationText={currentExplanationText}
+        isSaved={isSaved}
+        onToggleSave={onToggleSave ? () => onToggleSave(chords.map((c) => c.chord)) : undefined}
+        isSignedIn={isSignedIn}
       />
 
       {hasChords && (

@@ -6,7 +6,7 @@ import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useS
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Download, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Play, Pause, Download, Sparkles, ChevronDown, ChevronUp, Heart } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import SortableChord from "@/components/SortableChord";
 import Spacer from "@/components/Spacer";
@@ -37,6 +37,8 @@ interface ProgressionCardProps {
     prompt: string;
     onActiveNotesChange: (notes: string[]) => void;
     onChordPlay?: (chord: string) => void;
+    isSaved?: boolean;
+    onToggleSave?: (chords: string[]) => void;
 }
 
 const generateUniqueId = () => `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -48,6 +50,8 @@ export default function ProgressionCard({
     prompt,
     onActiveNotesChange,
     onChordPlay,
+    isSaved = false,
+    onToggleSave,
 }: ProgressionCardProps) {
     const [chords, setChords] = useState<ChordItem[]>(() =>
         initialChords.map((chord, index) => ({
@@ -432,6 +436,17 @@ export default function ProgressionCard({
 
                             {/* Action buttons */}
                             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border/50">
+                                {onToggleSave && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => onToggleSave(chords.map(c => c.chord))}
+                                        className={isSaved ? "text-red-500 border-red-500/50 hover:text-red-600 hover:border-red-600/50" : ""}
+                                    >
+                                        <Heart className={`h-4 w-4 mr-1 ${isSaved ? "fill-current" : ""}`} />
+                                        {isSaved ? "Saved" : "Save"}
+                                    </Button>
+                                )}
                                 <Popover open={isExplanationPopoverOpen} onOpenChange={onPopoverOpenChange}>
                                     <PopoverTrigger asChild>
                                         <Button
