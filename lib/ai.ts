@@ -11,9 +11,17 @@ if (!DEEPSEEK_API_KEY) {
 export const deepseek = createOpenAI({
     baseURL: 'https://api.deepseek.com',
     apiKey: DEEPSEEK_API_KEY,
+    fetch: async (url, options) => {
+        if (options?.body) {
+            const body = JSON.parse(options.body as string);
+            body.thinking = { type: 'disabled' };
+            options = { ...options, body: JSON.stringify(body) };
+        }
+        return fetch(url, options);
+    },
 });
 
-export const PRIMARY_MODEL_ID = 'deepseek-v4-flash';
+export const PRIMARY_MODEL_ID = 'deepseek-v4-pro';
 
 const MAX_RETRIES = 2;
 

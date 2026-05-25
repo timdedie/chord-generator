@@ -1,3 +1,5 @@
+export const maxDuration = 60;
+
 import { streamText, CoreMessage } from 'ai';
 import { deepseek, PRIMARY_MODEL_ID } from '@/lib/ai';
 

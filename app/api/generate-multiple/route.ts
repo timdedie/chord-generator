@@ -1,6 +1,9 @@
 import { createMultipleProgressionsSchema } from '@/lib/schemas';
 import { generateChordObject, createResponse } from '@/lib/ai';
 
+export const runtime = 'edge';
+export const maxDuration = 25;
+
 interface RequestBody {
     prompt: string;
     numChords: number;
