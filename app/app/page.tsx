@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, type KeyboardEvent } from "react";
+import React, { useState, useCallback, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
@@ -10,28 +10,17 @@ import { ArrowRight } from "lucide-react";
 import NumChordsSelector from "@/components/NumChordsSelector";
 import { useExamplePrompts } from "@/hooks/useExamplePrompts";
 import { usePiano } from "@/components/PianoProvider";
-import { useGenerationGate } from "@/hooks/useGenerationGate";
-import { PaywallModal } from "@/components/PaywallModal";
-import { useUser } from "@clerk/nextjs";
-
 export default function AppPage() {
     const router = useRouter();
     const { randomExamples } = useExamplePrompts();
     const { loadSamples, areSamplesLoaded, isLoadingSamples } = usePiano();
-    const { checkAndGate, paywallOpen, setPaywallOpen } = useGenerationGate();
-    const { isSignedIn } = useUser();
 
     const [prompt, setPrompt] = useState("");
     const [numChords, setNumChords] = useState(4);
     const [isNavigating, setIsNavigating] = useState(false);
 
-    useEffect(() => {
-        if (isSignedIn) setPaywallOpen(false);
-    }, [isSignedIn, setPaywallOpen]);
-
     const handleGenerate = useCallback(() => {
         if (!prompt.trim()) return;
-        if (!checkAndGate()) return;
 
         if (!areSamplesLoaded && !isLoadingSamples) loadSamples();
 
@@ -41,7 +30,7 @@ export default function AppPage() {
         params.set("q", prompt);
         params.set("n", String(numChords));
         router.push(`/app/results?${params.toString()}`);
-    }, [prompt, numChords, router, areSamplesLoaded, isLoadingSamples, loadSamples, checkAndGate]);
+    }, [prompt, numChords, router, areSamplesLoaded, isLoadingSamples, loadSamples]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
@@ -51,7 +40,6 @@ export default function AppPage() {
     }, [handleGenerate]);
 
     const handleExampleClick = useCallback((example: string) => {
-        if (!checkAndGate()) return;
         if (!areSamplesLoaded && !isLoadingSamples) loadSamples();
 
         setIsNavigating(true);
@@ -60,7 +48,7 @@ export default function AppPage() {
         params.set("q", example);
         params.set("n", String(numChords));
         router.push(`/app/results?${params.toString()}`);
-    }, [numChords, router, areSamplesLoaded, isLoadingSamples, loadSamples, checkAndGate]);
+    }, [numChords, router, areSamplesLoaded, isLoadingSamples, loadSamples]);
 
     const handleNumChordsChange = useCallback((value: number) => {
         setNumChords(value);
@@ -163,7 +151,6 @@ export default function AppPage() {
                     </AnimatePresence>
                 </div>
             </main>
-            <PaywallModal open={paywallOpen} onOpenChange={setPaywallOpen} />
         </div>
     );
 }

@@ -13,9 +13,6 @@ import { usePiano } from "@/components/PianoProvider";
 import ThinkingMessages from "@/components/ThinkingMessages";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { useGenerationGate } from "@/hooks/useGenerationGate";
-import { PaywallModal } from "@/components/PaywallModal";
-import { useUser } from "@clerk/nextjs";
 import { useSavedProgressions } from "@/hooks/useSavedProgressions";
 
 interface ProgressionData {
@@ -28,8 +25,6 @@ function ResultsContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { loadSamples, areSamplesLoaded, isLoadingSamples } = usePiano();
-    const { checkAndGate, incrementCount, paywallOpen, setPaywallOpen } = useGenerationGate();
-    const { isSignedIn } = useUser();
     const { isSaved, toggleSave, isSignedIn: isSavedSignedIn } = useSavedProgressions();
 
     const [prompt, setPrompt] = useState("");
@@ -39,10 +34,6 @@ function ResultsContent() {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [activeNotes, setActiveNotes] = useState<string[]>([]);
     const [hasInitialized, setHasInitialized] = useState(false);
-
-    useEffect(() => {
-        if (isSignedIn) setPaywallOpen(false);
-    }, [isSignedIn, setPaywallOpen]);
 
     // Load samples on mount
     useEffect(() => {
@@ -75,7 +66,6 @@ function ResultsContent() {
 
     const generateProgressions = useCallback(async (queryPrompt: string, queryNumChords: number) => {
         if (!queryPrompt.trim()) return;
-        if (!checkAndGate()) return;
 
         setIsLoading(true);
         setProgressions([]);
@@ -103,18 +93,16 @@ function ResultsContent() {
                 return;
             }
 
-            incrementCount();
             setProgressions(data.progressions || []);
         } catch (err) {
             console.error("Network error:", err);
         }
 
         setIsLoading(false);
-    }, [areSamplesLoaded, isLoadingSamples, loadSamples, checkAndGate, incrementCount]);
+    }, [areSamplesLoaded, isLoadingSamples, loadSamples]);
 
     const generateMoreProgressions = useCallback(async () => {
         if (!prompt.trim() || isLoadingMore) return;
-        if (!checkAndGate()) return;
 
         setIsLoadingMore(true);
 
@@ -142,14 +130,13 @@ function ResultsContent() {
                 return;
             }
 
-            incrementCount();
             setProgressions((prev) => [...prev, ...(data.progressions || [])]);
         } catch (err) {
             console.error("Network error:", err);
         }
 
         setIsLoadingMore(false);
-    }, [prompt, numChords, progressions, isLoadingMore, checkAndGate, incrementCount]);
+    }, [prompt, numChords, progressions, isLoadingMore]);
 
     const handleGenerate = useCallback(() => {
         if (!prompt.trim()) return;
@@ -254,7 +241,6 @@ function ResultsContent() {
             <div className="fixed bottom-0 left-0 md:left-14 right-0 h-32 bg-gradient-to-t from-gray-50 dark:from-black to-transparent pointer-events-none z-20" />
 
             <PianoKeyboard firstNote={firstNote} lastNote={lastNote} activeNotes={activeNotes} />
-            <PaywallModal open={paywallOpen} onOpenChange={setPaywallOpen} />
         </div>
     );
 }
