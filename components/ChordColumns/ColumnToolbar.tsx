@@ -2,7 +2,18 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Download, Sparkles, Heart } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Play,
+  Pause,
+  Download,
+  Sparkles,
+  Heart,
+  Pencil,
+  Send,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -51,6 +62,16 @@ interface ColumnToolbarProps {
   isSaved?: boolean;
   onToggleSave?: () => void;
   isSignedIn?: boolean;
+  iterationIndex: number;
+  iterationCount: number;
+  onPrevIteration: () => void;
+  onNextIteration: () => void;
+  isEditPopoverOpen: boolean;
+  onEditPopoverOpenChange: (open: boolean) => void;
+  editFeedback: string;
+  onEditFeedbackChange: (value: string) => void;
+  onSendFeedback: () => void;
+  isEditSubmitting: boolean;
 }
 
 export default function ColumnToolbar({
@@ -67,6 +88,16 @@ export default function ColumnToolbar({
   isSaved = false,
   onToggleSave,
   isSignedIn = false,
+  iterationIndex,
+  iterationCount,
+  onPrevIteration,
+  onNextIteration,
+  isEditPopoverOpen,
+  onEditPopoverOpenChange,
+  editFeedback,
+  onEditFeedbackChange,
+  onSendFeedback,
+  isEditSubmitting,
 }: ColumnToolbarProps) {
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-sm border-b border-border/50">
@@ -107,6 +138,70 @@ export default function ColumnToolbar({
       </div>
 
       <div className="flex items-center gap-1.5">
+        {iterationCount > 1 && (
+          <div className="flex items-center gap-0.5 mr-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={onPrevIteration}
+              disabled={iterationIndex === 0}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs text-muted-foreground tabular-nums px-0.5 min-w-[2.5rem] text-center">
+              {iterationIndex + 1} / {iterationCount}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={onNextIteration}
+              disabled={iterationIndex === iterationCount - 1}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+        <Popover open={isEditPopoverOpen} onOpenChange={onEditPopoverOpenChange}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isEditSubmitting || chords.length === 0}
+            >
+              <Pencil className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] sm:w-[360px] p-3" sideOffset={5}>
+            <h4 className="font-medium leading-none text-sm mb-2">
+              Describe your changes
+            </h4>
+            <Textarea
+              value={editFeedback}
+              onChange={(e) => onEditFeedbackChange(e.target.value)}
+              placeholder="e.g. make the third chord more tense, swap the last chord for something darker…"
+              className="min-h-[70px] text-sm resize-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  onSendFeedback();
+                }
+              }}
+            />
+            <div className="flex justify-end mt-2">
+              <Button
+                size="sm"
+                onClick={onSendFeedback}
+                disabled={!editFeedback.trim() || isEditSubmitting}
+              >
+                <Send className="h-3.5 w-3.5 mr-1" />
+                Send
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
         {onToggleSave && (
           isSignedIn ? (
             <Button

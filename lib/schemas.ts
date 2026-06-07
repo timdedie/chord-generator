@@ -77,6 +77,13 @@ export const createMultipleProgressionsSchema = (numChords: number) => z.object(
         .describe('3 distinct chord progressions, each with a style label.'),
 });
 
+export const EditProgressionSchema = z.object({
+    chords: z.array(ValidChordStringSchema)
+        .min(2)
+        .max(8)
+        .describe("The revised chord progression, incorporating the user's requested changes."),
+});
+
 export const SingleChordSchema = z.object({
     chord: ValidChordStringSchema.describe("A single chord symbol (e.g. F#m7)"),
 });

@@ -16,6 +16,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { ChordItem } from "@/hooks/useChordManagement";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Chord } from "tonal";
 import { now as toneNow } from "tone";
 import { usePiano } from "@/components/PianoProvider";
@@ -28,6 +29,8 @@ import ColumnToolbar from "./ColumnToolbar";
 
 const generateUniqueId = () =>
   `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+const EMPTY_CHORDS: ChordItem[] = [];
 
 interface ChordColumnsContainerProps {
   id: string;
@@ -55,12 +58,33 @@ export default function ChordColumnsContainer({
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === "dark";
 
-  const [chords, setChords] = useState<ChordItem[]>(() =>
+  const [iterations, setIterations] = useState<ChordItem[][]>(() => [
     initialChords.map((chord, index) => ({
       id: `${id}-chord-${index}-${generateUniqueId()}`,
       chord,
-    }))
+    })),
+  ]);
+  const [currentIteration, setCurrentIteration] = useState(0);
+  const [loadingIterationIndex, setLoadingIterationIndex] = useState<number | null>(null);
+
+  const chords = iterations[currentIteration] ?? EMPTY_CHORDS;
+
+  const setChords = useCallback(
+    (updater: ChordItem[] | ((prev: ChordItem[]) => ChordItem[])) => {
+      setIterations((prev) => {
+        const current = prev[currentIteration] ?? [];
+        const next =
+          typeof updater === "function"
+            ? (updater as (p: ChordItem[]) => ChordItem[])(current)
+            : updater;
+        const copy = [...prev];
+        copy[currentIteration] = next;
+        return copy;
+      });
+    },
+    [currentIteration]
   );
+
   const [loadingChordId, setLoadingChordId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playingChordId, setPlayingChordId] = useState<string | null>(null);
@@ -75,6 +99,11 @@ export default function ChordColumnsContainer({
   >(new Map());
   const explanationAbortControllerRef = useRef<AbortController | null>(null);
   const currentProgressionKeyRef = useRef<string>("");
+
+  // Edit-with-feedback state
+  const [isEditPopoverOpen, setIsEditPopoverOpen] = useState(false);
+  const [editFeedback, setEditFeedback] = useState("");
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
 
   const { piano, areSamplesLoaded, loadSamples, isLoadingSamples } =
     usePiano();
@@ -214,13 +243,13 @@ export default function ChordColumnsContainer({
       if (oldIndex === -1 || newIndex === -1) return items;
       return arrayMove(items, oldIndex, newIndex);
     });
-  }, []);
+  }, [setChords]);
 
   // --- Add / Remove ---
 
   const handleRemoveChord = useCallback((chordId: string) => {
     setChords((prev) => prev.filter((c) => c.id !== chordId));
-  }, []);
+  }, [setChords]);
 
   const addChordAt = useCallback(
     async (position: number) => {
@@ -289,7 +318,7 @@ export default function ChordColumnsContainer({
       }
       setLoadingChordId(null);
     },
-    [chords, prompt]
+    [chords, prompt, setChords]
   );
 
   // --- Explanation ---
@@ -388,7 +417,78 @@ export default function ChordColumnsContainer({
     }
   };
 
+  // --- Edit with feedback (creates a new iteration) ---
+
+  const handleSendFeedback = useCallback(async () => {
+    const feedbackText = editFeedback.trim();
+    if (!feedbackText || isEditSubmitting || chords.length === 0) return;
+
+    const chordsForApi = chords.map((c) => c.chord);
+    const newIterationIndex = iterations.length;
+
+    setIsEditSubmitting(true);
+    setEditFeedback("");
+    setIsEditPopoverOpen(false);
+    setIterations((prev) => [...prev, []]);
+    setLoadingIterationIndex(newIterationIndex);
+    setCurrentIteration(newIterationIndex);
+
+    try {
+      const res = await fetch("/api/edit-progression", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chords: chordsForApi,
+          feedback: feedbackText,
+          prompt,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error || !Array.isArray(data.chords)) {
+        console.error("Edit progression API error:", data.error);
+        setIterations((prev) => prev.slice(0, newIterationIndex));
+        setCurrentIteration(newIterationIndex - 1);
+        return;
+      }
+
+      const newChordItems: ChordItem[] = data.chords.map(
+        (chord: string, index: number) => ({
+          id: `${id}-iter-${newIterationIndex}-chord-${index}-${generateUniqueId()}`,
+          chord,
+        })
+      );
+
+      setIterations((prev) => {
+        const copy = [...prev];
+        copy[newIterationIndex] = newChordItems;
+        return copy;
+      });
+    } catch (e) {
+      console.error("Error editing progression:", e);
+      setIterations((prev) => prev.slice(0, newIterationIndex));
+      setCurrentIteration(newIterationIndex - 1);
+    } finally {
+      setLoadingIterationIndex(null);
+      setIsEditSubmitting(false);
+    }
+  }, [editFeedback, isEditSubmitting, chords, iterations.length, prompt, id]);
+
+  const onEditPopoverOpenChange = useCallback((open: boolean) => {
+    setIsEditPopoverOpen(open);
+  }, []);
+
+  const goToPreviousIteration = useCallback(() => {
+    setCurrentIteration((i) => Math.max(0, i - 1));
+  }, []);
+
+  const goToNextIteration = useCallback(() => {
+    setCurrentIteration((i) => Math.min(iterations.length - 1, i + 1));
+  }, [iterations.length]);
+
   const hasChords = chords.length > 0;
+  const isCurrentIterationLoading = loadingIterationIndex === currentIteration;
 
   return (
     <div className="w-full rounded-xl overflow-hidden border border-border/50 bg-card/50">
@@ -406,9 +506,23 @@ export default function ChordColumnsContainer({
         isSaved={isSaved}
         onToggleSave={onToggleSave ? () => onToggleSave(chords.map((c) => c.chord)) : undefined}
         isSignedIn={isSignedIn}
+        iterationIndex={currentIteration}
+        iterationCount={iterations.length}
+        onPrevIteration={goToPreviousIteration}
+        onNextIteration={goToNextIteration}
+        isEditPopoverOpen={isEditPopoverOpen}
+        onEditPopoverOpenChange={onEditPopoverOpenChange}
+        editFeedback={editFeedback}
+        onEditFeedbackChange={setEditFeedback}
+        onSendFeedback={handleSendFeedback}
+        isEditSubmitting={isEditSubmitting}
       />
 
-      {hasChords && (
+      {isCurrentIterationLoading ? (
+        <div className="p-4" style={{ height: "50vh", minHeight: 300 }}>
+          <Skeleton className="h-full w-full rounded-lg" />
+        </div>
+      ) : hasChords && (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}

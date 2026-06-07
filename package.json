@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },
@@ -69,6 +69,8 @@
     "autoprefixer": "^10.4.19",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.7",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5"
