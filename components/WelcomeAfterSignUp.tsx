@@ -35,19 +35,22 @@ export default function WelcomeAfterSignUp() {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-sm text-center lowercase">
-                <DialogHeader className="items-center text-center sm:text-center">
+            <DialogContent className="sm:max-w-md text-center lowercase p-10 gap-6">
+                <DialogHeader className="items-center text-center sm:text-center gap-5">
                     <Image
                         src="/chordgen_logo.svg"
                         alt="ChordGen"
-                        width={56}
-                        height={56}
-                        className="h-14 w-14 object-contain"
+                        width={72}
+                        height={72}
+                        className="h-18 w-18 object-contain"
                     />
-                    <DialogDescription className="text-sm">
-                        hey :) thanks for using my app! if you like it, consider supporting it via
-                        paypal to help me keep it running and cover server costs (im just a
-                        student) but if you cant, no worries, have fun with the free tool :)
+                    <DialogDescription className="text-sm leading-relaxed space-y-3">
+                        <p>hey :) thanks for using my app!</p>
+                        <p>
+                            if you like it, consider supporting it via paypal to help me keep it
+                            running and cover server costs (im just a student).
+                        </p>
+                        <p>but if you cant, no worries, have fun with the free tool :)</p>
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="sm:justify-center">
@@ -55,7 +58,7 @@ export default function WelcomeAfterSignUp() {
                         href="https://www.paypal.com/paypalme/timdedie"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex w-fit items-center gap-2 rounded-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 shadow px-4 py-2 font-medium text-gray-700 dark:text-gray-200 transition-transform hover:scale-105"
+                        className="inline-flex w-fit items-center gap-2 rounded-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 shadow px-5 py-2.5 font-medium text-gray-700 dark:text-gray-200 transition-transform hover:scale-105"
                     >
                         <Image
                             src="/paypal/paypal-logo.png"
