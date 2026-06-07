@@ -183,6 +183,7 @@ export default function ColumnToolbar({
               onChange={(e) => onEditFeedbackChange(e.target.value)}
               placeholder="e.g. make the third chord more tense, swap the last chord for something darker…"
               className="min-h-[70px] text-sm resize-none"
+              maxLength={300}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault();
@@ -190,6 +191,9 @@ export default function ColumnToolbar({
                 }
               }}
             />
+            <div className="text-right text-xs text-muted-foreground mt-1">
+              {editFeedback.length}/300
+            </div>
             <div className="flex justify-end mt-2">
               <Button
                 size="sm"
