@@ -73,9 +73,9 @@ export default function SavedPage() {
                                     style={progression.style}
                                     prompt={progression.prompt}
                                     onActiveNotesChange={handleActiveNotesChange}
-                                    isSaved={isSaved(progression.id)}
-                                    onToggleSave={() =>
-                                        toggleSave({ id: progression.id, chords: progression.chords, style: progression.style, prompt: progression.prompt })
+                                    isSaved={isSaved}
+                                    onToggleSave={(saveId, chords) =>
+                                        toggleSave({ id: saveId, chords, style: progression.style, prompt: progression.prompt })
                                     }
                                     isSignedIn={isSignedIn}
                                 />

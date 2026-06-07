@@ -206,24 +206,6 @@ export default function ColumnToolbar({
             </div>
           </PopoverContent>
         </Popover>
-        {onToggleSave && (
-          isSignedIn ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleSave}
-              className={isSaved ? "text-red-500 hover:text-red-600" : ""}
-            >
-              <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
-            </Button>
-          ) : (
-            <SignInButton mode="modal">
-              <Button variant="ghost" size="sm">
-                <Heart className="h-4 w-4" />
-              </Button>
-            </SignInButton>
-          )
-        )}
         <Popover
           open={isExplanationPopoverOpen}
           onOpenChange={onPopoverOpenChange}
@@ -265,7 +247,25 @@ export default function ColumnToolbar({
           </PopoverContent>
         </Popover>
 
-        <MidiDownloaderInline chords={chords} prompt={prompt} compact />
+        <MidiDownloaderInline chords={chords} prompt={prompt} compact variant="ghost" />
+        {onToggleSave && (
+          isSignedIn ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleSave}
+              className={isSaved ? "text-red-500 hover:text-red-600" : ""}
+            >
+              <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
+            </Button>
+          ) : (
+            <SignInButton mode="modal">
+              <Button variant="ghost" size="sm">
+                <Heart className="h-4 w-4" />
+              </Button>
+            </SignInButton>
+          )
+        )}
       </div>
     </div>
   );

@@ -11,9 +11,10 @@ interface MidiDownloaderProps {
     chords: string[];
     prompt: string;
     compact?: boolean;
+    variant?: React.ComponentProps<typeof Button>["variant"];
 }
 
-const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt, compact = false }) => {
+const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt, compact = false, variant }) => {
     const [midiUrl, setMidiUrl] = useState<string>("");
     const [hasValidChords, setHasValidChords] = useState<boolean>(false);
 
@@ -104,7 +105,7 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt, compact
     return (
         <Button
             asChild
-            variant={compact ? "outline" : "default"}
+            variant={variant ?? (compact ? "outline" : "default")}
             size={compact ? "sm" : "default"}
             onClick={handleDownloadClick}
         >

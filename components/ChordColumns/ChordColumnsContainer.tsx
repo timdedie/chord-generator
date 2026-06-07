@@ -39,8 +39,8 @@ interface ChordColumnsContainerProps {
   prompt: string;
   onActiveNotesChange: (notes: string[]) => void;
   onChordPlay?: (chord: string) => void;
-  isSaved?: boolean;
-  onToggleSave?: (chords: string[]) => void;
+  isSaved?: (id: string) => boolean;
+  onToggleSave?: (id: string, chords: string[]) => void;
   isSignedIn?: boolean;
 }
 
@@ -51,7 +51,7 @@ export default function ChordColumnsContainer({
   prompt,
   onActiveNotesChange,
   onChordPlay,
-  isSaved = false,
+  isSaved,
   onToggleSave,
   isSignedIn = false,
 }: ChordColumnsContainerProps) {
@@ -68,6 +68,7 @@ export default function ChordColumnsContainer({
   const [loadingIterationIndex, setLoadingIterationIndex] = useState<number | null>(null);
 
   const chords = iterations[currentIteration] ?? EMPTY_CHORDS;
+  const saveId = currentIteration === 0 ? id : `${id}-iter-${currentIteration}`;
 
   const setChords = useCallback(
     (updater: ChordItem[] | ((prev: ChordItem[]) => ChordItem[])) => {
@@ -503,8 +504,8 @@ export default function ChordColumnsContainer({
         onPopoverOpenChange={onPopoverOpenChange}
         isExplanationLoading={isExplanationLoading}
         currentExplanationText={currentExplanationText}
-        isSaved={isSaved}
-        onToggleSave={onToggleSave ? () => onToggleSave(chords.map((c) => c.chord)) : undefined}
+        isSaved={isSaved ? isSaved(saveId) : false}
+        onToggleSave={onToggleSave ? () => onToggleSave(saveId, chords.map((c) => c.chord)) : undefined}
         isSignedIn={isSignedIn}
         iterationIndex={currentIteration}
         iterationCount={iterations.length}

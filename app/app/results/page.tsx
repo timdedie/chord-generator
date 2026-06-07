@@ -197,8 +197,8 @@ function ResultsContent() {
                                 style={progression.style}
                                 prompt={prompt}
                                 onActiveNotesChange={handleActiveNotesChange}
-                                isSaved={isSaved(progression.id)}
-                                onToggleSave={(chords) => toggleSave({ id: progression.id, chords, style: progression.style, prompt })}
+                                isSaved={isSaved}
+                                onToggleSave={(saveId, chords) => toggleSave({ id: saveId, chords, style: progression.style, prompt })}
                                 isSignedIn={isSavedSignedIn}
                             />
                         ))}
