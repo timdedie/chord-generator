@@ -150,7 +150,7 @@ export default async function KeyPage({ params }: { params: Promise<Params> }) {
                             Generate progressions in {k.label}
                         </h2>
                         <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-                            ChordGen builds custom progressions in any key. Just describe the mood — the AI handles the music theory.
+                            ChordGen builds custom progressions in any key. Just describe the mood, and it handles the music theory for you.
                         </p>
                         <Button asChild size="lg" className="font-bold">
                             <Link href={promptHref}>

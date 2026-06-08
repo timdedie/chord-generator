@@ -25,7 +25,7 @@ import { MotionSection, MotionItem, ScrollIndicator } from '@/components/motion-
 import { faqs } from '@/lib/constants';
 
 export const metadata: Metadata = {
-    title: 'AI Chord Progression Generator — Free, No Sign-Up | ChordGen',
+    title: 'AI Chord Progression Generator: Free, No Sign-Up | ChordGen',
     description: 'Generate chord progressions instantly from any mood, genre, or feeling. Interactive piano preview, drag-and-drop editing, free MIDI download for any DAW. No account needed.',
     alternates: { canonical: '/' },
 };
@@ -34,30 +34,30 @@ const useCases = [
     {
         Icon: Mic2,
         title: 'Songwriters',
-        description: 'Break through writer\'s block. Describe the emotion of your song and get harmonic ideas in seconds — no theory knowledge required.',
+        description: 'Stuck on a song? Describe the feeling you\'re going for and get a harmonic starting point in seconds. No music theory needed.',
     },
     {
         Icon: Headphones,
         title: 'Producers',
-        description: 'Prototype chord beds for beats, EDM drops, or cinematic cues. Export MIDI and layer it with your sounds instantly.',
+        description: 'Skip drawing chords into the piano roll one note at a time. Generate a progression, then drag the MIDI straight into Ableton, FL Studio, or Logic.',
     },
     {
         Icon: Piano,
         title: 'Instrumentalists',
-        description: 'Explore new harmonic territory for jazz, classical, or contemporary playing. Use the interactive piano to visualize every chord.',
+        description: 'Explore new harmonic territory for jazz, classical, or contemporary playing, and use the interactive piano to see exactly how each chord is built.',
     },
     {
         Icon: BookOpen,
         title: 'Music students',
-        description: 'Learn how real progressions are built across genres. Generate examples for any style — from blues to neo-soul to film scoring.',
+        description: 'See how real progressions come together across genres, from blues turnarounds to neo-soul extensions to film-score cues.',
     },
 ];
 
 const features = [
     {
         Icon: Music,
-        title: 'AI-Powered',
-        description: 'Describe any mood or genre. Our AI creates musically coherent progressions instantly.',
+        title: 'Type it, don\'t pick it',
+        description: 'No scale pickers or preset menus. Type a mood or genre in plain words and get a progression built around it, not just filtered from it.',
     },
     {
         Icon: Piano,
@@ -136,8 +136,8 @@ export default function LandingPage() {
 
                     {/* Subheadline */}
                     <p className="animate-fade-in-up-delay-2 text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-4 font-medium">
-                        The free AI chord progression generator.
-                        Describe a mood, preview on piano, download MIDI.
+                        Type what you want, hear it on a piano, then drag the MIDI
+                        straight into your DAW. Free, no sign-up.
                     </p>
 
                     {/* CTA */}
@@ -235,7 +235,7 @@ export default function LandingPage() {
                             Built for every musician
                         </h2>
                         <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 font-medium">
-                            Whether you&apos;re writing your first song or scoring your hundredth.
+                            From your very first song to your hundredth film score.
                         </p>
                     </MotionItem>
 
@@ -347,6 +347,15 @@ export default function LandingPage() {
                                 </Link>
                             </div>
                         </div>
+                    </MotionItem>
+
+                    <MotionItem className="text-center mt-10">
+                        <p className="text-sm text-gray-500 dark:text-gray-500">
+                            Coming from another chord tool?{' '}
+                            <Link href="/chordchord-alternative" className="font-bold text-primary hover:underline">
+                                See how ChordGen compares as a free ChordChord alternative
+                            </Link>
+                        </p>
                     </MotionItem>
                 </MotionSection>
             </section>

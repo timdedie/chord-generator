@@ -8,7 +8,7 @@ import { ChordRow } from '@/components/ChordChip';
 
 const title = 'Common Chord Progressions: 12 Patterns Every Songwriter Should Know';
 const description =
-    'The 12 chord progressions used in thousands of songs — I–V–vi–IV, ii–V–I, the 50s progression, the Andalusian cadence, and more. Examples, songs, and free MIDI.';
+    'The 12 chord progressions used in thousands of songs: I-V-vi-IV, ii-V-I, the 50s progression, the Andalusian cadence, and more. Examples, songs, and free MIDI.';
 const url = 'https://www.chordgen.org/blog/common-chord-progressions-guide';
 const datePublished = '2026-04-24';
 
@@ -35,19 +35,19 @@ const progressions = [
         name: 'I – V – vi – IV (the "axis" progression)',
         chords: ['C', 'G', 'Am', 'F'],
         key: 'C major',
-        body: 'The most-used four-chord progression in popular music. Found in "Let It Be," "Don\'t Stop Believin\'," "With or Without You," "No Woman No Cry," and thousands more. The lift from V to vi is what makes it irresistible — a strong tonic resolution defused by an unexpected minor chord.',
+        body: 'The most-used four-chord progression in popular music. Found in "Let It Be," "Don\'t Stop Believin\'," "With or Without You," "No Woman No Cry," and thousands more. The lift from V to vi is what makes it irresistible: a strong tonic resolution, defused by an unexpected minor chord.',
     },
     {
         name: 'vi – IV – I – V (the "sad pop" rotation)',
         chords: ['Am', 'F', 'C', 'G'],
         key: 'C major',
-        body: 'Same chords as the axis, started on the vi. The minor opening makes it feel reflective and bittersweet rather than triumphant. "Apologize" by OneRepublic, "Numb" by Linkin Park, "Despacito" — all sit on this rotation.',
+        body: 'Same chords as the axis, started on the vi. The minor opening makes it feel reflective and bittersweet rather than triumphant. "Apologize" by OneRepublic, "Numb" by Linkin Park, and "Despacito" all sit on this rotation.',
     },
     {
         name: 'I – vi – IV – V (the 50s progression)',
         chords: ['C', 'Am', 'F', 'G'],
         key: 'C major',
-        body: 'The doo-wop progression. "Stand By Me," "Earth Angel," "Heart and Soul" — comforting and instantly recognizable. Modern uses include "Beautiful Girls" by Sean Kingston and "Crocodile Rock" by Elton John.',
+        body: 'The doo-wop progression: comforting and instantly recognizable in "Stand By Me," "Earth Angel," and "Heart and Soul." Modern uses include "Beautiful Girls" by Sean Kingston and "Crocodile Rock" by Elton John.',
     },
     {
         name: 'ii – V – I (the jazz cadence)',
@@ -59,19 +59,19 @@ const progressions = [
         name: 'I – IV – V (the three-chord trick)',
         chords: ['G', 'C', 'D'],
         key: 'G major',
-        body: 'The bedrock of blues, country, folk, and rock and roll. "Twist and Shout," "La Bamba," "Wild Thing" — three chords and the truth. If you only learn one progression, learn this.',
+        body: 'The bedrock of blues, country, folk, and rock and roll. "Twist and Shout," "La Bamba," and "Wild Thing" prove the point: three chords and the truth. If you only learn one progression, learn this.',
     },
     {
         name: 'i – ♭VI – ♭III – ♭VII (the epic minor cycle)',
         chords: ['Am', 'F', 'C', 'G'],
         key: 'A minor',
-        body: 'The "Inception" progression. Used by Hans Zimmer in film, by Avicii in EDM, by Toto in "Africa." Same chords as the pop axis, but heard as starting on the relative minor — the emotional weight shifts entirely.',
+        body: 'The "Inception" progression. Used by Hans Zimmer in film, by Avicii in EDM, by Toto in "Africa." Same chords as the pop axis, but heard as starting on the relative minor, and the emotional weight shifts entirely.',
     },
     {
         name: 'i – iv – V (the harmonic minor cadence)',
         chords: ['Am', 'Dm', 'E'],
         key: 'A minor',
-        body: 'A minor key with a major V — the V borrowed from the harmonic minor scale. Used in classical music, metal, and middle-eastern-flavored pop. The leading tone in the V chord makes the resolution to i feel inevitable.',
+        body: 'A minor key with a major V, borrowed from the harmonic minor scale. Used in classical music, metal, and middle-eastern-flavored pop. The leading tone in the V chord makes the resolution to i feel inevitable.',
     },
     {
         name: 'i – ♭VII – ♭VI – V (the Andalusian cadence)',
@@ -83,7 +83,7 @@ const progressions = [
         name: 'I – V – IV – I (the country / gospel turnaround)',
         chords: ['G', 'D', 'C', 'G'],
         key: 'G major',
-        body: 'Less common in modern pop but everywhere in country, gospel, and bluegrass. The IV resolves directly back to I instead of going through V — a "plagal" cadence with a softer, more conclusive feel.',
+        body: 'Less common in modern pop but everywhere in country, gospel, and bluegrass. The IV resolves directly back to I instead of going through V, a "plagal" cadence with a softer, more conclusive feel.',
     },
     {
         name: 'I – ♭VII – IV (the Mixolydian rock pattern)',
@@ -154,15 +154,15 @@ export default function CommonChordProgressionsGuide() {
 
                     <div className="prose prose-lg dark:prose-invert max-w-none mb-12">
                         <p>
-                            A chord progression is just a sequence of chords played in order. What makes some
-                            progressions feel inevitable — what makes &ldquo;Let It Be&rdquo; sound like Let It Be — is the
-                            relationship between those chords and the key they sit in. The 12 patterns below show
-                            up across decades, genres, and continents. They are the vocabulary of popular music.
+                            A chord progression is just a sequence of chords played in order. What makes some of
+                            them feel inevitable, what makes &ldquo;Let It Be&rdquo; sound like Let It Be, comes down to
+                            the relationship between those chords and the key they sit in. The 12 patterns below
+                            show up across decades, genres, and continents. They are the vocabulary of popular music.
                         </p>
                         <p>
                             All examples are written in C major or A minor for readability, but progressions
-                            transpose freely. Every example has a free MIDI download once you generate it inside
-                            ChordGen — try the prompts at the bottom of each section.
+                            transpose freely. Generate any of them inside ChordGen and you can download a free
+                            MIDI file in your own key. Try the prompts at the bottom of each section.
                         </p>
                     </div>
 

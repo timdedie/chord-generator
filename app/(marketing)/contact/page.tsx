@@ -25,7 +25,7 @@ const reasons = [
     {
         Icon: Bug,
         title: 'Report a bug',
-        body: 'Found something broken? Send a short description and the prompt you used — we read every report.',
+        body: 'Found something broken? Send a short description and the prompt you used. We read every report.',
     },
     {
         Icon: Sparkles,
@@ -82,7 +82,7 @@ export default function ContactPage() {
                         Get in touch
                     </h1>
                     <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 leading-relaxed">
-                        Bug reports, feature requests, partnerships, or just a hello — we read every email.
+                        Bug reports, feature requests, partnerships, or just a hello. We read every email.
                     </p>
                 </div>
             </section>

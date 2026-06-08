@@ -6,7 +6,7 @@ import { genres } from '@/lib/seoContent';
 export const metadata: Metadata = {
     title: 'Chord Progressions by Genre',
     description:
-        'Browse chord progressions by genre — jazz, lo-fi, pop, rock, R&B, EDM, neo-soul, blues, country, folk, gospel, cinematic, ambient, and bossa nova.',
+        'Browse chord progressions by genre: jazz, lo-fi, pop, rock, R&B, EDM, neo-soul, blues, country, folk, gospel, cinematic, ambient, and bossa nova.',
     alternates: { canonical: '/chords' },
 };
 
@@ -19,7 +19,7 @@ export default function ChordsIndex() {
                         Chord progressions by genre
                     </h1>
                     <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400">
-                        Each guide covers the chord vocabulary, characteristic progressions, and famous examples for one genre — with free MIDI you can drop straight into your DAW.
+                        Each guide covers the chord vocabulary, characteristic progressions, and famous examples for one genre, plus free MIDI you can drop straight into your DAW.
                     </p>
                 </div>
             </section>

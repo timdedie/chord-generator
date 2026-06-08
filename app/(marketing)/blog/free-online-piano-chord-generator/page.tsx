@@ -8,7 +8,7 @@ import { ChordRow } from '@/components/ChordChip';
 
 const title = 'Free Online Piano Chord Generator: How ChordGen Works';
 const description =
-    'A walkthrough of ChordGen — a free online piano chord generator that turns text prompts into chord progressions you can play, edit, and download as MIDI.';
+    'A walkthrough of ChordGen, a free online piano chord generator that turns text prompts into chord progressions you can play, edit, and download as MIDI.';
 const url = 'https://www.chordgen.org/blog/free-online-piano-chord-generator';
 const datePublished = '2026-04-24';
 
@@ -51,7 +51,7 @@ const features = [
     {
         Icon: Sparkles,
         title: 'Text-to-chords',
-        body: 'Describe a mood — "melancholic jazz", "upbeat summer pop", "lo-fi beat" — and ChordGen interprets it musically. No theory knowledge required.',
+        body: 'Describe a mood, like "melancholic jazz," "upbeat summer pop," or "lo-fi beat," and ChordGen interprets it musically. No theory knowledge required.',
     },
     {
         Icon: Piano,
@@ -93,9 +93,9 @@ export default function FreeOnlinePianoChordGenerator() {
                     <div className="prose prose-lg dark:prose-invert max-w-none mb-16">
                         <p>
                             Most &ldquo;chord generators&rdquo; online ask you to pick a key, a scale, and a mode, then spit out a
-                            random sequence of chords from that scale. That works if you already know what you want.
-                            If you don&apos;t — if you only know that you&apos;re after something <em>warm</em>, or
-                            <em> melancholic</em>, or <em>like that one Frank Ocean track</em> — you&apos;re stuck.
+                            random sequence of chords from that scale. That works fine if you already know what you want.
+                            But if all you know is that you&apos;re after something <em>warm</em>, or
+                            <em> melancholic</em>, or <em>like that one Frank Ocean track</em>, you&apos;re stuck.
                         </p>
                         <p>
                             ChordGen takes a different approach. You describe the music in words, and an AI translates
@@ -136,8 +136,8 @@ export default function FreeOnlinePianoChordGenerator() {
                     <div className="mb-12 p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
                         <ChordRow chords={['Cmaj7', 'Em7', 'Fmaj7', 'G7sus4']} large />
                         <p className="text-sm text-gray-500 dark:text-gray-500 mt-4">
-                            A diatonic progression in C major with a suspended dominant — the kind of harmonic
-                            cushion you&apos;d hear in a Norah Jones or Bill Withers track.
+                            A diatonic progression in C major with a suspended dominant. It&apos;s the kind of
+                            harmonic cushion you&apos;d hear in a Norah Jones or Bill Withers track.
                         </p>
                     </div>
 

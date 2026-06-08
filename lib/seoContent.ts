@@ -1,5 +1,5 @@
 // Static content for SEO landing pages (genres, keys, blog).
-// Kept server-only — referenced from RSC pages, generateStaticParams, and sitemap.
+// Server-only: referenced from RSC pages, generateStaticParams, and sitemap.
 
 export type Progression = {
     name: string;
@@ -28,9 +28,9 @@ export const genres: Genre[] = [
         title: 'Lo-Fi Chord Progressions',
         metaTitle: 'Lo-Fi Chord Progressions: 10 Examples + Free MIDI',
         metaDescription:
-            'The chord progressions that define lo-fi hip hop — extended jazz voicings, modal interchange, and dreamy seventh chords. Examples in multiple keys, free MIDI download.',
+            'The chord progressions that define lo-fi hip hop: extended jazz voicings, modal interchange, and dreamy seventh chords. Examples in multiple keys, free MIDI download.',
         intro:
-            'Lo-fi hip hop borrows its harmonic vocabulary from jazz: extended chords (7ths, 9ths, 11ths), modal interchange, and chromatic bass motion. The genre favors muted, slightly nostalgic chord voicings — major 7ths over minor i, sus chords that never fully resolve, ii–V cadences pulled out of bebop and slowed to a crawl.',
+            'Lo-fi hip hop borrows its harmonic vocabulary from jazz: extended chords (7ths, 9ths, 11ths), modal interchange, and chromatic bass motion. The genre favors muted, slightly nostalgic chord voicings, things like major 7ths over a minor i, sus chords that never fully resolve, and ii–V cadences pulled out of bebop and slowed to a crawl.',
         characteristics: [
             'Major 7th and minor 7th chords as the harmonic baseline',
             'ii–V–I jazz cadences, often unresolved',
@@ -61,7 +61,7 @@ export const genres: Genre[] = [
                 chords: ['Amaj7', 'Cmaj7', 'Dm7', 'Fmaj7'],
                 key: 'A minor (modal)',
                 description:
-                    'A wandering progression with no strong tonic pull — perfect for study beats and mellow vocal samples.',
+                    'A wandering progression with no strong tonic pull. Good for study beats and mellow vocal samples.',
             },
         ],
         examples: [
@@ -78,7 +78,7 @@ export const genres: Genre[] = [
         metaDescription:
             'The essential jazz progressions: ii–V–I, rhythm changes, Coltrane changes, modal vamps. Free MIDI examples in every key. Built for songwriters and improvisers.',
         intro:
-            'Jazz harmony is built on extensions, substitutions, and motion. The ii–V–I is the gravitational center of the language — a tension-and-release pattern that resolves a tritone substitution into a stable tonic. From there, the vocabulary opens into tritone subs, modal interchange, secondary dominants, and Coltrane changes that move in major thirds.',
+            'Jazz harmony is built on extensions, substitutions, and motion. The ii–V–I sits at the gravitational center of the language: a tension-and-release pattern that resolves into a stable tonic. From there, the vocabulary opens into tritone subs, modal interchange, secondary dominants, and Coltrane changes that move in major thirds.',
         characteristics: [
             'Seventh chords as the minimum unit (triads are rare)',
             'ii–V–I as the foundational cadence',
@@ -108,7 +108,7 @@ export const genres: Genre[] = [
                 chords: ['B♭maj7', 'Gm7', 'Cm7', 'F7'],
                 key: 'B♭ major',
                 description:
-                    'The 32-bar AABA form derived from "I Got Rhythm" — used in hundreds of bebop heads.',
+                    'The 32-bar AABA form derived from "I Got Rhythm," used in hundreds of bebop heads.',
             },
             {
                 name: 'Coltrane changes (excerpt)',
@@ -116,7 +116,7 @@ export const genres: Genre[] = [
                 chords: ['Cmaj7', 'E♭7', 'A♭maj7'],
                 key: 'C major (modulating)',
                 description:
-                    'Movement in major thirds, dividing the octave equally. From "Giant Steps" — harmonic study material.',
+                    'Movement in major thirds, dividing the octave equally. Drawn from "Giant Steps" and a staple of harmonic study.',
             },
         ],
         examples: [
@@ -131,7 +131,7 @@ export const genres: Genre[] = [
         title: 'Pop Chord Progressions',
         metaTitle: 'Pop Chord Progressions: I-V-vi-IV and 6 More + MIDI',
         metaDescription:
-            'The chord progressions used in modern pop — I–V–vi–IV, the 50s progression, axis of awesome patterns. With MIDI examples in C, G, and D major.',
+            'The chord progressions used in modern pop: I–V–vi–IV, the 50s progression, axis of awesome patterns, and more. With MIDI examples in C, G, and D major.',
         intro:
             'Pop music has converged on a small set of progressions that work across decades and genres. The I–V–vi–IV ("axis") progression alone underpins thousands of hits; rotated variants (vi–IV–I–V, IV–I–V–vi) provide subtle emotional shifts while keeping the same four diatonic chords.',
         characteristics: [
@@ -148,7 +148,7 @@ export const genres: Genre[] = [
                 chords: ['C', 'G', 'Am', 'F'],
                 key: 'C major',
                 description:
-                    'Probably the most recorded progression of the last 40 years. "Let It Be," "Don\'t Stop Believin\'," "With or Without You" — all variations.',
+                    'Probably the most recorded progression of the last 40 years. "Let It Be," "Don\'t Stop Believin\'," and "With or Without You" are all variations on it.',
             },
             {
                 name: 'Sad pop / emotional',
@@ -182,7 +182,7 @@ export const genres: Genre[] = [
         metaDescription:
             'Chord progressions for EDM, house, future bass, and progressive house. Big drops, emotional builds, and supersaw-friendly voicings. Free MIDI for any DAW.',
         intro:
-            'EDM harmony is functionally simple — the energy comes from arrangement, sound design, and rhythm. Progressions are typically 4-bar loops in minor keys, with the iv chord providing the emotional lift before a drop. Open voicings (sus2, add9) translate well to supersaws and pluck synths.',
+            'EDM harmony is functionally simple. The energy comes from arrangement, sound design, and rhythm rather than chord complexity. Progressions are typically 4-bar loops in minor keys, with the iv chord providing the emotional lift before a drop. Open voicings (sus2, add9) translate well to supersaws and pluck synths.',
         characteristics: [
             'Minor keys (Am, Em, F♯m most common)',
             'Sus2 and add9 voicings for open, airy textures',
@@ -229,7 +229,7 @@ export const genres: Genre[] = [
         metaDescription:
             'The chord vocabulary of R&B and neo-soul: extended 9ths and 11ths, slash chords, and chromatic motion. Examples from D\'Angelo, Frank Ocean, SZA. Free MIDI.',
         intro:
-            'R&B inherits jazz harmony but voices it differently — wider, lusher, with more attention to the bassline. Slash chords are fundamental: a Cmaj7/E or a Bm/D shifts the harmonic center without changing the chord quality. Neo-soul takes this further with rich 9th and 11th extensions.',
+            'R&B inherits jazz harmony but voices it differently: wider, lusher, with more attention to the bassline. Slash chords are fundamental, and a Cmaj7/E or a Bm/D shifts the harmonic center without changing the chord quality. Neo-soul takes this further with rich 9th and 11th extensions.',
         characteristics: [
             'Extended chords: maj9, m9, m11, 13',
             'Slash chords for stepwise bass motion',
@@ -244,7 +244,7 @@ export const genres: Genre[] = [
                 chords: ['Cmaj9', 'Em7', 'Am9', 'Dm11'],
                 key: 'C major',
                 description:
-                    'The D\'Angelo / Erykah Badu sound — every chord stacked with extensions, no triads in sight.',
+                    'The D\'Angelo / Erykah Badu sound: every chord stacked with extensions, no triads in sight.',
             },
             {
                 name: 'Modern R&B ballad',
@@ -259,7 +259,7 @@ export const genres: Genre[] = [
                 roman: 'iim7 – V7 – iiim7 – vim7',
                 chords: ['Dm7', 'G7', 'Em7', 'Am7'],
                 key: 'C major',
-                description: 'Backdoor cycle with smooth voice leading — Babyface, Boyz II Men territory.',
+                description: 'A backdoor cycle with smooth voice leading, in Babyface and Boyz II Men territory.',
             },
         ],
         examples: [
@@ -274,9 +274,9 @@ export const genres: Genre[] = [
         title: 'Rock Chord Progressions',
         metaTitle: 'Rock Chord Progressions: Power Chords & Anthems + MIDI',
         metaDescription:
-            'The progressions that define rock — I–IV–V, vi–IV–I–V anthems, blues-derived 12-bar forms, and modal mixture. Free MIDI examples for guitar and keys.',
+            'The progressions that define rock: I–IV–V, vi–IV–I–V anthems, blues-derived 12-bar forms, and modal mixture. Free MIDI examples for guitar and keys.',
         intro:
-            'Rock builds on the blues but freely borrows from modes — Mixolydian (♭VII) for British invasion swagger, Dorian (♭III–IV) for grunge, Aeolian for power-chord metal. The I–IV–V remains the bedrock, but the genre\'s identity often comes from the borrowed chords that surround it.',
+            'Rock builds on the blues but freely borrows from modes: Mixolydian (♭VII) for British invasion swagger, Dorian (♭III–IV) for grunge, Aeolian for power-chord metal. The I–IV–V remains the bedrock, but the genre\'s identity often comes from the borrowed chords surrounding it.',
         characteristics: [
             'Power chords (root + 5th) and open triads',
             '♭VII as a signature borrowed chord',
@@ -290,7 +290,7 @@ export const genres: Genre[] = [
                 roman: 'I – IV – V',
                 chords: ['E', 'A', 'B'],
                 key: 'E major',
-                description: 'The bedrock of rock and roll — Chuck Berry to The Stooges.',
+                description: 'The bedrock of rock and roll, from Chuck Berry to The Stooges.',
             },
             {
                 name: 'Mixolydian rock',
@@ -305,7 +305,7 @@ export const genres: Genre[] = [
                 chords: ['Am', 'F', 'C', 'G'],
                 key: 'C major',
                 description:
-                    'Big, emotional, instantly recognizable — used by U2, Coldplay, Green Day, and many more.',
+                    'Big, emotional, and instantly recognizable. Used by U2, Coldplay, Green Day, and many more.',
             },
         ],
         examples: [
@@ -322,7 +322,7 @@ export const genres: Genre[] = [
         metaDescription:
             'The 12-bar blues, quick-change variations, jazz blues, and minor blues forms. Free MIDI for guitar, piano, and harmonica practice in every key.',
         intro:
-            'The 12-bar blues is the most influential 12 measures in popular music. Three chords (I7, IV7, V7) arranged in a fixed pattern provide the template for thousands of songs across blues, rock, jazz, and country. Variations — quick-change, jazz blues, minor blues — extend the form without breaking it.',
+            'The 12-bar blues is the most influential 12 measures in popular music. Three chords (I7, IV7, V7) arranged in a fixed pattern provide the template for thousands of songs across blues, rock, jazz, and country. Variations like the quick-change, jazz blues, and minor blues extend the form without breaking it.',
         characteristics: [
             'Dominant 7th chords on every degree (I7, IV7, V7)',
             '12-bar AAB lyric structure',
@@ -336,21 +336,21 @@ export const genres: Genre[] = [
                 roman: 'I7 (×4) – IV7 (×2) – I7 (×2) – V7 – IV7 – I7 – V7',
                 chords: ['E7', 'E7', 'E7', 'E7', 'A7', 'A7', 'E7', 'E7', 'B7', 'A7', 'E7', 'B7'],
                 key: 'E major',
-                description: 'The standard 12-bar form in E — the most common blues guitar key.',
+                description: 'The standard 12-bar form in E, the most common blues guitar key.',
             },
             {
                 name: 'Quick-change blues',
                 roman: 'I7 – IV7 – I7 – I7 – IV7 – IV7 – I7 – I7 – V7 – IV7 – I7 – V7',
                 chords: ['A7', 'D7', 'A7', 'A7', 'D7', 'D7', 'A7', 'A7', 'E7', 'D7', 'A7', 'E7'],
                 key: 'A major',
-                description: 'The IV chord arrives one bar early — the standard variation.',
+                description: 'The IV chord arrives one bar early. It\'s the standard variation.',
             },
             {
                 name: 'Minor blues',
                 roman: 'i7 – iv7 – i7 – i7 – iv7 – iv7 – i7 – i7 – ♭VI7 – V7 – i7 – V7',
                 chords: ['Am7', 'Dm7', 'Am7', 'Am7', 'Dm7', 'Dm7', 'Am7', 'Am7', 'F7', 'E7', 'Am7', 'E7'],
                 key: 'A minor',
-                description: 'Darker, more melancholy form — used by B.B. King, Otis Rush, and Gary Moore.',
+                description: 'A darker, more melancholy form, favored by B.B. King, Otis Rush, and Gary Moore.',
             },
         ],
         examples: [
@@ -367,7 +367,7 @@ export const genres: Genre[] = [
         metaDescription:
             'Neo-soul chord progressions inspired by D\'Angelo, Erykah Badu, Robert Glasper. Extended chords, modal mixture, chromatic motion. Free MIDI download.',
         intro:
-            'Neo-soul fuses jazz harmony with hip-hop rhythm and soul vocals. Chords are voiced wide and rich — m9s, maj13s, sus chords with added 9ths — and the bass often moves chromatically beneath them. Robert Glasper, D\'Angelo, and Hiatus Kaiyote are the modern reference points.',
+            'Neo-soul fuses jazz harmony with hip-hop rhythm and soul vocals. Chords are voiced wide and rich (think m9s, maj13s, and sus chords with added 9ths), and the bass often moves chromatically beneath them. Robert Glasper, D\'Angelo, and Hiatus Kaiyote are the modern reference points.',
         characteristics: [
             'Wide, lush voicings (9ths, 11ths, 13ths)',
             'Chromatic bass walks',
@@ -405,7 +405,7 @@ export const genres: Genre[] = [
         metaDescription:
             'Epic cinematic chord progressions for film, trailer, and game music. Borrowed chords, modal mixture, and dramatic tension. Free MIDI for any DAW.',
         intro:
-            'Cinematic harmony exploits modal mixture and unresolved tension. The progression doesn\'t need to "go" anywhere — it needs to feel like something. Hans Zimmer\'s i–♭VI–♭III–♭VII (the "Inception sound") is the modern shorthand for epic. Lydian raised 4ths suggest wonder; Phrygian ♭2s suggest dread.',
+            'Cinematic harmony exploits modal mixture and unresolved tension. The progression doesn\'t need to "go" anywhere so much as feel like something. Hans Zimmer\'s i–♭VI–♭III–♭VII (the "Inception sound") is the modern shorthand for epic. Lydian raised 4ths suggest wonder; Phrygian ♭2s suggest dread.',
         characteristics: [
             'Modal mixture (♭VI, ♭III, ♭VII borrowed from minor)',
             'Open fifths and octaves for orchestral weight',
@@ -450,7 +450,7 @@ export const genres: Genre[] = [
         metaDescription:
             'Ambient chord progressions for pads, drones, and atmospheric music. Slow harmonic motion, suspended chords, modal voicings. Free MIDI download.',
         intro:
-            'Ambient music treats harmony as texture. Chords change slowly — sometimes one chord per minute — and the focus is on overtones, voicing, and timbre rather than harmonic motion. Suspended chords, open fifths, and modal vamps form the vocabulary.',
+            'Ambient music treats harmony as texture. Chords change slowly, sometimes just one per minute, and the focus sits on overtones, voicing, and timbre rather than harmonic motion. Suspended chords, open fifths, and modal vamps form the vocabulary.',
         characteristics: [
             'Suspended and open-fifth voicings',
             'Modal vamps (often Lydian or Dorian)',
@@ -464,7 +464,7 @@ export const genres: Genre[] = [
                 roman: 'Isus2 – IVsus2 – vimsus – Isus2',
                 chords: ['Csus2', 'Fsus2', 'Amsus', 'Csus2'],
                 key: 'C major (modal)',
-                description: 'No 3rds anywhere — pure suspended motion that floats without resolving.',
+                description: 'No 3rds anywhere, just pure suspended motion that floats without resolving.',
             },
             {
                 name: 'Modal Lydian drone',
@@ -486,7 +486,7 @@ export const genres: Genre[] = [
         title: 'Folk Chord Progressions',
         metaTitle: 'Folk Chord Progressions: Open Chords + MIDI',
         metaDescription:
-            'The chord progressions of folk music — open guitar voicings, modal melodies, three-chord ballads. Free MIDI examples for songwriters.',
+            'The chord progressions of folk music: open guitar voicings, modal melodies, three-chord ballads. Free MIDI examples for songwriters.',
         intro:
             'Folk music favors open guitar chords (G, C, D, Em, Am) and modal scales. Many traditional folk songs sit in Mixolydian or Dorian modes, giving them a slightly antique sound. Modern indie folk (Bon Iver, Fleet Foxes) extends the vocabulary with sus chords and unusual voicings.',
         characteristics: [
@@ -502,7 +502,7 @@ export const genres: Genre[] = [
                 roman: 'I – IV – V',
                 chords: ['G', 'C', 'D'],
                 key: 'G major',
-                description: 'The simplest folk pattern — countless traditional songs use just these three.',
+                description: 'The simplest folk pattern. Countless traditional songs use just these three chords.',
             },
             {
                 name: 'Mixolydian ballad',
@@ -516,7 +516,7 @@ export const genres: Genre[] = [
                 roman: 'vi – IV – I – V',
                 chords: ['Em', 'C', 'G', 'D'],
                 key: 'G major',
-                description: 'The pop axis progression voiced with open guitar chords — Mumford & Sons, The Lumineers.',
+                description: 'The pop axis progression voiced with open guitar chords, in the style of Mumford & Sons and The Lumineers.',
             },
         ],
         examples: [
@@ -547,14 +547,14 @@ export const genres: Genre[] = [
                 roman: 'I – IV – I – V',
                 chords: ['G', 'C', 'G', 'D'],
                 key: 'G major',
-                description: 'The Hank Williams template — three chords and the truth.',
+                description: 'The Hank Williams template: three chords and the truth.',
             },
             {
                 name: 'Country ballad',
                 roman: 'I – V – vi – IV',
                 chords: ['G', 'D', 'Em', 'C'],
                 key: 'G major',
-                description: 'The pop axis works for country too — used by Garth Brooks, Carrie Underwood, and many others.',
+                description: 'The pop axis works for country too. Garth Brooks, Carrie Underwood, and many others have leaned on it.',
             },
         ],
         examples: [
@@ -571,7 +571,7 @@ export const genres: Genre[] = [
         metaDescription:
             'Gospel chord progressions: the gospel cycle, reharmonization patterns, and rich extended voicings. Free MIDI for piano and organ.',
         intro:
-            'Gospel piano is built on motion — chords don\'t sit still. The gospel cycle (a sequence of secondary dominants) cycles through all 12 keys; reharmonization techniques replace simple cadences with chromatic substitutions. Every cadence is decorated.',
+            'Gospel piano is built on motion. Chords rarely sit still: the gospel cycle (a sequence of secondary dominants) runs through all 12 keys, and reharmonization techniques replace simple cadences with chromatic substitutions. Every cadence gets decorated.',
         characteristics: [
             'Secondary dominants on every chord',
             'Tritone substitutions in turnarounds',
@@ -585,7 +585,7 @@ export const genres: Genre[] = [
                 roman: 'I – VI7 – ii7 – V7',
                 chords: ['C', 'A7', 'Dm7', 'G7'],
                 key: 'C major',
-                description: 'The VI7 secondary dominant pulls into the ii — every gospel pianist\'s default.',
+                description: 'The VI7 secondary dominant pulls into the ii. It\'s every gospel pianist\'s default move.',
             },
             {
                 name: 'Reharmonized I–IV',
@@ -661,7 +661,7 @@ const majorRoman = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
 const minorRoman = ['i', 'ii°', '♭III', 'iv', 'v', '♭VI', '♭VII'];
 
 // Keys whose relative would require an enharmonic outside this set (Gb major, D# minor)
-// are intentionally omitted — Eb minor and F# major.
+// are intentionally omitted: Eb minor and F# major.
 const majorScales: Record<string, string[]> = {
     C: ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'],
     G: ['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F#dim'],
@@ -732,7 +732,7 @@ function buildMajorKey(tonic: string): KeyContent {
         quality: 'major',
         metaTitle: `${label} Chord Progressions: I-V-vi-IV in ${flatLabel(tonic)} + MIDI`,
         metaDescription: `Chord progressions in the key of ${label}. The diatonic chords, common patterns (I–V–vi–IV, I–IV–V, ii–V–I), and free MIDI download.`,
-        intro: `The key of ${label} is built on the ${label} scale: ${flatLabel(tonic)}, ${chords.slice(1).map((c) => flatLabel(c.replace(/m|dim/, ''))).join(', ')}. Its diatonic chords give you everything you need to harmonize a melody — three majors (I, IV, V), three minors (ii, iii, vi), and one diminished (vii°). Most pop, rock, and folk songs in this key never venture outside this set.`,
+        intro: `The key of ${label} is built on the ${label} scale: ${flatLabel(tonic)}, ${chords.slice(1).map((c) => flatLabel(c.replace(/m|dim/, ''))).join(', ')}. Its diatonic chords give you everything you need to harmonize a melody: three majors (I, IV, V), three minors (ii, iii, vi), and one diminished (vii°). Most pop, rock, and folk songs in this key never venture outside this set.`,
         diatonicChords: chords,
         diatonicRoman: majorRoman,
         progressions: [
@@ -755,14 +755,14 @@ function buildMajorKey(tonic: string): KeyContent {
                 roman: 'ii – V – I',
                 chords: [chords[1], chords[4], chords[0]],
                 key: label,
-                description: 'The jazz cadence — works equally well in pop choruses.',
+                description: 'The jazz cadence, and it works just as well in a pop chorus.',
             },
             {
                 name: `Three-chord rock in ${label}`,
                 roman: 'I – IV – V',
                 chords: [chords[0], chords[3], chords[4]],
                 key: label,
-                description: 'Blues, country, rock and roll — all built on this triad.',
+                description: 'Blues, country, rock and roll: all of it is built on this triad.',
             },
         ],
         relativeKey: {
@@ -807,14 +807,14 @@ function buildMinorKey(tonic: string): KeyContent {
                 roman: 'i – iv – V',
                 chords: [chords[0], chords[3], chords[4].replace('m', '')],
                 key: label,
-                description: 'The harmonic minor cadence with a major V — used in classical and metal.',
+                description: 'The harmonic minor cadence with a major V, common in classical music and metal.',
             },
             {
                 name: `Sad pop in ${label}`,
                 roman: 'i – ♭VI – ♭III – ♭VII',
                 chords: [chords[0], chords[5], chords[2], chords[6]],
                 key: label,
-                description: 'Reflective and melancholic — used in pop ballads and indie.',
+                description: 'Reflective and melancholic, a favorite in pop ballads and indie.',
             },
         ],
         relativeKey: {

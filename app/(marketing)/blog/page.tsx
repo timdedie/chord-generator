@@ -15,14 +15,14 @@ const posts = [
         slug: 'common-chord-progressions-guide',
         title: 'Common Chord Progressions: The Complete Guide',
         excerpt:
-            'The 12 chord progressions every songwriter should know — from I–V–vi–IV to ii–V–I — with examples, songs, and free MIDI in every key.',
+            'The 12 chord progressions every songwriter should know, from I-V-vi-IV to ii-V-I, with examples, songs, and free MIDI in every key.',
         readTime: '12 min read',
     },
     {
         slug: 'free-online-piano-chord-generator',
         title: 'Free Online Piano Chord Generator: How ChordGen Works',
         excerpt:
-            'A walkthrough of how to use ChordGen as a free online piano chord generator — generate progressions from a text prompt, preview on a keyboard, export MIDI.',
+            'A walkthrough of how to use ChordGen as a free online piano chord generator: generate progressions from a text prompt, preview them on a keyboard, and export MIDI.',
         readTime: '6 min read',
     },
 ];
