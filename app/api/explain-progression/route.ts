@@ -1,12 +1,17 @@
 export const maxDuration = 60;
 
+import { auth } from '@clerk/nextjs/server';
 import { streamText, CoreMessage } from 'ai';
 import { deepseek, STANDARD_MODEL_ID } from '@/lib/ai';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { getUserRole } from '@/lib/premium';
 
 export async function POST(request: Request) {
     try {
-        if (!(await checkRateLimit(request))) {
+        const { userId } = await auth();
+        const role = await getUserRole(userId);
+
+        if (role !== 'admin' && !(await checkRateLimit(request))) {
             return new Response(
                 JSON.stringify({ error: 'Too many requests. Please try again tomorrow.' }),
                 { status: 429, headers: { 'Content-Type': 'application/json' } }

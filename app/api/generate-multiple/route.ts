@@ -3,8 +3,8 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { premiumGenerations } from '@/lib/db/schema';
 import { createMultipleProgressionsSchema } from '@/lib/schemas';
-import { generateChordObject, createResponse, STANDARD_MODEL_ID, PREMIUM_MODEL_ID, FREE_PREMIUM_GENERATIONS_PER_DAY } from '@/lib/ai';
-import { hasUnlimitedPremium } from '@/lib/premium';
+import { generateChordObject, createResponse, STANDARD_MODEL_ID, PREMIUM_MODEL_ID, FREE_PREMIUM_GENERATIONS_PER_DAY, PRO_PREMIUM_GENERATIONS_PER_DAY } from '@/lib/ai';
+import { getUserRole } from '@/lib/premium';
 import { checkRateLimit } from '@/lib/rateLimit';
 
 export const runtime = 'edge';
@@ -22,14 +22,14 @@ function todayDate(): string {
 }
 
 /** Atomically claims one of today's premium generation slots for a user. Returns true if claimed. */
-async function claimPremiumSlot(userId: string): Promise<boolean> {
+async function claimPremiumSlot(userId: string, limit: number): Promise<boolean> {
     const rows = await db
         .insert(premiumGenerations)
         .values({ userId, date: todayDate(), count: 1 })
         .onConflictDoUpdate({
             target: [premiumGenerations.userId, premiumGenerations.date],
             set: { count: sql`${premiumGenerations.count} + 1` },
-            where: sql`${premiumGenerations.count} < ${FREE_PREMIUM_GENERATIONS_PER_DAY}`,
+            where: sql`${premiumGenerations.count} < ${limit}`,
         })
         .returning();
 
@@ -72,7 +72,10 @@ Label each with a 2-4 word descriptor of its character (e.g. "Open and Direct", 
 
 export async function POST(request: Request): Promise<Response> {
     try {
-        if (!(await checkRateLimit(request))) {
+        const { userId } = await auth();
+        const role = await getUserRole(userId);
+
+        if (role !== 'admin' && !(await checkRateLimit(request))) {
             return createResponse({ error: 'Too many requests. Please try again tomorrow.' }, 429);
         }
 
@@ -84,12 +87,13 @@ export async function POST(request: Request): Promise<Response> {
         }
 
         let premiumGranted = false;
-        let unlimitedPremium = false;
+        const unlimitedPremium = role === 'admin';
         if (premium) {
-            const { userId } = await auth();
-            if (userId) {
-                unlimitedPremium = await hasUnlimitedPremium(userId);
-                premiumGranted = unlimitedPremium || await claimPremiumSlot(userId);
+            if (unlimitedPremium) {
+                premiumGranted = true;
+            } else if (userId) {
+                const limit = role === 'pro' ? PRO_PREMIUM_GENERATIONS_PER_DAY : FREE_PREMIUM_GENERATIONS_PER_DAY;
+                premiumGranted = await claimPremiumSlot(userId, limit);
             }
         }
 

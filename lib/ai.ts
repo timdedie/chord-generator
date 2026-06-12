@@ -24,6 +24,7 @@ export const deepseek = createOpenAI({
 export const STANDARD_MODEL_ID = 'deepseek-v4-flash';
 export const PREMIUM_MODEL_ID = 'deepseek-v4-pro';
 export const FREE_PREMIUM_GENERATIONS_PER_DAY = 3;
+export const PRO_PREMIUM_GENERATIONS_PER_DAY = 30;
 
 const MAX_RETRIES = 2;
 

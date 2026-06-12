@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { apiUsage } from "@/lib/db/schema";
 
 /** Generous per-IP cap on AI generation calls per day, to deter scripted abuse. */
-export const DAILY_IP_LIMIT = 40;
+export const DAILY_IP_LIMIT = 150;
 
 function todayDate(): string {
     return new Date().toISOString().slice(0, 10);

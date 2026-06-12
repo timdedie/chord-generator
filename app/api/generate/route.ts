@@ -4,8 +4,10 @@ import {
     createProgressionSchema,
     SingleChordSchema,
 } from '@/lib/schemas';
+import { auth } from '@clerk/nextjs/server';
 import { generateChordObject, createResponse } from '@/lib/ai';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { getUserRole } from '@/lib/premium';
 
 interface SimpleChordObject {
     chord: string;
@@ -80,7 +82,10 @@ function buildAddChordMessage(
 
 export async function POST(request: Request): Promise<Response> {
     try {
-        if (!(await checkRateLimit(request))) {
+        const { userId } = await auth();
+        const role = await getUserRole(userId);
+
+        if (role !== 'admin' && !(await checkRateLimit(request))) {
             return createResponse({ error: 'Too many requests. Please try again tomorrow.' }, 429);
         }
 
