@@ -24,7 +24,7 @@ const MidiDownloaderInline = dynamic(() => import("@/components/MidiDownloader")
 const DynamicMarkdownDisplay = dynamic(() => import("@/components/MarkdownDisplay"), {
     loading: () => (
         <div className="flex items-center justify-center h-full">
-            <Sparkles className="h-6 w-6 animate-pulse text-primary" />
+            <Sparkles className="h-6 w-6 animate-pulse text-blue-600 dark:text-blue-500" />
         </div>
     ),
     ssr: false
@@ -468,7 +468,7 @@ export default function ProgressionCard({
                                         <div className="min-h-[50px] w-full">
                                             {isExplanationLoading && !currentExplanationText && (
                                                 <div className="flex items-center justify-center h-full">
-                                                    <Sparkles className="h-6 w-6 animate-pulse text-primary" />
+                                                    <Sparkles className="h-6 w-6 animate-pulse text-blue-600 dark:text-blue-500" />
                                                 </div>
                                             )}
                                             {currentExplanationText && (

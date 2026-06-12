@@ -1,10 +1,18 @@
 export const maxDuration = 60;
 
 import { streamText, CoreMessage } from 'ai';
-import { deepseek, PRIMARY_MODEL_ID } from '@/lib/ai';
+import { deepseek, STANDARD_MODEL_ID } from '@/lib/ai';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(request: Request) {
     try {
+        if (!(await checkRateLimit(request))) {
+            return new Response(
+                JSON.stringify({ error: 'Too many requests. Please try again tomorrow.' }),
+                { status: 429, headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+
         const { chords, prompt } = await request.json() as { chords: string[], prompt?: string };
 
         if (!chords || chords.length === 0) {
@@ -46,7 +54,7 @@ For Dm7 - G7 - Cmaj7: "A classic **ii-V-I** in C Major. **Dm7** leads to the ten
         ];
 
         const result = await streamText({
-            model: deepseek(PRIMARY_MODEL_ID),
+            model: deepseek(STANDARD_MODEL_ID),
             system: systemMessage,
             messages: messages,
             temperature: 0.6,

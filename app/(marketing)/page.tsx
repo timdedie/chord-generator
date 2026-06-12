@@ -4,15 +4,16 @@ import Script from 'next/script';
 import type { Metadata } from 'next';
 import {
     ArrowRight,
-    Sparkles,
     Music,
     Piano,
     Download,
     Edit3,
     ChevronRight,
+    GripVertical,
     Mic2,
     Headphones,
     BookOpen,
+    FileMusic,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,8 +22,10 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
-import { MotionSection, MotionItem, ScrollIndicator } from '@/components/motion-wrapper';
+import { MotionSection, MotionItem } from '@/components/motion-wrapper';
+import HeroDemo from '@/components/landing/HeroDemo';
 import { faqs } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
     title: 'AI Chord Progression Generator: Free, No Sign-Up | ChordGen',
@@ -53,34 +56,43 @@ const useCases = [
     },
 ];
 
-const features = [
-    {
-        Icon: Music,
-        title: 'Type it, don\'t pick it',
-        description: 'No scale pickers or preset menus. Type a mood or genre in plain words and get a progression built around it, not just filtered from it.',
-    },
-    {
-        Icon: Piano,
-        title: 'Visual Piano',
-        description: 'See and hear every chord on an interactive keyboard as you build your progression.',
-    },
-    {
-        Icon: Edit3,
-        title: 'Full Control',
-        description: 'Drag, drop, add, or remove chords. Fine-tune until it sounds exactly right.',
-    },
-    {
-        Icon: Download,
-        title: 'Free MIDI',
-        description: 'Export to any DAW. Standard MIDI files, completely free, no strings attached.',
-    },
-];
-
 const steps = [
     { number: '01', title: 'Describe', description: 'Enter a prompt like "melancholic jazz" or "upbeat pop anthem"' },
     { number: '02', title: 'Generate', description: 'Our AI creates multiple unique progressions tailored to your vision' },
     { number: '03', title: 'Refine', description: 'Edit, rearrange, and perfect your progression with intuitive controls' },
     { number: '04', title: 'Export', description: 'Download as MIDI and drop directly into your DAW' },
+];
+
+const genres: [string, string][] = [
+    ['lo-fi', 'Lo-Fi'],
+    ['jazz', 'Jazz'],
+    ['pop', 'Pop'],
+    ['edm', 'EDM'],
+    ['rnb', 'R&B'],
+    ['rock', 'Rock'],
+    ['blues', 'Blues'],
+    ['neo-soul', 'Neo-Soul'],
+    ['cinematic', 'Cinematic'],
+    ['ambient', 'Ambient'],
+    ['folk', 'Folk'],
+    ['country', 'Country'],
+    ['gospel', 'Gospel'],
+    ['bossa-nova', 'Bossa Nova'],
+];
+
+const keys: [string, string][] = [
+    ['c-major', 'C Major'],
+    ['g-major', 'G Major'],
+    ['d-major', 'D Major'],
+    ['a-major', 'A Major'],
+    ['e-major', 'E Major'],
+    ['f-major', 'F Major'],
+    ['a-minor', 'A Minor'],
+    ['e-minor', 'E Minor'],
+    ['d-minor', 'D Minor'],
+    ['b-minor', 'B Minor'],
+    ['f-sharp-minor', 'F♯ Minor'],
+    ['c-minor', 'C Minor'],
 ];
 
 const faqSchema = {
@@ -109,115 +121,226 @@ const howToSchema = {
     })),
 };
 
+function Overline({ children, className }: { children: React.ReactNode; className?: string }) {
+    return (
+        <p className={cn('font-mono-accent text-xs font-semibold uppercase tracking-[0.25em] text-gray-500 dark:text-gray-500', className)}>
+            {children}
+        </p>
+    );
+}
+
+function Accent({ children }: { children: React.ReactNode }) {
+    return <span className="text-blue-600 dark:text-blue-500">{children}</span>;
+}
+
 export default function LandingPage() {
     return (
         <div className="bg-gray-50 dark:bg-black overflow-hidden">
-            {/* Hero Section */}
-            <section className="relative min-h-[640px] lg:min-h-[800px] flex items-center justify-center px-4">
-                {/* Background gradient */}
-                <div className="absolute inset-0 -z-10">
-                    <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-                    <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 blur-[120px] rounded-full" />
+            {/* Hero */}
+            <section className="relative px-4 pt-20 pb-20 sm:pt-28 sm:pb-24">
+                <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
+                    <div className="absolute inset-0 [background-image:radial-gradient(circle,rgba(125,125,125,0.16)_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_70%_55%_at_50%_30%,black,transparent)]" />
                 </div>
 
-                <div className="max-w-5xl mx-auto text-center">
-                    {/* Badge */}
-                    <div className="animate-fade-in-up inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-8">
-                        <Sparkles className="h-4 w-4" />
-                        <span>Free AI-Powered Tool</span>
-                    </div>
+                <div className="mx-auto max-w-5xl text-center">
+                    <Overline className="animate-fade-in-up mb-6">
+                        Free · No sign-up · Instant MIDI
+                    </Overline>
 
-                    {/* Main headline */}
-                    <h1 className="animate-fade-in-up-delay-1 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight text-gray-900 dark:text-white leading-[0.95] mb-6">
+                    <h1 className="animate-fade-in-up-delay-1 mb-6 text-5xl font-black leading-[0.95] tracking-tight text-gray-900 dark:text-white sm:text-6xl md:text-7xl lg:text-8xl">
                         Generate chords
                         <br />
-                        <span className="text-primary">from words.</span>
+                        <Accent>from words.</Accent>
                     </h1>
 
-                    {/* Subheadline */}
-                    <p className="animate-fade-in-up-delay-2 text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-4 font-medium">
+                    <p className="animate-fade-in-up-delay-2 mx-auto mb-9 max-w-2xl text-lg font-medium text-gray-600 dark:text-gray-400 sm:text-xl md:text-2xl">
                         Type what you want, hear it on a piano, then drag the MIDI
-                        straight into your DAW. Free, no sign-up.
+                        straight into your DAW.
                     </p>
 
-                    {/* CTA */}
-                    <div className="animate-fade-in-up-delay-3 flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Button asChild size="lg" className="text-lg px-8 py-7 rounded-2xl font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-shadow">
+                    <div className="animate-fade-in-up-delay-3 mb-16 flex flex-col items-center justify-center gap-5 sm:flex-row">
+                        <Button asChild size="lg" className="rounded-2xl px-8 py-7 text-lg font-bold shadow-lg shadow-gray-900/20 transition-shadow hover:shadow-xl dark:shadow-white/10">
                             <Link href="/app">
-                                Start Creating
+                                Start creating
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>
                         </Button>
+                        <Link
+                            href="#how-it-works"
+                            className="text-sm font-semibold text-gray-600 underline-offset-4 hover:text-gray-900 hover:underline dark:text-gray-400 dark:hover:text-white"
+                        >
+                            See how it works
+                        </Link>
                     </div>
 
-                    {/* Trust signal */}
-                    <p className="animate-fade-in-up-delay-4 mt-8 text-sm text-gray-500 dark:text-gray-500">
-                        No sign-up required. 100% free. Forever.
-                    </p>
+                    <HeroDemo />
                 </div>
-
-                {/* Scroll indicator */}
-                <ScrollIndicator />
             </section>
 
-            {/* Features Section */}
-            <section className="py-24 sm:py-32 px-4">
-                <MotionSection variant="stagger" className="max-w-6xl mx-auto">
-                    <MotionItem className="text-center mb-16">
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
-                            Everything you need
+            {/* Features — bento grid */}
+            <section className="px-4 py-24 sm:py-32">
+                <MotionSection variant="stagger" className="mx-auto max-w-6xl">
+                    <MotionItem className="mb-14 text-center">
+                        <Overline className="mb-4">Features</Overline>
+                        <h2 className="mb-4 text-4xl font-black tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
+                            Everything you need, nothing you don&apos;t.
                         </h2>
-                        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 font-medium">
+                        <p className="text-lg font-medium text-gray-600 dark:text-gray-400 sm:text-xl">
                             From inspiration to production-ready MIDI in seconds.
                         </p>
                     </MotionItem>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {features.map((feature, index) => (
-                            <MotionItem
-                                key={index}
-                                variant="scaleIn"
-                            >
-                                <div className="group relative p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:shadow-xl">
-                                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                        <feature.Icon className="h-7 w-7 text-primary" />
-                                    </div>
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                                        {feature.title}
-                                    </h3>
-                                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                        {feature.description}
-                                    </p>
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                        {/* Type it, don't pick it */}
+                        <MotionItem variant="scaleIn" className="lg:col-span-2">
+                            <div className="group h-full rounded-3xl border border-gray-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900 sm:p-10">
+                                <Music className="mb-6 h-7 w-7 text-gray-900 dark:text-white" />
+                                <h3 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
+                                    Type it, don&apos;t pick it
+                                </h3>
+                                <p className="mb-8 max-w-md leading-relaxed text-gray-600 dark:text-gray-400">
+                                    No scale pickers or preset menus. Type a mood or genre in
+                                    plain words and get a progression built around it, not just
+                                    filtered from it.
+                                </p>
+                                <div className="flex flex-wrap gap-2" aria-hidden>
+                                    {['late-night drive', 'rainy day jazz', 'euphoric festival drop', 'bittersweet goodbye'].map((p) => (
+                                        <span
+                                            key={p}
+                                            className="rounded-full border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-500 transition-colors duration-300 group-hover:border-gray-400 group-hover:text-gray-700 dark:border-gray-800 dark:text-gray-500 dark:group-hover:text-gray-300"
+                                        >
+                                            &ldquo;{p}&rdquo;
+                                        </span>
+                                    ))}
                                 </div>
-                            </MotionItem>
-                        ))}
+                            </div>
+                        </MotionItem>
+
+                        {/* Visual piano */}
+                        <MotionItem variant="scaleIn">
+                            <div className="group flex h-full flex-col rounded-3xl border border-gray-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900 sm:p-10">
+                                <Piano className="mb-6 h-7 w-7 text-gray-900 dark:text-white" />
+                                <h3 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
+                                    Visual piano
+                                </h3>
+                                <p className="mb-8 leading-relaxed text-gray-600 dark:text-gray-400">
+                                    See and hear every chord on an interactive keyboard as you
+                                    build your progression.
+                                </p>
+                                <div className="relative mt-auto h-16" aria-hidden>
+                                    <div className="flex h-full gap-[3px]">
+                                        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                                            <div
+                                                key={i}
+                                                className={cn(
+                                                    'flex-1 rounded-b-md border transition-colors duration-300',
+                                                    [0, 2, 4].includes(i)
+                                                        ? 'border-gray-400 bg-gray-300 dark:border-gray-500 dark:bg-gray-600'
+                                                        : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'
+                                                )}
+                                            />
+                                        ))}
+                                    </div>
+                                    {[0, 1, 3, 4, 5].map((pos) => (
+                                        <div
+                                            key={pos}
+                                            className="absolute top-0 h-[58%] rounded-b-md bg-gray-900 dark:bg-black dark:border dark:border-gray-700"
+                                            style={{
+                                                left: `calc(${pos + 1} * (100% / 7) - (100% / 7) * 0.3)`,
+                                                width: 'calc((100% / 7) * 0.6)',
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </MotionItem>
+
+                        {/* Full control */}
+                        <MotionItem variant="scaleIn">
+                            <div className="group flex h-full flex-col rounded-3xl border border-gray-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900 sm:p-10">
+                                <Edit3 className="mb-6 h-7 w-7 text-gray-900 dark:text-white" />
+                                <h3 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
+                                    Full control
+                                </h3>
+                                <p className="mb-8 leading-relaxed text-gray-600 dark:text-gray-400">
+                                    Drag, drop, add, or remove chords. Fine-tune until it sounds
+                                    exactly right.
+                                </p>
+                                <div className="mt-auto flex items-center gap-2" aria-hidden>
+                                    {['Am7', 'Dm9', 'G13'].map((c, i) => (
+                                        <span
+                                            key={c}
+                                            className={cn(
+                                                'font-mono-accent inline-flex items-center gap-1 rounded-xl border px-3 py-2 text-sm font-semibold transition-transform duration-300',
+                                                i === 1
+                                                    ? 'rotate-[-4deg] border-gray-900 bg-white text-gray-900 shadow-md group-hover:rotate-[3deg] dark:border-gray-200 dark:bg-gray-900 dark:text-white'
+                                                    : 'border-gray-200 text-gray-700 dark:border-gray-800 dark:text-gray-300'
+                                            )}
+                                        >
+                                            <GripVertical className="h-3.5 w-3.5 opacity-40" />
+                                            {c}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </MotionItem>
+
+                        {/* Free MIDI */}
+                        <MotionItem variant="scaleIn" className="lg:col-span-2">
+                            <div className="group h-full rounded-3xl border border-gray-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900 sm:p-10">
+                                <Download className="mb-6 h-7 w-7 text-gray-900 dark:text-white" />
+                                <h3 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
+                                    Free MIDI, any DAW
+                                </h3>
+                                <p className="mb-8 max-w-md leading-relaxed text-gray-600 dark:text-gray-400">
+                                    Export standard MIDI files, completely free, no strings
+                                    attached. Drop them straight into your session.
+                                </p>
+                                <div className="flex flex-wrap items-center gap-3" aria-hidden>
+                                    <span className="font-mono-accent inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 dark:border-gray-800 dark:text-white">
+                                        <FileMusic className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                        progression.mid
+                                    </span>
+                                    <ArrowRight className="h-4 w-4 text-gray-400 transition-transform duration-300 group-hover:translate-x-1" />
+                                    {['Ableton', 'FL Studio', 'Logic', 'Cubase'].map((daw) => (
+                                        <span
+                                            key={daw}
+                                            className="rounded-full bg-gray-100 px-3.5 py-1.5 text-sm font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                                        >
+                                            {daw}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </MotionItem>
                     </div>
                 </MotionSection>
             </section>
 
-            {/* How It Works Section */}
-            <section className="py-24 sm:py-32 px-4 bg-white dark:bg-gray-950">
-                <MotionSection variant="stagger" className="max-w-5xl mx-auto">
-                    <MotionItem className="text-center mb-20">
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
-                            How it works
+            {/* How it works */}
+            <section id="how-it-works" className="bg-white px-4 py-24 dark:bg-gray-950 sm:py-32">
+                <MotionSection variant="stagger" className="mx-auto max-w-6xl">
+                    <MotionItem className="mb-16 text-center">
+                        <Overline className="mb-4">How it works</Overline>
+                        <h2 className="mb-4 text-4xl font-black tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
+                            From feeling to finished MIDI.
                         </h2>
-                        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 font-medium">
+                        <p className="text-lg font-medium text-gray-600 dark:text-gray-400 sm:text-xl">
                             Four simple steps to your next progression.
                         </p>
                     </MotionItem>
 
-                    <div className="space-y-8 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-8">
+                    <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
                         {steps.map((step, index) => (
                             <MotionItem key={index}>
-                                <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
-                                    <span className="text-6xl sm:text-7xl font-black text-primary/20 mb-4 leading-none">
+                                <div id={`step-${index + 1}`} className="border-t-2 border-gray-900 pt-6 dark:border-gray-100">
+                                    <span className="font-mono-accent text-sm font-semibold tracking-[0.2em] text-gray-400 dark:text-gray-500">
                                         {step.number}
                                     </span>
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                    <h3 className="mb-2 mt-3 text-2xl font-bold text-gray-900 dark:text-white">
                                         {step.title}
                                     </h3>
-                                    <p className="text-gray-600 dark:text-gray-400">
+                                    <p className="leading-relaxed text-gray-600 dark:text-gray-400">
                                         {step.description}
                                     </p>
                                 </div>
@@ -227,31 +350,34 @@ export default function LandingPage() {
                 </MotionSection>
             </section>
 
-            {/* Use Cases Section */}
-            <section className="py-24 sm:py-32 px-4">
-                <MotionSection variant="stagger" className="max-w-6xl mx-auto">
-                    <MotionItem className="text-center mb-16">
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
+            {/* Use cases — editorial list */}
+            <section className="px-4 py-24 sm:py-32">
+                <MotionSection variant="stagger" className="mx-auto max-w-5xl">
+                    <MotionItem className="mb-16 text-center">
+                        <Overline className="mb-4">Who it&apos;s for</Overline>
+                        <h2 className="mb-4 text-4xl font-black tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
                             Built for every musician
                         </h2>
-                        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 font-medium">
+                        <p className="text-lg font-medium text-gray-600 dark:text-gray-400 sm:text-xl">
                             From your very first song to your hundredth film score.
                         </p>
                     </MotionItem>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 gap-x-16 sm:grid-cols-2">
                         {useCases.map((useCase, index) => (
-                            <MotionItem key={index} variant="scaleIn">
-                                <div className="group p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-primary/50 dark:hover:border-primary/50 transition-all duration-300 hover:shadow-xl h-full">
-                                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                        <useCase.Icon className="h-7 w-7 text-primary" />
+                            <MotionItem key={index}>
+                                <div className="flex gap-5 border-b border-gray-200 py-8 dark:border-gray-800">
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
+                                        <useCase.Icon className="h-6 w-6 text-gray-900 dark:text-white" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                                        {useCase.title}
-                                    </h3>
-                                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                        {useCase.description}
-                                    </p>
+                                    <div>
+                                        <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
+                                            {useCase.title}
+                                        </h3>
+                                        <p className="leading-relaxed text-gray-600 dark:text-gray-400">
+                                            {useCase.description}
+                                        </p>
+                                    </div>
                                 </div>
                             </MotionItem>
                         ))}
@@ -260,44 +386,30 @@ export default function LandingPage() {
             </section>
 
             {/* Browse by genre / key */}
-            <section className="py-24 sm:py-32 px-4">
-                <MotionSection variant="stagger" className="max-w-5xl mx-auto">
-                    <MotionItem className="text-center mb-12">
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
+            <section className="px-4 pb-24 sm:pb-32">
+                <MotionSection variant="stagger" className="mx-auto max-w-5xl">
+                    <MotionItem className="mb-12 text-center">
+                        <Overline className="mb-4">Reference library</Overline>
+                        <h2 className="mb-4 text-4xl font-black tracking-tight text-gray-900 dark:text-white sm:text-5xl">
                             Browse by genre or key
                         </h2>
-                        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 font-medium">
+                        <p className="text-lg font-medium text-gray-600 dark:text-gray-400 sm:text-xl">
                             Reference guides for every common style and tonality.
                         </p>
                     </MotionItem>
 
                     <MotionItem>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-5">
+                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                            <div className="rounded-3xl border border-gray-200 bg-white p-8 dark:border-gray-800 dark:bg-gray-900">
+                                <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">
                                     Popular genres
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {[
-                                        ['lo-fi', 'Lo-Fi'],
-                                        ['jazz', 'Jazz'],
-                                        ['pop', 'Pop'],
-                                        ['edm', 'EDM'],
-                                        ['rnb', 'R&B'],
-                                        ['rock', 'Rock'],
-                                        ['blues', 'Blues'],
-                                        ['neo-soul', 'Neo-Soul'],
-                                        ['cinematic', 'Cinematic'],
-                                        ['ambient', 'Ambient'],
-                                        ['folk', 'Folk'],
-                                        ['country', 'Country'],
-                                        ['gospel', 'Gospel'],
-                                        ['bossa-nova', 'Bossa Nova'],
-                                    ].map(([slug, label]) => (
+                                    {genres.map(([slug, label]) => (
                                         <Link
                                             key={slug}
                                             href={`/chords/${slug}`}
-                                            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-800 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors"
+                                            className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900 dark:border-gray-800 dark:text-gray-300 dark:hover:border-gray-200 dark:hover:text-white"
                                         >
                                             {label}
                                         </Link>
@@ -305,35 +417,22 @@ export default function LandingPage() {
                                 </div>
                                 <Link
                                     href="/chords"
-                                    className="inline-flex items-center gap-1 mt-5 text-sm font-bold text-primary hover:underline"
+                                    className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-gray-900 hover:underline dark:text-white"
                                 >
                                     All genres <ChevronRight className="h-4 w-4" />
                                 </Link>
                             </div>
 
-                            <div className="p-8 rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-5">
+                            <div className="rounded-3xl border border-gray-200 bg-white p-8 dark:border-gray-800 dark:bg-gray-900">
+                                <h3 className="mb-5 text-xl font-bold text-gray-900 dark:text-white">
                                     Common keys
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {[
-                                        ['c-major', 'C Major'],
-                                        ['g-major', 'G Major'],
-                                        ['d-major', 'D Major'],
-                                        ['a-major', 'A Major'],
-                                        ['e-major', 'E Major'],
-                                        ['f-major', 'F Major'],
-                                        ['a-minor', 'A Minor'],
-                                        ['e-minor', 'E Minor'],
-                                        ['d-minor', 'D Minor'],
-                                        ['b-minor', 'B Minor'],
-                                        ['f-sharp-minor', 'F♯ Minor'],
-                                        ['c-minor', 'C Minor'],
-                                    ].map(([slug, label]) => (
+                                    {keys.map(([slug, label]) => (
                                         <Link
                                             key={slug}
                                             href={`/key/${slug}`}
-                                            className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-800 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors"
+                                            className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-gray-900 hover:text-gray-900 dark:border-gray-800 dark:text-gray-300 dark:hover:border-gray-200 dark:hover:text-white"
                                         >
                                             {label}
                                         </Link>
@@ -341,7 +440,7 @@ export default function LandingPage() {
                                 </div>
                                 <Link
                                     href="/key"
-                                    className="inline-flex items-center gap-1 mt-5 text-sm font-bold text-primary hover:underline"
+                                    className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-gray-900 hover:underline dark:text-white"
                                 >
                                     All keys <ChevronRight className="h-4 w-4" />
                                 </Link>
@@ -349,10 +448,10 @@ export default function LandingPage() {
                         </div>
                     </MotionItem>
 
-                    <MotionItem className="text-center mt-10">
+                    <MotionItem className="mt-10 text-center">
                         <p className="text-sm text-gray-500 dark:text-gray-500">
                             Coming from another chord tool?{' '}
-                            <Link href="/chordchord-alternative" className="font-bold text-primary hover:underline">
+                            <Link href="/chordchord-alternative" className="font-bold text-gray-900 hover:underline dark:text-white">
                                 See how ChordGen compares as a free ChordChord alternative
                             </Link>
                         </p>
@@ -360,30 +459,28 @@ export default function LandingPage() {
                 </MotionSection>
             </section>
 
-            {/* FAQ Section */}
-            <section className="py-24 sm:py-32 px-4 bg-white dark:bg-gray-950">
-                <MotionSection variant="stagger" className="max-w-3xl mx-auto">
-                    <MotionItem className="text-center mb-16">
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white mb-4">
-                            Questions?
+            {/* FAQ */}
+            <section className="bg-white px-4 py-24 dark:bg-gray-950 sm:py-32">
+                <MotionSection variant="stagger" className="mx-auto max-w-3xl">
+                    <MotionItem className="mb-14 text-center">
+                        <Overline className="mb-4">FAQ</Overline>
+                        <h2 className="text-4xl font-black tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
+                            Questions, answered.
                         </h2>
-                        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 font-medium">
-                            We&apos;ve got answers.
-                        </p>
                     </MotionItem>
 
                     <MotionItem>
-                        <Accordion type="single" collapsible className="w-full space-y-4">
+                        <Accordion type="single" collapsible className="w-full">
                             {faqs.map((faq, index) => (
                                 <AccordionItem
                                     key={index}
                                     value={`item-${index}`}
-                                    className="border border-gray-200 dark:border-gray-800 rounded-2xl px-6 bg-white dark:bg-gray-900 data-[state=open]:shadow-lg transition-shadow"
+                                    className="border-b border-gray-200 dark:border-gray-800"
                                 >
-                                    <AccordionTrigger className="text-left text-lg font-semibold hover:no-underline py-6">
+                                    <AccordionTrigger className="py-6 text-left text-lg font-semibold hover:no-underline">
                                         {faq.question}
                                     </AccordionTrigger>
-                                    <AccordionContent className="text-gray-600 dark:text-gray-400 pb-6 text-base leading-relaxed">
+                                    <AccordionContent className="pb-6 text-base leading-relaxed text-gray-600 dark:text-gray-400">
                                         {faq.answer}
                                     </AccordionContent>
                                 </AccordionItem>
@@ -393,33 +490,50 @@ export default function LandingPage() {
                 </MotionSection>
             </section>
 
-            {/* Final CTA Section */}
-            <section className="py-24 sm:py-32 px-4">
-                <MotionSection variant="fadeInUp" className="max-w-4xl mx-auto">
-                    <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 px-8 py-16 sm:px-16 sm:py-24 text-center">
-                        {/* Background decoration */}
-                        <div className="absolute inset-0 -z-10">
-                            <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
-                            <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+            {/* Final CTA */}
+            <section className="px-4 py-24 sm:py-32">
+                <MotionSection variant="fadeInUp" className="mx-auto max-w-4xl">
+                    <div className="relative overflow-hidden rounded-[2.5rem] bg-gray-950 px-8 pt-16 pb-44 text-center sm:px-16 sm:pt-24 sm:pb-52">
+                        <div aria-hidden className="absolute inset-0">
+                            <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
+                            <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-blue-500/[0.07] blur-3xl" />
                         </div>
 
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 leading-tight">
-                            Ready to create?
-                        </h2>
-                        <p className="text-lg sm:text-xl text-gray-300 mb-10 max-w-xl mx-auto">
-                            Your next chord progression is just a prompt away.
-                            Start generating for free, right now.
-                        </p>
-                        <Button
-                            asChild
-                            size="lg"
-                            className="text-lg px-10 py-7 rounded-2xl font-bold bg-white text-gray-900 hover:bg-gray-100 shadow-2xl"
-                        >
-                            <Link href="/app">
-                                Launch ChordGen
-                                <ChevronRight className="ml-2 h-5 w-5" />
-                            </Link>
-                        </Button>
+                        <div className="relative">
+                            <Overline className="mb-6 text-gray-400 dark:text-gray-400">Free forever</Overline>
+                            <h2 className="mb-6 text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl">
+                                Ready when <span className="text-blue-500">you are.</span>
+                            </h2>
+                            <p className="mx-auto mb-10 max-w-xl text-lg text-gray-400 sm:text-xl">
+                                Your next chord progression is just a prompt away.
+                                Start generating for free, right now.
+                            </p>
+                            <Button
+                                asChild
+                                size="lg"
+                                className="rounded-2xl bg-white px-10 py-7 text-lg font-bold text-gray-900 shadow-2xl hover:bg-gray-100"
+                            >
+                                <Link href="/app">
+                                    Launch ChordGen
+                                    <ChevronRight className="ml-2 h-5 w-5" />
+                                </Link>
+                            </Button>
+                        </div>
+
+                        {/* Decorative piano strip */}
+                        <div aria-hidden className="absolute bottom-0 left-0 right-0 flex h-24 gap-px px-px sm:h-28">
+                            {Array.from({ length: 24 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={cn(
+                                        'flex-1 rounded-t-sm transition-colors duration-300',
+                                        [3, 8, 15, 20].includes(i)
+                                            ? 'bg-blue-500/80'
+                                            : 'bg-white/10 hover:bg-blue-500/60'
+                                    )}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </MotionSection>
             </section>

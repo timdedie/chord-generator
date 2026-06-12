@@ -21,7 +21,9 @@ export const deepseek = createOpenAI({
     },
 });
 
-export const PRIMARY_MODEL_ID = 'deepseek-v4-pro';
+export const STANDARD_MODEL_ID = 'deepseek-v4-flash';
+export const PREMIUM_MODEL_ID = 'deepseek-v4-pro';
+export const FREE_PREMIUM_GENERATIONS_PER_DAY = 3;
 
 const MAX_RETRIES = 2;
 
@@ -65,8 +67,9 @@ export async function generateChordObject<T extends z.ZodTypeAny>(
     userMessage: string,
     schema: T,
     temperature: number = 1.0,
+    modelId: string = STANDARD_MODEL_ID,
 ): Promise<z.infer<T>> {
-    const modelClient = deepseek(PRIMARY_MODEL_ID);
+    const modelClient = deepseek(modelId);
     const messages: CoreMessage[] = [{ role: 'user', content: userMessage }];
     const allErrors: { attempt: number; error: string; response?: unknown }[] = [];
 

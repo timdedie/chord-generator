@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
 import NumChordsSelector from "@/components/NumChordsSelector";
+import PremiumToggle from "@/components/PremiumToggle";
 
 interface SearchHeaderProps {
     prompt: string;
@@ -13,6 +14,10 @@ interface SearchHeaderProps {
     onNumChordsChange: (value: number) => void;
     onGenerate: () => void;
     isLoading: boolean;
+    premiumSignedIn: boolean;
+    premiumAvailable: boolean;
+    premiumEnabled: boolean;
+    onPremiumToggle: () => void;
 }
 
 export default function SearchHeader({
@@ -22,6 +27,10 @@ export default function SearchHeader({
     onNumChordsChange,
     onGenerate,
     isLoading,
+    premiumSignedIn,
+    premiumAvailable,
+    premiumEnabled,
+    onPremiumToggle,
 }: SearchHeaderProps) {
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
@@ -55,6 +64,14 @@ export default function SearchHeader({
                             compact
                         />
                     </div>
+
+                    <PremiumToggle
+                        isSignedIn={premiumSignedIn}
+                        available={premiumAvailable}
+                        enabled={premiumEnabled}
+                        onToggle={onPremiumToggle}
+                        disabled={isLoading}
+                    />
 
                     <Button
                         onClick={onGenerate}

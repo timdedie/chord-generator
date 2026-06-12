@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
 import NumChordsSelector from "@/components/NumChordsSelector";
+import PremiumToggle from "@/components/PremiumToggle";
 import { useExamplePrompts } from "@/hooks/useExamplePrompts";
+import { usePremiumGeneration } from "@/hooks/usePremiumGeneration";
 import { usePiano } from "@/components/PianoProvider";
 export default function AppPage() {
     const router = useRouter();
     const { randomExamples } = useExamplePrompts();
     const { loadSamples, areSamplesLoaded, isLoadingSamples } = usePiano();
+    const premium = usePremiumGeneration();
 
     const [prompt, setPrompt] = useState("");
     const [numChords, setNumChords] = useState(4);
@@ -29,8 +32,9 @@ export default function AppPage() {
         const params = new URLSearchParams();
         params.set("q", prompt);
         params.set("n", String(numChords));
+        if (premium.enabled) params.set("premium", "1");
         router.push(`/app/results?${params.toString()}`);
-    }, [prompt, numChords, router, areSamplesLoaded, isLoadingSamples, loadSamples]);
+    }, [prompt, numChords, router, areSamplesLoaded, isLoadingSamples, loadSamples, premium.enabled]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
@@ -113,6 +117,14 @@ export default function AppPage() {
                                 compact
                             />
                         </div>
+
+                        <PremiumToggle
+                            isSignedIn={premium.isSignedIn}
+                            available={premium.available}
+                            enabled={premium.enabled}
+                            onToggle={premium.toggle}
+                            disabled={isNavigating}
+                        />
 
                         <Button
                             onClick={handleGenerate}

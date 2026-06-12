@@ -5,6 +5,7 @@ import {
     SingleChordSchema,
 } from '@/lib/schemas';
 import { generateChordObject, createResponse } from '@/lib/ai';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 interface SimpleChordObject {
     chord: string;
@@ -79,6 +80,10 @@ function buildAddChordMessage(
 
 export async function POST(request: Request): Promise<Response> {
     try {
+        if (!(await checkRateLimit(request))) {
+            return createResponse({ error: 'Too many requests. Please try again tomorrow.' }, 429);
+        }
+
         const body = (await request.json()) as RequestBody;
         const { prompt, existingChords = [], addChordPosition, numChords } = body;
 

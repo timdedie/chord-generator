@@ -1,5 +1,11 @@
+import { auth } from '@clerk/nextjs/server';
+import { sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { premiumGenerations } from '@/lib/db/schema';
 import { createMultipleProgressionsSchema } from '@/lib/schemas';
-import { generateChordObject, createResponse } from '@/lib/ai';
+import { generateChordObject, createResponse, STANDARD_MODEL_ID, PREMIUM_MODEL_ID, FREE_PREMIUM_GENERATIONS_PER_DAY } from '@/lib/ai';
+import { hasUnlimitedPremium } from '@/lib/premium';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export const runtime = 'edge';
 export const maxDuration = 25;
@@ -8,6 +14,26 @@ interface RequestBody {
     prompt: string;
     numChords: number;
     existingProgressions?: { chords: string[]; style: string }[];
+    premium?: boolean;
+}
+
+function todayDate(): string {
+    return new Date().toISOString().slice(0, 10);
+}
+
+/** Atomically claims one of today's premium generation slots for a user. Returns true if claimed. */
+async function claimPremiumSlot(userId: string): Promise<boolean> {
+    const rows = await db
+        .insert(premiumGenerations)
+        .values({ userId, date: todayDate(), count: 1 })
+        .onConflictDoUpdate({
+            target: [premiumGenerations.userId, premiumGenerations.date],
+            set: { count: sql`${premiumGenerations.count} + 1` },
+            where: sql`${premiumGenerations.count} < ${FREE_PREMIUM_GENERATIONS_PER_DAY}`,
+        })
+        .returning();
+
+    return rows.length > 0;
 }
 
 interface ApiError extends Error {
@@ -46,18 +72,33 @@ Label each with a 2-4 word descriptor of its character (e.g. "Open and Direct", 
 
 export async function POST(request: Request): Promise<Response> {
     try {
+        if (!(await checkRateLimit(request))) {
+            return createResponse({ error: 'Too many requests. Please try again tomorrow.' }, 429);
+        }
+
         const body = (await request.json()) as RequestBody;
-        const { prompt, numChords, existingProgressions } = body;
+        const { prompt, numChords, existingProgressions, premium } = body;
 
         if (!prompt) {
             return createResponse({ error: 'Prompt is required.' }, 400);
         }
 
+        let premiumGranted = false;
+        let unlimitedPremium = false;
+        if (premium) {
+            const { userId } = await auth();
+            if (userId) {
+                unlimitedPremium = await hasUnlimitedPremium(userId);
+                premiumGranted = unlimitedPremium || await claimPremiumSlot(userId);
+            }
+        }
+
         const count = (typeof numChords === 'number' && numChords >= 2 && numChords <= 8) ? numChords : 4;
         const userMessage = buildMultipleProgressionsMessage(prompt, count, existingProgressions);
         const schema = createMultipleProgressionsSchema(count);
+        const modelId = premiumGranted ? PREMIUM_MODEL_ID : STANDARD_MODEL_ID;
 
-        const result = await generateChordObject(userMessage, schema, 1.2);
+        const result = await generateChordObject(userMessage, schema, 1.2, modelId);
 
         const progressionsWithIds = result.progressions.map((prog: { chords: string[]; style: string }, index: number) => ({
             id: `prog-${Date.now()}-${index}`,
@@ -65,7 +106,7 @@ export async function POST(request: Request): Promise<Response> {
             style: prog.style,
         }));
 
-        return createResponse({ progressions: progressionsWithIds });
+        return createResponse({ progressions: progressionsWithIds, premiumUsed: premiumGranted, unlimitedPremium });
 
     } catch (err: unknown) {
         const e = err as ApiError;

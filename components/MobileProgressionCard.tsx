@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 const DynamicMarkdownDisplay = dynamic(() => import("@/components/MarkdownDisplay"), {
     loading: () => (
         <div className="flex items-center justify-center h-full">
-            <Sparkles className="h-6 w-6 animate-pulse text-primary" />
+            <Sparkles className="h-6 w-6 animate-pulse text-blue-600 dark:text-blue-500" />
         </div>
     ),
     ssr: false
@@ -254,7 +254,7 @@ export default function MobileProgressionCard({
                                         onClick={() => playChordOnce(chord)}
                                         className={cn(
                                             "flex items-center justify-center px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-black transition-all duration-150 active:scale-95 min-w-[64px]",
-                                            playingIndex === index && "ring-2 ring-primary ring-offset-1 ring-offset-background dark:ring-offset-black"
+                                            playingIndex === index && "ring-2 ring-blue-600 dark:ring-blue-500 ring-offset-1 ring-offset-background dark:ring-offset-black"
                                         )}
                                     >
                                         <ChordSymbol chord={chord} className="text-xl [&>span:first-child]:text-xl [&_sup]:text-xs [&_span.text-xl]:text-sm" />
@@ -285,7 +285,7 @@ export default function MobileProgressionCard({
                                         <div className="min-h-[50px] w-full">
                                             {isExplanationLoading && !currentExplanationText && (
                                                 <div className="flex items-center justify-center h-full">
-                                                    <Sparkles className="h-6 w-6 animate-pulse text-primary" />
+                                                    <Sparkles className="h-6 w-6 animate-pulse text-blue-600 dark:text-blue-500" />
                                                 </div>
                                             )}
                                             {currentExplanationText && (

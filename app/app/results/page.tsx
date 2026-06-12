@@ -14,6 +14,7 @@ import ThinkingMessages from "@/components/ThinkingMessages";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useSavedProgressions } from "@/hooks/useSavedProgressions";
+import { usePremiumGeneration } from "@/hooks/usePremiumGeneration";
 
 interface ProgressionData {
     id: string;
@@ -26,6 +27,7 @@ function ResultsContent() {
     const router = useRouter();
     const { loadSamples, areSamplesLoaded, isLoadingSamples } = usePiano();
     const { isSaved, toggleSave, isSignedIn: isSavedSignedIn } = useSavedProgressions();
+    const premium = usePremiumGeneration();
 
     const [prompt, setPrompt] = useState("");
     const [numChords, setNumChords] = useState(4);
@@ -60,11 +62,12 @@ function ResultsContent() {
         // If we have a query and haven't generated yet, generate
         if (q && !hasInitialized) {
             setHasInitialized(true);
-            generateProgressions(q, n ? parseInt(n, 10) : 4);
+            const usePremium = searchParams.get("premium") === "1";
+            generateProgressions(q, n ? parseInt(n, 10) : 4, usePremium);
         }
     }, [searchParams, hasInitialized]);
 
-    const generateProgressions = useCallback(async (queryPrompt: string, queryNumChords: number) => {
+    const generateProgressions = useCallback(async (queryPrompt: string, queryNumChords: number, usePremium: boolean = false) => {
         if (!queryPrompt.trim()) return;
 
         setIsLoading(true);
@@ -82,6 +85,7 @@ function ResultsContent() {
                 body: JSON.stringify({
                     prompt: queryPrompt,
                     numChords: queryNumChords,
+                    premium: usePremium,
                 }),
             });
 
@@ -94,12 +98,20 @@ function ResultsContent() {
             }
 
             setProgressions(data.progressions || []);
+
+            if (usePremium) {
+                if (data.premiumUsed && !data.unlimitedPremium) {
+                    premium.consume();
+                } else {
+                    premium.refresh();
+                }
+            }
         } catch (err) {
             console.error("Network error:", err);
         }
 
         setIsLoading(false);
-    }, [areSamplesLoaded, isLoadingSamples, loadSamples]);
+    }, [areSamplesLoaded, isLoadingSamples, loadSamples, premium]);
 
     const generateMoreProgressions = useCallback(async () => {
         if (!prompt.trim() || isLoadingMore) return;
@@ -145,10 +157,11 @@ function ResultsContent() {
         const params = new URLSearchParams();
         params.set("q", prompt);
         params.set("n", String(numChords));
+        if (premium.enabled) params.set("premium", "1");
         router.push(`/app/results?${params.toString()}`);
 
-        generateProgressions(prompt, numChords);
-    }, [prompt, numChords, router, generateProgressions]);
+        generateProgressions(prompt, numChords, premium.enabled);
+    }, [prompt, numChords, router, generateProgressions, premium.enabled]);
 
     const handleNumChordsChange = useCallback((value: number) => {
         setNumChords(value);
@@ -173,6 +186,10 @@ function ResultsContent() {
                 onNumChordsChange={handleNumChordsChange}
                 onGenerate={handleGenerate}
                 isLoading={isLoading}
+                premiumSignedIn={premium.isSignedIn}
+                premiumAvailable={premium.available}
+                premiumEnabled={premium.enabled}
+                onPremiumToggle={premium.toggle}
             />
 
             <main className="container max-w-6xl mx-auto px-4 pt-36 pb-48">

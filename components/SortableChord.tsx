@@ -52,7 +52,7 @@ const SortableChord: React.FC<SortableChordProps> = ({
                 onMouseLeave={() => setHover(false)}
                 className={cn(
                     "relative group cursor-pointer flex items-center justify-center w-28 h-28 flex-shrink-0 border border-gray-300 bg-gray-50 dark:bg-black dark:border-gray-700 transition-colors duration-200",
-                    isPlaying && "ring-2 ring-primary ring-offset-2 ring-offset-background dark:ring-offset-black"
+                    isPlaying && "ring-2 ring-blue-600 dark:ring-blue-500 ring-offset-2 ring-offset-background dark:ring-offset-black"
                 )}
             >
                 <ChordSymbol chord={item.chord} className="text-4xl" />
