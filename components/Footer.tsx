@@ -110,6 +110,9 @@ export function Footer() {
 
                 <div className="pt-6 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-500">
                     <p>&copy; {new Date().getFullYear()} ChordGen. All rights reserved.</p>
+                    <a href="https://dang.ai" rel="dofollow" className="sr-only">
+                        Verified on DANG!
+                    </a>
                     <DarkModeToggle />
                 </div>
             </div>
