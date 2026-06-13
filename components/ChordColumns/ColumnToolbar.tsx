@@ -185,9 +185,11 @@ export default function ColumnToolbar({
               className="min-h-[70px] text-sm resize-none"
               maxLength={300}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  onSendFeedback();
+                  if (editFeedback.trim() && !isEditSubmitting) {
+                    onSendFeedback();
+                  }
                 }
               }}
             />
