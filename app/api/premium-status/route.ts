@@ -16,13 +16,13 @@ export async function GET() {
     const { userId } = await auth();
 
     if (!userId) {
-        return NextResponse.json({ signedIn: false, available: false });
+        return NextResponse.json({ signedIn: false, available: false, used: 0, limit: 0, unlimited: false });
     }
 
     const role = await getUserRole(userId);
 
     if (role === "admin") {
-        return NextResponse.json({ signedIn: true, available: true });
+        return NextResponse.json({ signedIn: true, available: true, used: 0, limit: 0, unlimited: true });
     }
 
     const rows = await db
@@ -32,5 +32,5 @@ export async function GET() {
 
     const used = rows[0]?.count ?? 0;
     const limit = role === "pro" ? PRO_PREMIUM_GENERATIONS_PER_DAY : FREE_PREMIUM_GENERATIONS_PER_DAY;
-    return NextResponse.json({ signedIn: true, available: used < limit });
+    return NextResponse.json({ signedIn: true, available: used < limit, used, limit, unlimited: false });
 }

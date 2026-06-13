@@ -76,12 +76,12 @@ export default function PremiumToggle({
     };
 
     const tooltipText = !isSignedIn
-        ? "Sign in to unlock premium generations"
+        ? "Sign in to unlock premium"
         : enabled
-            ? "Premium generation active — using our most powerful model"
+            ? "Premium on — our most powerful model"
             : available
-                ? "Use today's free premium generation (most powerful model)"
-                : "You've used today's free premium generation — resets tomorrow";
+                ? "Premium — our most powerful model"
+                : "No premium left today";
 
     return (
         <Tooltip>
