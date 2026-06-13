@@ -18,6 +18,11 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt, compact
     const [midiUrl, setMidiUrl] = useState<string>("");
     const [hasValidChords, setHasValidChords] = useState<boolean>(false);
 
+    // Builds a Blob URL for the current chords. setState calls here manage
+    // the object URL's lifecycle (created/revoked alongside the effect), and
+    // midiUrl is intentionally left out of the deps to avoid retriggering
+    // this effect when it sets its own state.
+    /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
         if (!chords || chords.length === 0) {
             if (midiUrl) URL.revokeObjectURL(midiUrl);
@@ -66,7 +71,9 @@ const MidiDownloader: React.FC<MidiDownloaderProps> = ({ chords, prompt, compact
         return () => {
             URL.revokeObjectURL(newUrl);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [chords]);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     const handleDownloadClick = () => {
         if (!midiUrl || !hasValidChords) {

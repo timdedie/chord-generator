@@ -1,6 +1,6 @@
 import { DragEndEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Chord } from "tonal";
 import { toast } from "sonner";
 
@@ -51,7 +51,16 @@ export function useChordManagement(props?: UseChordManagementProps) {
         });
     }, []);
 
-    const generateChordsInternal = useCallback(
+    type GenerateChordsInternal = (
+        currentPromptInternal: string,
+        currentChords: ChordItem[],
+        numChordsToGen: number,
+        attempt?: number
+    ) => Promise<ChordItem[] | null>;
+
+    const generateChordsInternalRef = useRef<GenerateChordsInternal>(async () => null);
+
+    const generateChordsInternal = useCallback<GenerateChordsInternal>(
         async (
             currentPromptInternal: string,
             currentChords: ChordItem[],
@@ -122,7 +131,7 @@ export function useChordManagement(props?: UseChordManagementProps) {
                 if (!allCleanedChordsAreValid) {
                     if (attempt < MAX_ATTEMPTS - 1) {
                         console.warn(`Invalid chord name(s) or empty array found in AI response ("${cleanedChordSymbols.join('-')}"), reattempting generation`, attempt + 1);
-                        return generateChordsInternal(currentPromptInternal, currentChords, numChordsToGen, attempt + 1);
+                        return generateChordsInternalRef.current(currentPromptInternal, currentChords, numChordsToGen, attempt + 1);
                     } else {
                         showErrorToast("Generation Error", `AI returned invalid chord names ("${cleanedChordSymbols.join(', ')}") or an empty array after several attempts.`);
                         setFullLoading(false); return null;
@@ -157,6 +166,9 @@ export function useChordManagement(props?: UseChordManagementProps) {
         },
         [showErrorToast]
     );
+    useEffect(() => {
+        generateChordsInternalRef.current = generateChordsInternal;
+    }, [generateChordsInternal]);
 
     const generateChords = useCallback(async (params: GenerationParams) => {
         const { numChords, customPrompt } = params;

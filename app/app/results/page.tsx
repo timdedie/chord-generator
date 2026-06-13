@@ -28,6 +28,7 @@ function ResultsContent() {
     const { loadSamples, areSamplesLoaded, isLoadingSamples } = usePiano();
     const { isSaved, toggleSave, isSignedIn: isSavedSignedIn } = useSavedProgressions();
     const premium = usePremiumGeneration();
+    const { consume: consumePremium, refresh: refreshPremium } = premium;
 
     const [prompt, setPrompt] = useState("");
     const [numChords, setNumChords] = useState(4);
@@ -43,29 +44,6 @@ function ResultsContent() {
             loadSamples();
         }
     }, [areSamplesLoaded, isLoadingSamples, loadSamples]);
-
-    // Load from URL params on mount
-    useEffect(() => {
-        const q = searchParams.get("q");
-        const n = searchParams.get("n");
-
-        if (q) {
-            setPrompt(q);
-        }
-        if (n) {
-            const numVal = parseInt(n, 10);
-            if (numVal >= 2 && numVal <= 8) {
-                setNumChords(numVal);
-            }
-        }
-
-        // If we have a query and haven't generated yet, generate
-        if (q && !hasInitialized) {
-            setHasInitialized(true);
-            const usePremium = searchParams.get("premium") === "1";
-            generateProgressions(q, n ? parseInt(n, 10) : 4, usePremium);
-        }
-    }, [searchParams, hasInitialized]);
 
     const generateProgressions = useCallback(async (queryPrompt: string, queryNumChords: number, usePremium: boolean = false) => {
         if (!queryPrompt.trim()) return;
@@ -101,9 +79,9 @@ function ResultsContent() {
 
             if (usePremium) {
                 if (data.premiumUsed && !data.unlimitedPremium) {
-                    premium.consume();
+                    consumePremium();
                 } else {
-                    premium.refresh();
+                    refreshPremium();
                 }
             }
         } catch (err) {
@@ -111,7 +89,31 @@ function ResultsContent() {
         }
 
         setIsLoading(false);
-    }, [areSamplesLoaded, isLoadingSamples, loadSamples, premium]);
+    }, [areSamplesLoaded, isLoadingSamples, loadSamples, consumePremium, refreshPremium]);
+
+    // Load from URL params on mount
+    useEffect(() => {
+        const q = searchParams.get("q");
+        const n = searchParams.get("n");
+
+        if (q) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs prompt input from the URL on mount/back-forward navigation
+            setPrompt(q);
+        }
+        if (n) {
+            const numVal = parseInt(n, 10);
+            if (numVal >= 2 && numVal <= 8) {
+                setNumChords(numVal);
+            }
+        }
+
+        // If we have a query and haven't generated yet, generate
+        if (q && !hasInitialized) {
+            setHasInitialized(true);
+            const usePremium = searchParams.get("premium") === "1";
+            generateProgressions(q, n ? parseInt(n, 10) : 4, usePremium);
+        }
+    }, [searchParams, hasInitialized, generateProgressions]);
 
     const generateMoreProgressions = useCallback(async () => {
         if (!prompt.trim() || isLoadingMore) return;

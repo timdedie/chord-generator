@@ -30,6 +30,7 @@ export default function WelcomeAfterSignUp() {
         localStorage.setItem(seenKey, '1');
         if (!justSignedUp) return;
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time decision once auth state loads
         setOpen(true);
     }, [isLoaded, isSignedIn, user]);
 

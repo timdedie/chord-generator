@@ -23,6 +23,7 @@ export default function PianoKeyboard({
 
     useEffect(() => {
         const mq = window.matchMedia("(max-width: 768px)");
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- reads matchMedia, unavailable during SSR
         setIsMobile(mq.matches);
         const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
         mq.addEventListener("change", handler);

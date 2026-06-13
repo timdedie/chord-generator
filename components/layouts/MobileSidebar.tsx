@@ -37,6 +37,7 @@ export function MobileSidebar() {
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- reads localStorage, unavailable during SSR
             setTheme((localStorage.getItem('theme') as Theme) || 'system');
         }
     }, []);

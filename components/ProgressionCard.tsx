@@ -109,6 +109,8 @@ export default function ProgressionCard({
         onActiveNotesChange([]);
     }, [piano, onActiveNotesChange]);
 
+    const playNextChordRef = useRef<(index: number) => void>(() => {});
+
     const playNextChord = useCallback((index: number) => {
         if (index >= chords.length) {
             pauseProgression();
@@ -130,12 +132,15 @@ export default function ProgressionCard({
             }
 
             playbackTimeoutRef.current = setTimeout(() => {
-                playNextChord(index + 1);
+                playNextChordRef.current(index + 1);
             }, CHORD_PLAYBACK_INTERVAL);
         } else {
             pauseProgression();
         }
     }, [chords, piano, pauseProgression, onActiveNotesChange]);
+    useEffect(() => {
+        playNextChordRef.current = playNextChord;
+    }, [playNextChord]);
 
     const handleTogglePlayPause = useCallback(() => {
         if (isPlaying) {
@@ -151,8 +156,9 @@ export default function ProgressionCard({
         }
     }, [isPlaying, pauseProgression, playNextChord, chords, areSamplesLoaded, isLoadingSamples, loadSamples]);
 
-    // Stop playback when chords change
+    // Stop playback when chords change (syncs Tone.js playback to the chords state)
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         pauseProgression();
     }, [chords, pauseProgression]);
 

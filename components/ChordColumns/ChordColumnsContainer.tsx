@@ -174,6 +174,8 @@ export default function ChordColumnsContainer({
     onActiveNotesChange([]);
   }, [piano, onActiveNotesChange]);
 
+  const playNextChordRef = useRef<(index: number) => void>(() => {});
+
   const playNextChord = useCallback(
     (index: number) => {
       if (index >= chords.length) {
@@ -196,7 +198,7 @@ export default function ChordColumnsContainer({
         }
 
         playbackTimeoutRef.current = setTimeout(() => {
-          playNextChord(index + 1);
+          playNextChordRef.current(index + 1);
         }, CHORD_PLAYBACK_INTERVAL);
       } else {
         pauseProgression();
@@ -204,6 +206,9 @@ export default function ChordColumnsContainer({
     },
     [chords, piano, pauseProgression, onActiveNotesChange]
   );
+  useEffect(() => {
+    playNextChordRef.current = playNextChord;
+  }, [playNextChord]);
 
   const handleTogglePlayPause = useCallback(async () => {
     if (isPlaying) {
@@ -227,8 +232,9 @@ export default function ChordColumnsContainer({
     loadSamples,
   ]);
 
-  // Stop playback when chords change
+  // Stop playback when chords change (syncs Tone.js playback to the chords prop)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     pauseProgression();
   }, [chords, pauseProgression]);
 

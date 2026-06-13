@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,6 +83,8 @@ export default function MobileProgressionCard({
         onActiveNotesChange([]);
     }, [piano, onActiveNotesChange]);
 
+    const playNextChordRef = useRef<(index: number) => void>(() => {});
+
     const playNextChord = useCallback((index: number) => {
         if (index >= initialChords.length) {
             pauseProgression();
@@ -104,12 +106,15 @@ export default function MobileProgressionCard({
             }
 
             playbackTimeoutRef.current = setTimeout(() => {
-                playNextChord(index + 1);
+                playNextChordRef.current(index + 1);
             }, CHORD_PLAYBACK_INTERVAL);
         } else {
             pauseProgression();
         }
     }, [initialChords, piano, pauseProgression, onActiveNotesChange]);
+    useEffect(() => {
+        playNextChordRef.current = playNextChord;
+    }, [playNextChord]);
 
     const handleTogglePlayPause = useCallback(() => {
         if (isPlaying) {

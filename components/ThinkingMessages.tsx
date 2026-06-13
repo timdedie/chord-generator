@@ -28,14 +28,10 @@ const thinkingMessagesList = [
 ];
 
 export default function ThinkingMessages() {
-    const [shuffledMessages, setShuffledMessages] = useState<string[]>([]);
+    const [shuffledMessages] = useState<string[]>(() =>
+        [...thinkingMessagesList].sort(() => 0.5 - Math.random())
+    );
     const [currentIndex, setCurrentIndex] = useState(0);
-
-    useEffect(() => {
-        const shuffled = [...thinkingMessagesList].sort(() => 0.5 - Math.random());
-        setShuffledMessages(shuffled);
-        setCurrentIndex(0);
-    }, []);
 
     useEffect(() => {
         if (shuffledMessages.length === 0) return;

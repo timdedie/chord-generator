@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useUser } from "@clerk/nextjs";
 
 export interface SavedProgression {
@@ -17,10 +17,8 @@ export function useSavedProgressions() {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        if (!isLoaded || !isSignedIn) {
-            setSaved([]);
-            return;
-        }
+        if (!isLoaded || !isSignedIn) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount loading flag
         setIsLoading(true);
         fetch("/api/saved")
             .then((r) => r.json())
@@ -29,9 +27,13 @@ export function useSavedProgressions() {
             .finally(() => setIsLoading(false));
     }, [isLoaded, isSignedIn]);
 
+    // Treat saved progressions as empty once the user is signed out, without
+    // discarding the fetched state (it's reused if they sign back in).
+    const effectiveSaved = useMemo(() => (isSignedIn ? saved : []), [isSignedIn, saved]);
+
     const isSaved = useCallback(
-        (id: string) => saved.some((p) => p.id === id),
-        [saved]
+        (id: string) => effectiveSaved.some((p) => p.id === id),
+        [effectiveSaved]
     );
 
     const toggleSave = useCallback(
@@ -61,5 +63,5 @@ export function useSavedProgressions() {
         [isSignedIn, saved]
     );
 
-    return { saved, isSaved, toggleSave, isLoading, isSignedIn: isSignedIn ?? false };
+    return { saved: effectiveSaved, isSaved, toggleSave, isLoading, isSignedIn: isSignedIn ?? false };
 }
