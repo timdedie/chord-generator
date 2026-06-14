@@ -143,10 +143,6 @@ export default function LandingPage() {
                 </div>
 
                 <div className="mx-auto max-w-5xl text-center">
-                    <Overline className="animate-fade-in-up mb-6">
-                        Free · No sign-up · Instant MIDI
-                    </Overline>
-
                     <h1 className="animate-fade-in-up-delay-1 mb-6 text-5xl font-black leading-[0.95] tracking-tight text-gray-900 dark:text-white sm:text-6xl md:text-7xl lg:text-8xl">
                         Generate chords
                         <br />
@@ -500,7 +496,7 @@ export default function LandingPage() {
                         </div>
 
                         <div className="relative">
-                            <Overline className="mb-6 text-gray-400 dark:text-gray-400">Free forever</Overline>
+                            <Overline className="mb-6 text-gray-400 dark:text-gray-400">Free · No sign-up · Instant MIDI</Overline>
                             <h2 className="mb-6 text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl">
                                 Ready when <span className="text-blue-500">you are.</span>
                             </h2>

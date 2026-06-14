@@ -14,7 +14,12 @@ export const deepseek = createOpenAI({
     fetch: async (url, options) => {
         if (options?.body) {
             const body = JSON.parse(options.body as string);
-            body.thinking = { type: 'disabled' };
+            if (body.model === PREMIUM_MODEL_ID) {
+                body.thinking = { type: 'enabled' };
+                body.reasoning_effort = 'low';
+            } else {
+                body.thinking = { type: 'disabled' };
+            }
             options = { ...options, body: JSON.stringify(body) };
         }
         return fetch(url, options);
